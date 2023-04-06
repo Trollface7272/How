@@ -1,19 +1,39 @@
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
-import { Event, EventData } from "@src/class/abstract/Event";
-import { Message } from "discord.js";
+import { Event, EventData } from "@src/class/partials/Event";
+import { Message, ReplyOptions } from "discord.js";
+import { MessageEventData } from "@src/class/partials/MessageEvent";
+import { User } from "@src/class/User";
+import { Logger } from "@src/class/Logger";
+import { Client } from "@src/class/Client";
 
-export class MessageCreateData implements EventData {
+export class MessageCreateData implements EventData, MessageEventData {
     constructor(
         private message: Message
     ) {}
+    public async LoadDbData(): Promise<void> {
+        console.log("Implelent Db loading to interaction create")
+    }
+
+    public GetClient(): Client {
+        return this.message.client as Client
+    }
+
+    public GetUser() {
+        return new User(this.message.author)
+    }
 
     public GetContent() {
         return this.message.content
+    }
+
+    public async Reply(msg: ReplyOptions): Promise<Message<boolean>> {
+        return await this.message.reply(msg)
     }
 }
 
 export class MessageCreate implements Event {
     public async Handle(data: MessageCreateData): Promise<Event.ReturnCode> {
+        const loading = data.LoadDbData()
         const prefix = "!"
         const content = data.GetContent().toLowerCase()
 
@@ -23,8 +43,14 @@ export class MessageCreate implements Event {
 
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
-
-        commandData.Handle(data)
+        await loading
+        try { 
+            const command = new commandData(data)
+            command.Handle()
+        } catch (err) {
+            Logger.Error(err)
+            Logger.Trace()
+        }
 
         return 0
     }
