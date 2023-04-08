@@ -1,3 +1,4 @@
+import "./Prestart"
 import { Client } from "@src/class/Client";
 
 

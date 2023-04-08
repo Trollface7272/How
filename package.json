@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --no-warnings --respawn --transpile-only --poll --watch src ./src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -22,7 +23,7 @@
     "dotenv": "^16.0.3",
     "glob": "^9.3.4",
     "module-alias": "^2.2.2",
-    "mongoose": "^7.0.3"
+    "mongodb": "^5.2.0"
   },
   "_moduleAliases": {
     "@src": "./src",

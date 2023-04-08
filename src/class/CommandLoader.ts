@@ -7,12 +7,12 @@ export class CommandLoader {
     }
 
     private LoadCommands() {
-        glob.sync("../commands/**/*.*").forEach((file) => {
+        glob.sync("./src/commands/**/*.*", { absolute: true }).forEach((file) => {
             if (file.startsWith("_")) {
                 return
             }
-            Logger.Log(`Loading -> `, file)
-            require(`../commands/${file}`)
+            Logger.Info(`Loading -> `, file)
+            require(`${file}`)
         })
     }
 }

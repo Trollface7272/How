@@ -6,7 +6,9 @@ import { Logger } from "./Logger";
 
 export class EventEmitter {
     constructor(client: Client) {
+        Logger.Info(`Loading event ${Events.MessageCreate}`)
         client.on(Events.MessageCreate, this.MessageCreate)
+        Logger.Info(`Loading event ${Events.InteractionCreate}`)
         client.on(Events.InteractionCreate, this.InteractionCreate)
     }
 

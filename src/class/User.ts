@@ -4,7 +4,7 @@ export class User {
         return this.user.username
     }
     public get AvatarUrl() {
-        return this.user.avatar
+        return this.user.avatarURL()
     }
     constructor(protected user: disUser) {}
 

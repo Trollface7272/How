@@ -39,7 +39,9 @@ export class MessageCreate implements Event {
 
         if (!content.startsWith(prefix)) return 0
 
-        const [command, ...args] = content.split(" ")
+        const [command, ...args] = content.substring(prefix.length).split(" ")
+
+        console.log(command)
 
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0

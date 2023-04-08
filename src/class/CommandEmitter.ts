@@ -1,4 +1,5 @@
 import { Client } from "./Client";
+import { Logger } from "./Logger";
 import { CommandAbstract } from "./partials/Command";
 import { MessageEventData } from "./partials/MessageEvent";
 
@@ -9,7 +10,10 @@ export class CommandEmitter {
     constructor() {}
 
     public AddCommand(command: CommandClass, names: string[]) {
-        names.map(el => this.commands.set(el, command))
+        names.map(el => {
+            Logger.Info(`Loading command -> ${el}`)
+            return this.commands.set(el, command)
+        })
     }
 
     public GetCommand(command: string) {
@@ -20,5 +24,5 @@ export class CommandEmitter {
         return this.commands.size
     }
 }
-
+Logger.Info(`Creating Command Emitter`)
 export const CommandEmitterInstance = new CommandEmitter()
