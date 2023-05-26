@@ -3,6 +3,7 @@ declare global {
         interface ProcessEnv {
             NODE_ENV: "development" | "production" | "test"
             DATABASE_URL: string
+            DATABASE_NAME: string
             DISCORD_TOKEN: string
             OSU_REDDIRECT_URL: string
             OSU_ID: number

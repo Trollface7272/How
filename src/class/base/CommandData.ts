@@ -1,7 +1,8 @@
 import { ColorResolvable, InteractionReplyOptions, MessageReplyOptions, ReplyOptions } from "discord.js";
 import { Client } from "../Client";
 import { MessageEventData } from "../partials/MessageEvent";
-import { User } from "../User";
+import { RawUser } from "../RawUser";
+import { User } from "../database/User";
 
 export class CommandData {
     constructor(protected data: MessageEventData) { }
@@ -11,7 +12,7 @@ export class CommandData {
     }
 
     public GetUser(): User {
-        return this.data.GetUser()
+        return this.data.user
     }
 
     public GetEmbedColor(): ColorResolvable {

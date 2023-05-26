@@ -2,24 +2,43 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Event, EventData } from "@src/class/partials/Event";
 import { Message, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
-import { User } from "@src/class/User";
+import { RawUser } from "@src/class/RawUser";
 import { Logger } from "@src/class/Logger";
 import { Client } from "@src/class/Client";
+import { User } from "@src/class/database/User";
+import { Guild } from "@src/class/database/Guild";
 
 export class MessageCreateData implements EventData, MessageEventData {
+    private _user: User
+    private _guild: Guild
+    public get user() {
+        return this._user
+    }
+    public get guild() {
+        return this._guild
+    }
     constructor(
         private message: Message
     ) {}
-    public async LoadDbData(): Promise<void> {
-        console.log("Implelent Db loading to interaction create")
+    public async LoadDbData(): Promise<unknown> {
+        const loading: Promise<unknown>[] = []
+
+        this._user = new User(this.message.author)
+        loading.push(this._user.LoadUser())
+
+        this._guild = new Guild(this.message.guild)
+        loading.push(this._guild.LoadGuild())
+
+
+        return Promise.all(loading)
     }
 
     public GetClient(): Client {
         return this.message.client as Client
     }
 
-    public GetUser() {
-        return new User(this.message.author)
+    public GetRawUser() {
+        return new RawUser(this.message.author)
     }
 
     public GetContent() {
@@ -33,7 +52,8 @@ export class MessageCreateData implements EventData, MessageEventData {
 
 export class MessageCreate implements Event {
     public async Handle(data: MessageCreateData): Promise<Event.ReturnCode> {
-        const loading = data.LoadDbData()
+        if (data.GetRawUser().bot) return
+        await data.LoadDbData()
         const prefix = "!"
         const content = data.GetContent().toLowerCase()
 
@@ -45,7 +65,6 @@ export class MessageCreate implements Event {
 
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
-        await loading
         try { 
             const command = new commandData(data)
             command.Handle()

@@ -1,8 +1,9 @@
-import { ColorResolvable } from "discord.js"
-import { Collection, ObjectId } from "mongodb"
+import { ColorResolvable, User as DiscordUser } from "discord.js"
+import { ObjectId } from "mongodb"
 import { db } from "./Main"
+import { RawUser } from "../RawUser"
 
-export class User {
+export class User extends RawUser {
     public _id: ObjectId
     public username: string
     public blacklisted: boolean
@@ -21,12 +22,19 @@ export class User {
     public settings: {
         missesTheme: string
     }
-    private collection: Collection
-    constructor() {
-        this.collection = db.collection("users")
+
+    constructor(user: DiscordUser) {
+        super(user)
     }
 
-    public LoadUser(_id: string) {
-
+    public async LoadUser() {
+        const user = await db.collection("users").findOne({
+            _id: new ObjectId(this.id)
+        })
+        if(!user) return false
+        for (const key in user) {
+            this[key] = user[key]
+        }
+        return true
     }
 }
