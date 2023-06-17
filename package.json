@@ -4,14 +4,22 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --detectOpenHandles",
     "dev": "ts-node-dev --no-warnings --respawn --transpile-only --poll --watch src ./src/index.ts"
   },
   "keywords": [],
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@jest/globals": "^29.5.0",
+    "@types/jest": "^29.5.1",
     "@types/node": "^18.15.11",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.2"
@@ -27,6 +35,9 @@
   },
   "_moduleAliases": {
     "@src": "./src",
-    "@class": "./src/class"
+    "@class": "./src/class",
+    "@osu/*": "./src/class/api/osu",
+    "@database/*": "./src/class/database",
+    "@commands/*": "./src/commands"
   }
 }

@@ -2,6 +2,7 @@ import { Client as DiscordClient } from "discord.js"
 import { EventEmitter } from "./EventEmitter";
 import { Logger } from "./Logger";
 import { CommandLoader } from "./CommandLoader";
+import { Connect } from "./database/Main";
 export class Client extends DiscordClient {
     public EventEmitter: EventEmitter
     constructor() {
@@ -15,6 +16,7 @@ export class Client extends DiscordClient {
 
     public async Start(token: string) {
         Logger.Info(`Starting Client`)
+        await Connect()
         await super.login(token)
         Logger.Info(`Client Started`)
     }

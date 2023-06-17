@@ -1,3 +1,4 @@
+
 {
 	"compilerOptions": {
 		"lib": ["ESNext"],
@@ -13,12 +14,12 @@
 		"skipLibCheck": true,
 		"skipDefaultLibCheck": true,
 		"resolveJsonModule": true,
-		"typeRoots": [
-			"./src/types/proto"
-		],
 		"paths": {
 			"@src/*": ["./src/*"],
-			"@class/*": ["./src/class/*"]
+			"@class/*": ["./src/class/*"],
+			"@osu/*": ["./src/class/api/osu/*"],
+			"@database/*": ["./src/class/database/*"],
+			"@commands/*": ["./src/commands/*"],
 		}
 	},
 	"include": ["src", "**/*.d.ts"],

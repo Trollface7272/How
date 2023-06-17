@@ -152,7 +152,7 @@ export namespace Profile {
         website: string | null
         country: Country
         cover: Cover
-        constructor(profile: FromIds) {
+        constructor(profile: Base) {
             super(profile)
         }
     }
@@ -180,7 +180,7 @@ export namespace Profile {
         statistics: Statistics
         support_level: 0 | 1 | 2 | 3
         user_achievements: Achievement[]
-        constructor(profile: FromIds) {
+        constructor(profile: FromId) {
             super(profile)
         }
     }
@@ -190,7 +190,7 @@ export namespace Profile {
         statistics_rulesets?: unknown
         unread_pm_count?: number
         user_preferences?: unknown
-        constructor(profile: FromIds) {
+        constructor(profile: Self) {
             super(profile)
         }
     }

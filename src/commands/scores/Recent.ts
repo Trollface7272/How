@@ -2,6 +2,7 @@ import { CommandAbstract, CommandDataAbstract, CommandResponseCodes } from "@src
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
+import { Score } from "@src/class/api/osu/Score";
 
 interface args {
     Gamemode?: 0 | 1 | 2 | 3
