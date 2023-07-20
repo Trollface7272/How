@@ -4,14 +4,7 @@ import { Profile } from "./Profile"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
 
-interface Statistics {
-    count_50: number
-    count_100: number
-    count_300: number
-    count_geki: number
-    count_katu: number
-    count_miss: number
-}
+
 
 interface Weight {
     percentage: number
@@ -27,6 +20,14 @@ interface UserAttributes {
 }
 
 export namespace Score {
+    export interface Statistics {
+        count_50: number
+        count_100: number
+        count_300: number
+        count_geki: number
+        count_katu: number
+        count_miss: number
+    }
     export class BaseScore {
         index: number
         id: number

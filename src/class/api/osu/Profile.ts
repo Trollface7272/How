@@ -129,6 +129,7 @@ export namespace Profile {
         }
         constructor(profile: FromIds) {
             super(profile)
+            Object.assign(this, profile)
         }
     }
     export class Base extends Compact {
@@ -154,6 +155,7 @@ export namespace Profile {
         cover: Cover
         constructor(profile: Base) {
             super(profile)
+            Object.assign(this, profile)
         }
     }
     export class FromId extends Base {
@@ -182,6 +184,7 @@ export namespace Profile {
         user_achievements: Achievement[]
         constructor(profile: FromId) {
             super(profile)
+            Object.assign(this, profile)
         }
     }
     export class Self extends FromId {
@@ -192,6 +195,7 @@ export namespace Profile {
         user_preferences?: unknown
         constructor(profile: Self) {
             super(profile)
+            Object.assign(this, profile)
         }
     }
     export interface KudosuHistory {

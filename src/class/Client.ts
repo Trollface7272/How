@@ -3,6 +3,7 @@ import { EventEmitter } from "./EventEmitter";
 import { Logger } from "./Logger";
 import { CommandLoader } from "./CommandLoader";
 import { Connect } from "./database/Main";
+import { EmojiFactory } from "./Emojis";
 export class Client extends DiscordClient {
     public EventEmitter: EventEmitter
     constructor() {
@@ -22,6 +23,8 @@ export class Client extends DiscordClient {
     }
 
     private async OnStart() {
+        Logger.Info(`Loading Emojis`)
+        await EmojiFactory.LoadAllEmojis(this)
         Logger.Info(`Creating Event Emitter`)
         this.EventEmitter = new EventEmitter(this)
     }

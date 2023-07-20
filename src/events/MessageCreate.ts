@@ -11,15 +11,77 @@ import { Guild } from "@src/class/database/Guild";
 export class MessageCreateData implements EventData, MessageEventData {
     private _user: User
     private _guild: Guild
+    private args: string[]
+
     public get user() {
         return this._user
     }
     public get guild() {
         return this._guild
     }
+
     constructor(
         private message: Message
-    ) {}
+    ) {
+        this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
+        this.args.shift()
+    }
+    public GetSpecific(): number[] {
+        const idxs = this.args.map((arg, index) => {
+            const num = Number(arg)
+            if (isNaN(num) || num > 100 || num < 1) return null
+            return index
+        }).filter(e => e !== null)
+        
+        const out = []
+        for (const index of idxs) {
+            const num = Number(this.args[index])
+            out.push(num)
+            this.args.slice(index, 1)
+        }
+        return out
+    }
+    public GetCommand(): string {
+        return this.GetContent().split(" ")[0]
+    }
+    public GetUsername(): string {
+        return this.args.join(" ")
+    }
+
+    public GetString(key: string, aliases: string[]): string {
+        aliases.push(key)
+        for (const alias of aliases) {
+            const index = this.args.findIndex((arg) => arg === alias)
+            if (index === -1) return null
+            const val = this.args[index + 1]
+            if (val == null) return null
+            this.args.splice(index, 2)
+            return val
+        }
+    }
+
+    public GetNumber(key: string, aliases: string[]): number {
+        aliases.push(key)
+        for (const alias of aliases) {
+            const index = this.args.findIndex((arg) => arg === alias)
+            if (index === -1) return null
+            const val = Number(this.args[index + 1])
+            if (isNaN(val) || val == null) return null
+            this.args.splice(index, 2)
+            return val
+        }
+    }
+
+    public GetBoolean(key: string, aliases: string[]): boolean {
+        aliases.push(key)
+        for (const alias of aliases) {
+            const index = this.args.findIndex((arg) => arg === alias)
+            if (index === -1) return false
+            this.args.splice(index, 1)
+            return true
+        }
+    }
+
     public async LoadDbData(): Promise<unknown> {
         const loading: Promise<unknown>[] = []
 
@@ -65,7 +127,7 @@ export class MessageCreate implements Event {
 
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
-        try { 
+        try {
             const command = new commandData(data)
             command.Handle()
         } catch (err) {
@@ -75,5 +137,5 @@ export class MessageCreate implements Event {
 
         return 0
     }
-    
+
 }

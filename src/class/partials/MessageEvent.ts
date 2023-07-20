@@ -28,4 +28,28 @@ export abstract class MessageEventData {
     public async LoadDbData(userId: string, guildId: string): Promise<unknown> {
         throw Event.ReturnCode.Unimplemented
     }
+
+    public GetBoolean(key: string, aliases: string[]): boolean {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetNumber(key: string, aliases: string[]): number {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetString(key: string, aliases: string[]): string {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetUsername(): string {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetCommand(): string {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetSpecific(): number[] {
+        throw Event.ReturnCode.Unimplemented
+    }
 }

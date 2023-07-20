@@ -14,6 +14,7 @@ declare global {
             LOG_CHANNEL: string
             APPLICATION_ID: string
             DIFFICULTY_EMOTES_SERVER: string
+            ASSETS_PATH: string
         }
     }
 }

@@ -3,10 +3,20 @@ import { OAuth, OAuthGenerator } from "./OAuth"
 import axios from "axios"
 import { Gamemode } from "./MiscTypes"
 import { Profile } from "./Profile"
+import { Score } from "./Score"
+import { Endpoints } from "./Endpoints"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
     MissingIdentifyScope
+}
+
+const UsernameToIdCache = new Map<string, number>()
+const IdToUsernameCache = new Map<number, string>()
+
+const setCache = (id: number, username: string) => {
+    UsernameToIdCache.set(username, id)
+    IdToUsernameCache.set(id, username)
 }
 
 export class Fetcher {
@@ -37,8 +47,43 @@ export class Fetcher {
     }) {
         if (!this.isUser) throw OsuFetcherErrors.UserNotLinked
         if (!this.oauth.scope.includes("identify")) throw OsuFetcherErrors.MissingIdentifyScope
-        const resp = await this.axios.get(`/me/${Gamemode}`)
-        return new Profile.Self(resp.data as unknown as Profile.Self)
+        const resp = await this.axios.get(Endpoints.self(Gamemode))
+        const profile = resp.data as Profile.Self
+        setCache(profile.id, profile.username)
+        return new Profile.Self(profile)
+    }
+
+    public async GetProfile({ Gamemode, Username }: {
+        Gamemode: Gamemode,
+        Username: string
+    }) {
+        const resp = await this.axios.get(Endpoints.profile(Gamemode, Username))
+        const profile = resp.data as Profile.FromId
+        setCache(profile.id, profile.username)
+        return new Profile.FromId(profile)
+    }
+
+    public async GetUserScores({ Gamemode, Username, Limit, Type, Fails, Offset, Id }: {
+        Gamemode: Gamemode,
+        Type: "best" | "recent" | "firsts" | "pinned",
+        Username?: string,
+        Id?: number,
+        Limit?: number,
+        Offset?: number,
+        Fails?: boolean
+    }) {
+        if (!Id && Username) {
+            UsernameToIdCache.has(Username) ? Id = UsernameToIdCache.get(Username) : Id = (await this.GetProfile({ Gamemode, Username })).id
+        }
+        const resp = await this.axios.get(Endpoints.userScores(Id, Type), {
+            params: {
+                limit: Limit,
+                include_fails: Fails,
+                offset: Offset
+            }
+        })
+        const scores = resp.data as Score.Recent[]
+        return scores
     }
 
 }
