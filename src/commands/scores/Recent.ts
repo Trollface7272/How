@@ -7,7 +7,7 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Gamemode } from "@src/class/api/osu/MiscTypes";
 import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { EmojiFactory } from "@src/class/Emojis";
-import { FormatCombo, FormatHits, FormatProgress } from "@src/Utils";
+import { Escape, FormatCombo, FormatHits, FormatProgress } from "@src/Utils";
 import { EmbedBuilder, InteractionReplyOptions, MessageReplyOptions } from "discord.js";
 
 interface args {
@@ -60,13 +60,32 @@ class Recent implements CommandAbstract {
         const client = this.data.GetClient()
         const user = this.data.GetUser()
         const response: InteractionReplyOptions | MessageReplyOptions = {}
-        const { Username, Id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page, Scores } = this.data.GetComandArgs()
+        const { Username, Id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.data.GetComandArgs()
+        let Page = _Page
+        if (Specific.length == 1) {
+            Page = Specific[0]
+            Specific.shift()
+        }
 
         const fetcher = await Fetcher.Create(user.id)
-        const scores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent" })
+        const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent" })
 
+        if (allScores.length == 0) return this.noScoresFound(Username, response)
+
+        if (List) {
+            const scores = Specific.map(i => allScores[i])
+            if (scores.length == 0) return this.noScoresFound(Username, response)
+
+            this.renderMultipleScores(scores, response)
+        }
 
         await this.data.Reply(response)
+        return CommandResponseCodes.OK
+    }
+
+    private async noScoresFound(username: string, resp: InteractionReplyOptions | MessageReplyOptions) {
+        resp.content = `${username} has no recent scores.`
+        await this.data.Reply(resp)
         return CommandResponseCodes.OK
     }
 
@@ -80,10 +99,23 @@ class Recent implements CommandAbstract {
         ]
         if (rank == "F")
             description.push(`**Map Completion:** ${FormatProgress(mode, statistics, beatmap)}`)
-        
-
     }
 
+    private renderMultipleScores(scores: Score.Recent[], response: InteractionReplyOptions | MessageReplyOptions, {rank}: {rank?: number}) {
+        scores.map(score => {
+            const { index, rank, pp, accuracy, replay, statistics, score: score_num, beatmapset: { title }, beatmap: {version, url, difficulty_rating} } = score
+            const mods = score.mods.length == 0 ? `No Mod` : score.mods.join("")
+            const description = [
+                `**${index + 1}. [${Escape(title)} [${Escape(version)}]](${url}) +${mods}** [${difficulty_rating.roundFixed(2)}★]\n`,
+                `▸ ${EmojiFactory.GetEmoji(`Ranking${rank}`)} ▸ **${pp.toFixed(3)}pp**/${pp.roundFixed(3)}pp ▸ ${(accuracy * 100).roundFixed(2)}%${rank ? ` ▸ ${formatRank(rank, replay, score.best_id, score.mode)}` : ""}\n`,
+                `▸ ${score_num.toLocaleString()} ▸ ${GetCombo(score.max_combo, attributes.max_combo, score.mode_int)} ▸ [${GetHits(statistics, score.mode_int)}]\n`,
+                `▸ Score Set ${new Date(score.created_at).toDiscordToolTip()}`
+            ]
+
+            if (score.rank === "F") description += `\n**▸ Map Completion:** ${CalculateProgress(score.statistics, { circles: score.beatmap.count_circles, sliders: score.beatmap.count_sliders, spinners: score.beatmap.count_spinners }, score.mode_int)}%`
+            return description
+        })
+    }
 }
 
 CommandEmitterInstance.AddCommand(Recent, Recent.names)

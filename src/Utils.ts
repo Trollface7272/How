@@ -1,3 +1,4 @@
+import { escapeMarkdown } from "discord.js"
 import { Logger } from "./class/Logger"
 import { Beatmap } from "./class/api/osu/Beatmap"
 import { Gamemode } from "./class/api/osu/MiscTypes"
@@ -34,7 +35,7 @@ export const FormatHits = ({ count_300, count_100, count_50, count_geki, count_k
     }
 }
 
-export const FormatProgress = (gamemode: Gamemode, {count_300, count_100, count_50, count_geki, count_katu, count_miss}: Score.Statistics, {count_circles, count_sliders, count_spinners}: Beatmap.Base) => {
+export const FormatProgress = (gamemode: Gamemode, { count_300, count_100, count_50, count_geki, count_katu, count_miss }: Score.Statistics, { count_circles, count_sliders, count_spinners }: Beatmap.Base) => {
     switch (gamemode) {
         case "osu":
         case "taiko":
@@ -47,4 +48,8 @@ export const FormatProgress = (gamemode: Gamemode, {count_300, count_100, count_
             Logger.Error(`Unknown gamemode: ${gamemode}`)
             return "Unknown"
     }
+}
+
+export const Escape = (inp: string) => {
+    return escapeMarkdown(inp, { escape: false })
 }

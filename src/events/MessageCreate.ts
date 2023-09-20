@@ -32,10 +32,10 @@ export class MessageCreateData implements EventData, MessageEventData {
             if (isNaN(num) || num > 100 || num < 1) return null
             return index
         }).filter(e => e !== null)
-        
+
         const out = []
         for (const index of idxs) {
-            const num = Number(this.args[index])
+            const num = Number(this.args[index]) - 1
             out.push(num)
             this.args.slice(index, 1)
         }

@@ -20,9 +20,9 @@ export class InteractionCreateData implements EventData, MessageEventData {
 
     constructor(
         private interaction: Interaction
-    ) {}
+    ) { }
     public GetSpecific(): number[] {
-        return this.GetString("specific").split(",").map(e => Number(e))
+        return this.GetString("specific").split(",").map(e => Number(e) - 1)
     }
     public GetCommand(): string {
         return (this.interaction as ChatInputCommandInteraction).commandName
@@ -69,14 +69,14 @@ export class InteractionCreateData implements EventData, MessageEventData {
         return new RawGuild(this.interaction.guild)
     }
 
-    public async Reply(msg: ReplyOptions): Promise<Message<boolean>|InteractionResponse> {
+    public async Reply(msg: ReplyOptions): Promise<Message<boolean> | InteractionResponse> {
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton())
             return this.interaction.message.edit(msg as MessageEditOptions)
         if (this.interaction.isCommand()) {
             if (this.interaction.replied) return
             return this.interaction.reply(msg as InteractionReplyOptions)
         }
-        
+
     }
 }
 
@@ -88,5 +88,5 @@ export class InteractionCreate implements Event {
         await loading
         return Event.ReturnCode.Unimplemented
     }
-    
+
 }
