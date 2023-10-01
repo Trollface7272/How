@@ -1,3 +1,4 @@
+import { SlashCommandBuilder } from "discord.js"
 import { MessageEventData } from "./MessageEvent"
 
 export enum CommandResponseCodes {
@@ -23,7 +24,9 @@ export abstract class CommandAbstract {
             throw new Error("Cannot instanciate abstract class")
     }
 
-    public Handle() {
+    public static readonly interactionData?: SlashCommandBuilder = null
+
+    public Handle(): Promise<number>|number {
         throw new Error("Not Implemented")
     }
 }

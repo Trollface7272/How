@@ -7,6 +7,7 @@ import { Logger } from "@src/class/Logger";
 import { Client } from "@src/class/Client";
 import { User } from "@src/class/database/User";
 import { Guild } from "@src/class/database/Guild";
+import { CommandResponseCodes } from "@src/class/partials/Command";
 
 export class MessageCreateData implements EventData, MessageEventData {
     private _user: User
@@ -129,7 +130,14 @@ export class MessageCreate implements Event {
         if (!commandData) return 0
         try {
             const command = new commandData(data)
-            command.Handle()
+            const code = await command.Handle()
+            switch(code) {
+                case CommandResponseCodes.OK:
+                    return Event.ReturnCode.OK
+                default:
+                    console.log("Unknown CommandResponseCode", code)
+                    break;
+            }
         } catch (err) {
             Logger.Error(err)
             Logger.Trace()

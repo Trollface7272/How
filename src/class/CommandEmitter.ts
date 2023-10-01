@@ -3,7 +3,7 @@ import { Logger } from "./Logger";
 import { CommandAbstract } from "./partials/Command";
 import { MessageEventData } from "./partials/MessageEvent";
 
-type CommandClass = new (data: MessageEventData) => CommandAbstract
+type CommandClass = (new (data: MessageEventData) => CommandAbstract) & typeof CommandAbstract
 
 export class CommandEmitter {
     private commands: Map<string, CommandClass> = new Map<string, CommandClass>()
@@ -22,6 +22,10 @@ export class CommandEmitter {
 
     public GetCommandCount(): number {
         return this.commands.size
+    }
+
+    public GetAllCommands() {
+        return Array.from(this.commands.values())
     }
 }
 Logger.Info(`Creating Command Emitter`)
