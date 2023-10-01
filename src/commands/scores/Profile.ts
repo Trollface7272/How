@@ -4,11 +4,11 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Profile as OsuProfile } from "@src/class/api/osu/Profile";
-import { ActionRowBuilder, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, ReplyOptions, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
-import { Score } from "@src/class/api/osu/Score";
+import { ActionRowBuilder, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
 import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { GetFlag } from "@src/Utils";
+import { TextRenderer } from "@src/class/renderer/Text";
 
 interface args {
     username: string
@@ -48,14 +48,24 @@ class Profile implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        const {
+
+        let {
             mode, username
         } = this.data.GetComandArgs()
 
+        if (this.data.IsInteraction()) {
+            const interaction = this.data.GetInteraction()
+            if (interaction.isAnySelectMenu()) {
+                username = interaction.customId.split(";")[1]
+                mode = interaction.values[0] as "osu" | "mania" | "fruits" | "fruits"
+            }
+        }
+
+
         const fetcher = await Fetcher.Create(user.id)
         const profile = username ? await fetcher.GetProfile({ Username: username, Gamemode: mode }) : await fetcher.GetOwnProfile({ Gamemode: "osu" })
-        
-        const replyOptions = this.RenderProfile({ profile })
+
+        const replyOptions = this.RenderProfile({ profile, mode })
 
         await this.data.Reply(replyOptions)
 
@@ -63,28 +73,27 @@ class Profile implements CommandAbstract {
         return CommandResponseCodes.OK
     }
 
-    private RenderProfile({ profile }: { profile: OsuProfile.FromId }) {
+    private RenderProfile({ profile, mode }: { profile: OsuProfile.FromId, mode: "osu" | "mania" | "fruits" | "fruits" }) {
         const embed = new EmbedBuilder()
-        const { statistics, playmode, username, country_code, is_online } = profile
+        const { statistics, username, country_code, is_online } = profile
         const { global_rank, level, pp, hit_accuracy: accuracy, ranked_score, total_score, grade_counts, play_count, play_time, country_rank } = statistics
         const { current: currentLevel, progress: levelProgress } = level
 
         const countryRank = !country_rank ? "" : ` (${country_code}#${country_rank})`
         const globalRank = !global_rank ? "-" : `${global_rank.toLocaleString("en-US")}`
 
-        const description = [
-            `▸ **Rank:** #${globalRank}${countryRank}`,
-            `▸ **Level:** ${currentLevel} (${levelProgress.toFixed(2)}%)`,
-            `▸ **Performance:** ${pp.toFixed(2)}pp`,
-            `▸ **Accuracy:** ${accuracy.roundFixed(2)}%`,
-            `▸ **Score:** ${ranked_score.asScientificNotation()} (${total_score.asScientificNotation()})`,
-            `▸ **Ranks:** ${this.RenderGrades(grade_counts)}`,
-            `▸ **Playcount:** ${play_count.toLocaleString("en-US")} (${Math.round(play_time / 3600)} hours)`,
-        ].join("\n")
+        const description = TextRenderer.render("profile", {
+            globalRank: globalRank, countryRank: countryRank,
+            currentLevel: currentLevel, levelProgress: (levelProgress % 1 !== 0) ? levelProgress.roundFixed(2) : levelProgress,
+            pp: pp.roundFixed(2), accuracy: accuracy.roundFixed(2),
+            rankedScore: ranked_score.asScientificNotation(), totalScore: total_score.asScientificNotation(),
+            grades: this.RenderGrades(grade_counts),
+            playCount: play_count.toLocaleString("en-US"), playTime: Math.round(play_time / 3600),
+        })
 
         embed
             .setAuthor({
-                name: `${GamemodeNames[playmode]} Profile for ${username}`,
+                name: `${GamemodeNames[mode]} Profile for ${username}`,
                 iconURL: GetFlag(country_code),
                 url: `https://osu.ppy.sh/users/${profile.id}`
             }).setDescription(description)
@@ -93,7 +102,7 @@ class Profile implements CommandAbstract {
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`profile;${profile.id}`)
             .setPlaceholder("Select a gamemode")
-            .setOptions(this.GamemodeSelectMenuOptions(playmode))
+            .setOptions(this.GamemodeSelectMenuOptions(mode))
 
         const row = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(selectMenu)
 
@@ -110,19 +119,16 @@ class Profile implements CommandAbstract {
                 .setDefault(currentMode === "osu")
                 .setLabel(GamemodeNames.osu)
                 .setValue("osu")
-                .setDescription("Standard")
                 .setEmoji(EmojiFactory.GetEmoji("ModeOsu")),
             new StringSelectMenuOptionBuilder()
                 .setDefault(currentMode === "fruits")
                 .setLabel(GamemodeNames.fruits)
                 .setValue("fruits")
-                .setDescription("Fruits")
                 .setEmoji(EmojiFactory.GetEmoji("ModeFruits")),
             new StringSelectMenuOptionBuilder()
                 .setDefault(currentMode === "taiko")
                 .setLabel(GamemodeNames.taiko)
                 .setValue("taiko")
-                .setDescription("Taiko")
                 .setEmoji(EmojiFactory.GetEmoji("ModeTaiko")),
             new StringSelectMenuOptionBuilder()
                 .setDefault(currentMode === "mania")

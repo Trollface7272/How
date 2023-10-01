@@ -1,11 +1,14 @@
 import { Event, EventData } from "@src/class/partials/Event";
-import { ChatInputCommandInteraction, CommandInteraction, Interaction, InteractionReplyOptions, InteractionResponse, Message, MessageEditOptions, MessageInteraction, ReplyOptions } from "discord.js";
+import { AnySelectMenuInteraction, ChatInputCommandInteraction, CommandInteraction, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, MessageInteraction, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Client } from "@src/class/Client";
 import { RawGuild } from "@src/class/RawGuild";
 import { User } from "@src/class/database/User";
 import { Guild } from "@src/class/database/Guild";
+import { CommandEmitterInstance } from "@src/class/CommandEmitter";
+import { Logger } from "@src/class/Logger";
+import { CommandResponseCodes } from "@src/class/partials/Command";
 
 export class InteractionCreateData implements EventData, MessageEventData {
     private _user: User
@@ -21,11 +24,28 @@ export class InteractionCreateData implements EventData, MessageEventData {
     constructor(
         private interaction: Interaction
     ) { }
+
+    public GetInteraction(): Interaction {
+        return this.interaction
+    }
+
+    public GetInteractionType(): InteractionType {
+        return this.interaction.type
+    }
+
+    public IsInteraction(): boolean {
+        return true
+    }
+
     public GetSpecific(): number[] {
         return this.GetString("specific").split(",").map(e => Number(e) - 1)
     }
+
     public GetCommand(): string {
-        return (this.interaction as ChatInputCommandInteraction).commandName
+        if (this.interaction.isChatInputCommand())
+            return this.interaction.command.name
+        if (this.interaction.isAnySelectMenu())
+            return this.interaction.customId.split(";")[0]
     }
 
     public GetUsername(): string {
@@ -33,15 +53,18 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public GetString(key: string): string {
-        return (this.interaction as ChatInputCommandInteraction).options.getString(key)
+        if (!this.interaction.isChatInputCommand()) return null
+        return this.interaction.options.getString(key)
     }
 
     public GetNumber(key: string): number {
-        return (this.interaction as ChatInputCommandInteraction).options.getNumber(key)
+        if (!this.interaction.isChatInputCommand()) return null
+        return this.interaction.options.getNumber(key)
     }
 
     public GetBoolean(key: string): boolean {
-        return (this.interaction as ChatInputCommandInteraction).options.getBoolean(key)
+        if (!this.interaction.isChatInputCommand()) return null
+        return this.interaction.options.getBoolean(key)
     }
 
     public async LoadDbData(): Promise<unknown> {
@@ -71,7 +94,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
 
     public async Reply(msg: ReplyOptions): Promise<Message<boolean> | InteractionResponse> {
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton())
-            return this.interaction.message.edit(msg as MessageEditOptions)
+            return this.interaction.update(msg as MessageEditOptions)
         if (this.interaction.isCommand()) {
             if (this.interaction.replied) return
             return this.interaction.reply(msg as InteractionReplyOptions)
@@ -82,10 +105,30 @@ export class InteractionCreateData implements EventData, MessageEventData {
 
 export class InteractionCreate implements Event {
     public async Handle(data: InteractionCreateData): Promise<Event.ReturnCode> {
-        const loading = data.LoadDbData()
+        await data.LoadDbData()
+
+        const command = data.GetCommand()
+
+        console.log(command)
+
+        const commandData = CommandEmitterInstance.GetCommand(command)
+        if (!commandData) return 0
+        try {
+            const command = new commandData(data)
+            const code = await command.Handle()
+            switch (code) {
+                case CommandResponseCodes.OK:
+                    return Event.ReturnCode.OK
+                default:
+                    console.log("Unknown CommandResponseCode", code)
+                    break;
+            }
+        } catch (err) {
+            Logger.Error(err)
+            Logger.Trace()
+        }
 
 
-        await loading
         return Event.ReturnCode.Unimplemented
     }
 

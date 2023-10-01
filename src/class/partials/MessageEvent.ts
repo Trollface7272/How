@@ -1,4 +1,4 @@
-import { InteractionReplyOptions, InteractionResponse, Message, MessageReplyOptions } from "discord.js";
+import { Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageReplyOptions } from "discord.js";
 import { Client } from "../Client";
 import { RawUser } from "../RawUser";
 import { Event } from "./Event";
@@ -50,6 +50,18 @@ export abstract class MessageEventData {
     }
 
     public GetSpecific(): number[] {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public IsInteraction(): boolean {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetInteractionType(): InteractionType {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetInteraction(): Interaction {
         throw Event.ReturnCode.Unimplemented
     }
 }

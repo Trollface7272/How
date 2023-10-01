@@ -1,6 +1,6 @@
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Event, EventData } from "@src/class/partials/Event";
-import { Message, ReplyOptions } from "discord.js";
+import { Interaction, InteractionType, Message, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Logger } from "@src/class/Logger";
@@ -27,6 +27,19 @@ export class MessageCreateData implements EventData, MessageEventData {
         this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
     }
+    
+    public GetInteraction(): Interaction {
+        throw null
+    }
+
+    public GetInteractionType(): InteractionType {
+        return null
+    }
+
+    public IsInteraction(): boolean {
+        return false
+    }
+
     public GetSpecific(): number[] {
         const idxs = this.args.map((arg, index) => {
             const num = Number(arg)

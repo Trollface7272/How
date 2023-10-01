@@ -34,6 +34,7 @@ export class Client extends DiscordClient {
     }
 
     private async LoadInteractions() {
+        return
         const commandClasses = CommandEmitterInstance.GetAllCommands()
         const commands = commandClasses.map(cmd => cmd.interactionData).filter(cmd => cmd !== null)
 
