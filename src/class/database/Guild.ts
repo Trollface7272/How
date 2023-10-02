@@ -5,6 +5,7 @@ import { db } from "./Main";
 
 export class Guild extends RawGuild {
     public _id: ObjectId
+    public id: string
     public name: string
     public prefix: string
     public owner: string
@@ -13,9 +14,11 @@ export class Guild extends RawGuild {
     public commands: number
     public embedColor: string
 
+
     constructor(guild?: DiscordGuild | Document) {
         if (guild instanceof DiscordGuild) {
             super(guild || {} as DiscordGuild)
+            this.LoadDefault(guild)
         } else {
             super({} as DiscordGuild)
             for (const key in guild) {
@@ -24,22 +27,53 @@ export class Guild extends RawGuild {
         }
     }
 
+    private LoadDefault(guild: DiscordGuild) {
+        this._id = new ObjectId()
+        this.id = guild.id
+        this.name = guild.name
+        this.prefix = "!"
+        this.owner = guild.ownerId
+        this.messages = 0
+        this.commands = 0
+        this.embedColor = "Random"
+    }
+
     public async LoadGuild() {
         const guild = await db.collection("guilds").findOne({
-            _id: this.id as unknown as ObjectId
+            id: this.id
         })
-        if(!guild) return false
+        if(!guild) {
+            await this.Save()
+            return true
+        }
         for (const key in guild) {
             this[key] = guild[key]
         }
         return true
+    }
+
+    public async Save() {
+        return db.collection("guilds").updateOne({
+            _id: this._id
+        }, {
+            $set: {
+                id: this.id,
+                name: this.name,
+                prefix: this.prefix,
+                owner: this.owner,
+                ownerUsername: this.ownerUsername,
+                messages: this.messages,
+                commands: this.commands,
+                embedColor: this.embedColor,
+            }
+        }, { upsert: true })
     }
 }
 
 class cGuildFactory {
     public async GetGuild(id: string) {
         const guild = await db.collection("guilds").findOne({
-            _id: id as unknown as ObjectId
+            id: id
         })
         if(!guild) return false
         return new Guild(guild)

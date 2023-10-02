@@ -1,3 +1,5 @@
+import { Gamemode } from "./MiscTypes"
+
 export namespace Profile {
     //Helper Types
     export interface Kusodu {
@@ -97,6 +99,28 @@ export namespace Profile {
         title: string
     }
 
+    export interface RankHighest {
+        rank: number
+        update: string
+    }
+    
+    export interface EventUser {
+        username: string
+        url: string
+        previousUsername?: string
+    }
+
+    export interface EventBeatmap {
+        title: string
+        url: string
+    }
+
+    export interface EventBeatmapset {
+        title: string
+        url: string
+    }
+
+    export type RecentActivitryType = "achievement" | "beatmapPlaycount" | "beatmapsetApprove" | "beatmapsetDelete" | "beatmapsetRevive" | "beatmapsetUpdate" | "beatmapsetUpload" | "rank" | "rankLost" | "userSupportAgain" | "userSupportFirst" | "userSupportGift" | "usernameChange"
 
     //Api Types
     export class Compact {
@@ -182,6 +206,7 @@ export namespace Profile {
         statistics: Statistics
         support_level: 0 | 1 | 2 | 3
         user_achievements: Achievement[]
+        rank_highest: RankHighest
         constructor(profile: FromId) {
             super(profile)
             Object.assign(this, profile)
@@ -206,5 +231,89 @@ export namespace Profile {
         created_at: string
         giver: Giver
         post: Post
+    }
+
+    export interface RecentActivity {
+        created_at: string
+        id: number
+        type: RecentActivitryType
+    }
+
+    export interface RecentActivityAchievement extends RecentActivity {
+        type: "achievement"
+        achievement: Achievement
+        user: EventUser
+    }
+
+    export interface RecentActivityBeatmapPlaycount extends RecentActivity {
+        type: "beatmapPlaycount"
+        beatmap: EventBeatmap
+        count: number
+    }
+
+    export interface RecentActivityBeatmapsetApprove extends RecentActivity {
+        type: "beatmapsetApprove"
+        approval: "ranked" | "approved" | "qualified" | "loved"
+        beatmapset: EventBeatmapset
+        user: EventUser
+    }
+
+    export interface RecentActivityBeatmapsetDelete extends RecentActivity {
+        type: "beatmapsetDelete"
+        beatmapset: EventBeatmapset
+    }
+
+    export interface RecentActivityBeatmapsetRevive extends RecentActivity {
+        type: "beatmapsetRevive"
+        beatmapset: EventBeatmapset
+        user: EventUser
+    }
+
+    export interface RecentActivityBeatmapsetUpdate extends RecentActivity {
+        type: "beatmapsetUpdate"
+        beatmapset: EventBeatmapset
+        user: EventUser
+    }
+
+    export interface RecentActivityBeatmapsetUpload extends RecentActivity {
+        type: "beatmapsetUpload"
+        beatmapset: EventBeatmapset
+        user: EventUser
+    }
+
+    export interface RecentActivityRank extends RecentActivity {
+        type: "rank"
+        beatmap: EventBeatmap
+        rank: number
+        scoreRank: string
+        user: EventUser
+        mode: Gamemode
+    }
+
+    export interface RecentActivityRankLost extends RecentActivity {
+        type: "rankLost"
+        beatmap: EventBeatmap
+        user: EventUser
+        mode: Gamemode
+    }
+
+    export interface RecentActivityUserSupportAgain extends RecentActivity {
+        type: "userSupportAgain"
+        user: EventUser
+    }
+
+    export interface RecentActivityUserSupportFirst extends RecentActivity {
+        type: "userSupportFirst"
+        user: EventUser
+    }
+
+    export interface RecentActivityUserSupportGift extends RecentActivity {
+        type: "userSupportGift"
+        user: EventUser
+    }
+
+    export interface RecentActivityUsernameChange extends RecentActivity {
+        type: "usernameChange"
+        user: EventUser
     }
 }

@@ -27,7 +27,7 @@ export class MessageCreateData implements EventData, MessageEventData {
         this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
     }
-    
+
     public GetInteraction(): Interaction {
         throw null
     }
@@ -130,7 +130,7 @@ export class MessageCreate implements Event {
     public async Handle(data: MessageCreateData): Promise<Event.ReturnCode> {
         if (data.GetRawUser().bot) return
         await data.LoadDbData()
-        const prefix = "!"
+        const prefix = data.guild.prefix ?? "!"
         const content = data.GetContent().toLowerCase()
 
         if (!content.startsWith(prefix)) return 0

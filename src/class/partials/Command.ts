@@ -3,7 +3,9 @@ import { MessageEventData } from "./MessageEvent"
 
 export enum CommandResponseCodes {
     OK,
-    ErrorReplying
+    ErrorReplying,
+    OsuApiDown,
+    UnknownError
 }
 
 export abstract class CommandDataAbstract {

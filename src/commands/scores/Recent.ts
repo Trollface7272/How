@@ -8,7 +8,7 @@ import { Gamemode } from "@src/class/api/osu/MiscTypes";
 import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { EmojiFactory } from "@src/class/Emojis";
 import { Escape, FormatCombo, FormatHits, FormatProgress } from "@src/Utils";
-import { EmbedBuilder, InteractionReplyOptions, MessageReplyOptions } from "discord.js";
+import { InteractionReplyOptions, MessageReplyOptions } from "discord.js";
 
 interface args {
     Gamemode?: Gamemode

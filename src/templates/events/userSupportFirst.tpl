@@ -1,0 +1,1 @@
+▸ Supported osu! for the first time {{timestamp}}

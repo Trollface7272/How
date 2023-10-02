@@ -86,4 +86,18 @@ export class Fetcher {
         return scores
     }
 
+    public async GetRecentEvents({ id, Limit, Offset}: {
+        id: number,
+        Limit?: number,
+        Offset?: number
+    }) {
+        const resp = await this.axios.get(Endpoints.recentActivity(id), {
+            params: {
+                limit: Limit,
+                offset: Offset
+            }
+        })
+        const history = resp.data as Profile.RecentActivity[]
+        return history
+    }
 }

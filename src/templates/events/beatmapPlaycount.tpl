@@ -1,0 +1,1 @@
+▸ [{{beatmapName}}]({{beatmapUrl}}) achieved {{count}} plays {{timestamp}}

@@ -6,9 +6,6 @@ export class RawUser {
     public get AvatarUrl() {
         return this.user.avatarURL()
     }
-    public get id() {
-        return this.user.id
-    }
     public get bot() {
         return this.user.bot
     }

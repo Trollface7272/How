@@ -53,3 +53,10 @@ export const FormatProgress = (gamemode: Gamemode, { count_300, count_100, count
 export const Escape = (inp: string) => {
     return escapeMarkdown(inp, { escape: false })
 }
+
+export const ButtonEmojis = {
+    Start: "⇇",
+    End: "⇉",
+    Left: "←",
+    Right: "→"
+}

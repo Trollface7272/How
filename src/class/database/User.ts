@@ -20,6 +20,7 @@ type Osu = {
 
 export class User extends RawUser {
     public _id: ObjectId
+    public id: string
     public username: string
     public blacklisted: boolean
     public messages: number
@@ -43,6 +44,7 @@ export class User extends RawUser {
     constructor(user?: DiscordUser | Document) {
         if (user instanceof DiscordUser) {
             super(user || {} as DiscordUser)
+            this.LoadDefault(user)
         } else {
             super({} as DiscordUser)
             for (const key in user) {
@@ -51,11 +53,36 @@ export class User extends RawUser {
         }
     }
 
+    private LoadDefault(user: DiscordUser) {
+        this._id = new ObjectId()
+        this.id = user.id
+        this.username = user.username
+        this.blacklisted = false
+        this.messages = 0
+        this.commands = 0
+        this.interactions = {
+            command: 0,
+            button: 0,
+            dropdown: 0
+        }
+        this.embedColor = "Random"
+        this.firstSeen = new Date()
+        this.lastSeen = new Date()
+        this.knownIps = []
+        this.osuTemp = ""
+        this.settings = {
+            missesTheme: "default"
+        }
+    }
+
     public async LoadUser() {
         const user = await db.collection("users").findOne({
-            _id: this.id as unknown as ObjectId
+            id: this.id
         })
-        if (!user) return false
+        if (!user) {
+            await this.Save()
+            return true
+        }
         for (const key in user) {
             this[key] = user[key]
         }
@@ -76,6 +103,7 @@ export class User extends RawUser {
             _id: this._id
         }, {
             $set: {
+                id: this.id,
                 username: this.username,
                 blacklisted: this.blacklisted,
                 messages: this.messages,
@@ -89,7 +117,7 @@ export class User extends RawUser {
                 settings: this.settings,
                 osu: this.osu
             }
-        })
+        }, { upsert: true })
     }
 }
 
@@ -97,7 +125,7 @@ class cUserFactory {
 
     public async GetUser(id: string) {
         const user = await db.collection("users").findOne({
-            _id: id as unknown as ObjectId
+            id: id
         })
         if (!user) return false
         return new User(user)

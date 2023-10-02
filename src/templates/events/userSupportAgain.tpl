@@ -1,0 +1,1 @@
+▸ Supported osu! {{timestamp}}

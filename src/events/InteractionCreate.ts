@@ -44,7 +44,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
     public GetCommand(): string {
         if (this.interaction.isChatInputCommand())
             return this.interaction.command.name
-        if (this.interaction.isAnySelectMenu())
+        if (this.interaction.isAnySelectMenu() || this.interaction.isButton())
             return this.interaction.customId.split(";")[0]
     }
 
