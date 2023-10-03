@@ -12,6 +12,7 @@ import { TextRenderer } from "@src/class/renderer/Text";
 import { AxiosError } from "axios";
 import { CommandBase } from "@src/class/base/Command";
 import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { Logger } from "@src/class/Logger";
 
 interface args {
   username: string
@@ -65,14 +66,12 @@ class Profile extends CommandBase implements CommandAbstract {
 
     if (this.data.IsInteraction()) {
       const interaction = this.data.GetInteraction()
-      console.log(interaction)
       if (interaction.isAnySelectMenu()) {
         username = interaction.customId.split(";")[1]
         mode = interaction.values[0] as Gamemode
       }
       if (interaction.isButton()) {
         const [_, _username, __, _page] = interaction.customId.split(";")
-        console.log(interaction.customId.split(";"))
         events = true
         page = Number(_page)
         username = _username
@@ -157,7 +156,7 @@ class Profile extends CommandBase implements CommandAbstract {
             return CommandResponseCodes.OsuApiDown
           }
           default:
-            console.log(err)
+            Logger.Error("Profile - ApiError", err)
             return CommandResponseCodes.UnknownError
         }
       }

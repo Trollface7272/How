@@ -109,7 +109,7 @@ export class InteractionCreate implements Event {
 
         const command = data.GetCommand()
 
-        console.log(command)
+        Logger.Info(`Running interaction command ->`, command)
 
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0

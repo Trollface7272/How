@@ -1,12 +1,14 @@
 import { BeatmapSet } from "./BeatmapSet"
 
-interface DifficultyAttributes {
-    max_combo: number
-    star_rating: number
-}
+
 
 type Status = "graveyard" | "wip" | "pending" | "ranked" | "approved" | "qualified" | "loved"
 export namespace Beatmap {
+    export interface DifficultyAttributes {
+        max_combo: number
+        star_rating: number
+    }
+
     export interface StdAttributes extends DifficultyAttributes {
         aim_difficulty: number
         approach_rate: number
@@ -50,6 +52,9 @@ export namespace Beatmap {
 
     }
     export class Base extends Compact {
+        public get lastUpdated() {
+            return new Date(this.last_updated)
+        }
         accuracy: number
         ar: number
         bpm: number
@@ -68,6 +73,7 @@ export namespace Beatmap {
         playcount: string
         ranked: string
         url: string
+        max_combo?: number
         constructor(map: Base) {
             super(map)
         }
@@ -75,7 +81,6 @@ export namespace Beatmap {
     export class FromId extends Base {
         beatmapset: BeatmapSet.Beatmap.FromId
         failtimes: { fail: number[], exit: number[] }
-        max_combo: number
         constructor(map: FromId) {
             super(map)
             this.beatmapset = new BeatmapSet.Beatmap.FromId(this.beatmapset)
@@ -84,11 +89,10 @@ export namespace Beatmap {
     export class FromIds extends Base {
         beatmapset: BeatmapSet.Beatmap.FromIds //With rating
         failtimes: { fail: number[], exit: number[] }
-        max_combo: number
         constructor(map: FromIds) {
             super(map)
             this.beatmapset = new BeatmapSet.Beatmap.FromIds(this.beatmapset)
         }
     }
-    export class Lookup extends FromId {}
+    export class Lookup extends FromId { }
 }

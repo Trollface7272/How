@@ -1,5 +1,7 @@
 import { Beatmap } from "./Beatmap"
 import { BeatmapSet } from "./BeatmapSet"
+import { Fetcher } from "./Fetcher"
+import { PerformanceCalculator, PerformanceContainer } from "./PerformanceCalculator"
 import { Profile } from "./Profile"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
@@ -29,6 +31,9 @@ export namespace Score {
         count_miss: number
     }
     export class BaseScore {
+        public get createdAt() {
+            return new Date(this.created_at)
+        }
         index: number
         id: number
         best_id: number
@@ -52,23 +57,55 @@ export namespace Score {
     }
 
     export class Recent extends BaseScore {
+        performance?: {
+            normal: PerformanceContainer
+            improved?: PerformanceContainer
+        }
+        position?: number
+
         beatmap: Beatmap.Base
         beatmapset: BeatmapSet.Compact
         user: Profile.Compact
         constructor(score: Recent) {
             super(score)
+            Object.assign(this, score)
             this.beatmap = new Beatmap.Base(this.beatmap)
             this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
             this.user = new Profile.Compact(this.user)
         }
+
+        public async fetchPerformance() {
+            const calc = new PerformanceCalculator(this.beatmap, this.mods)
+            this.performance = await calc.Calculate(this)
+        }
+
+        public async fetchPosition(discordUserId: string) {
+            const score = await (await Fetcher.Create(discordUserId)).GetScoreById({ Gamemode: this.mode, id: this.id })
+            this.position = score.rank_global
+        }
     }
 
-    export class Firsts extends Recent { }
+    export class Firsts extends Recent {
+        constructor(score: Firsts) {
+            super(score)
+            Object.assign(this, score)
+        }
+    }
 
-    export class Pinned extends Recent { }
+    export class Pinned extends Recent {
+        constructor(score: Pinned) {
+            super(score)
+            Object.assign(this, score)
+        }
+    }
 
     export class Best extends Recent {
         weight: Weight
+        constructor(score: Best) {
+            super(score)
+            Object.assign(this, score)
+            this.weight = score.weight
+        }
     }
 
     export class LeaderboardScore extends BaseScore {
@@ -120,6 +157,7 @@ export namespace Score {
 
         constructor(score: FromId) {
             super(score)
+            Object.assign(this, score)
             this.beatmap = new Beatmap.Base(this.beatmap)
             this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
             this.user = new Profile.Compact(this.user)

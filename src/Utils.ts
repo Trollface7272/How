@@ -3,6 +3,7 @@ import { Logger } from "./class/Logger"
 import { Beatmap } from "./class/api/osu/Beatmap"
 import { Gamemode } from "./class/api/osu/MiscTypes"
 import { Score } from "./class/api/osu/Score"
+import { exec } from "child_process"
 
 
 export const HandleAsync = async <T, E>(promise: Promise<T>): Promise<[T, E]> => {
@@ -52,6 +53,29 @@ export const FormatProgress = (gamemode: Gamemode, { count_300, count_100, count
 
 export const Escape = (inp: string) => {
     return escapeMarkdown(inp, { escape: false })
+}
+
+export const RunProcess = (command: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        try {
+            exec(command, {}, (err, stdout, stderr) => {
+                if (err) return reject({ err, stderr, stdout })
+                resolve(stdout)
+            })
+        } catch (error) {
+            reject(error)
+        }
+    })
+}
+
+export const ParseJson = <T>(json: string): Promise<[T, null] | [null, SyntaxError]> => {
+    return new Promise((resolve) => {
+        try {
+            resolve([JSON.parse(json), null])
+        } catch (error) {
+            resolve([null, error])
+        }
+    })
 }
 
 export const ButtonEmojis = {

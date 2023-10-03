@@ -19,6 +19,9 @@ const setCache = (id: number, username: string) => {
     IdToUsernameCache.set(id, username)
 }
 
+type GetScoreType = "best" | "recent" | "firsts" | "pinned"
+type GetScoreTypeReturn<T> = T extends "best" ? Score.Best : T extends "recent" ? Score.Recent : T extends "firsts" ? Score.Firsts : T extends "pinned" ? Score.Pinned : never
+
 export class Fetcher {
     public static async Create(userId: string) {
         let isUser = true
@@ -63,30 +66,39 @@ export class Fetcher {
         return new Profile.FromId(profile)
     }
 
-    public async GetUserScores({ Gamemode, Username, Limit, Type, Fails, Offset, Id }: {
+    public async GetUserScores<T extends GetScoreType>({ Gamemode, Username, Limit, Type, Fails, Offset, Id }: {
         Gamemode: Gamemode,
-        Type: "best" | "recent" | "firsts" | "pinned",
+        Type: T,
         Username?: string,
         Id?: number,
         Limit?: number,
         Offset?: number,
         Fails?: boolean
-    }) {
+    }): Promise<GetScoreTypeReturn<T>[]> {
         if (!Id && Username) {
             UsernameToIdCache.has(Username) ? Id = UsernameToIdCache.get(Username) : Id = (await this.GetProfile({ Gamemode, Username })).id
         }
-        const resp = await this.axios.get(Endpoints.userScores(Id, Type), {
+        const resp = await this.axios.get<Score.Best[] | Score.Recent[] | Score.Firsts[] | Score.Pinned[]>(Endpoints.userScores(Id, Type), {
             params: {
                 limit: Limit,
                 include_fails: Fails,
                 offset: Offset
             }
         })
-        const scores = resp.data as Score.Recent[]
-        return scores
+        resp.data.forEach((score, i) => score.index = i)
+        switch (Type) {
+            case "best":
+                return resp.data.map(score => new Score.Best(score)) as GetScoreTypeReturn<T>[]
+            case "recent":
+                return resp.data.map(score => new Score.Recent(score)) as GetScoreTypeReturn<T>[]
+            case "firsts":
+                return resp.data.map(score => new Score.Firsts(score)) as GetScoreTypeReturn<T>[]
+            case "pinned":
+                return resp.data.map(score => new Score.Pinned(score)) as GetScoreTypeReturn<T>[]
+        }
     }
 
-    public async GetRecentEvents({ id, Limit, Offset}: {
+    public async GetRecentEvents({ id, Limit, Offset }: {
         id: number,
         Limit?: number,
         Offset?: number
@@ -99,5 +111,21 @@ export class Fetcher {
         })
         const history = resp.data as Profile.RecentActivity[]
         return history
+    }
+
+    public async GetBeatmapUserScore({User, Beatmap, Gamemode, Mods}: {User: number, Beatmap: number, Gamemode: Gamemode, Mods?: string[]}) {
+        const resp = await this.axios.get(Endpoints.userBeatmapScore(Beatmap, User), {
+            params: {
+                mode: Gamemode,
+                mods: Mods
+            }
+        })
+        return new Score.BeatmapUserScore(resp.data)
+    }
+
+    public async GetScoreById({id, Gamemode}: {id: number, Gamemode: Gamemode}) {
+        const resp = await this.axios.get(Endpoints.scoreById(Gamemode, id))
+        console.log(resp.data)
+        return new Score.FromId(resp.data)
     }
 }

@@ -137,7 +137,7 @@ export class MessageCreate implements Event {
 
         const [command, ...args] = content.substring(prefix.length).split(" ")
 
-        console.log(command)
+        Logger.Info(`Running command ->`, command)
 
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
