@@ -1,17 +1,16 @@
-import { CommandAbstract, CommandDataAbstract, CommandResponseCodes } from "@src/class/partials/Command";
-import { MessageEventData } from "@src/class/partials/MessageEvent";
-import { CommandData } from "@src/class/base/CommandData";
-import { CommandEmitterInstance } from "@src/class/CommandEmitter";
-import { Score } from "@src/class/api/osu/Score";
-import { Fetcher } from "@src/class/api/osu/Fetcher";
-import { Gamemode } from "@src/class/api/osu/MiscTypes";
-import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts";
-import { EmojiFactory } from "@src/class/Emojis";
-import { Escape, FormatCombo, FormatHits, FormatProgress, GetFlag, HandleAsync } from "@src/Utils";
-import { EmbedBuilder, InteractionReplyOptions, MessageReplyOptions } from "discord.js";
-import { TextRenderer } from "@src/class/renderer/Text";
-import NodeCache from "node-cache";
-import { AxiosError } from "axios";
+import { CommandAbstract, CommandDataAbstract, CommandResponseCodes } from "@src/class/partials/Command"
+import { MessageEventData } from "@src/class/partials/MessageEvent"
+import { CommandData } from "@src/class/base/CommandData"
+import { CommandEmitterInstance } from "@src/class/CommandEmitter"
+import { Score } from "@src/class/api/osu/Score"
+import { Fetcher } from "@src/class/api/osu/Fetcher"
+import { Gamemode } from "@src/class/api/osu/MiscTypes"
+import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts"
+import { EmojiFactory } from "@src/class/Emojis"
+import { FormatCombo, FormatHits, FormatProgress, GetFlag, HandleAsync } from "@src/Utils"
+import { EmbedBuilder, InteractionReplyOptions, MessageReplyOptions } from "discord.js"
+import { TextRenderer } from "@src/class/renderer/Text"
+import NodeCache from "node-cache"
 
 interface args {
     Gamemode?: Gamemode
@@ -101,7 +100,7 @@ class Recent implements CommandAbstract {
 
             const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)])
             await loading
-            this.data.Reply(this.renderSingleBestScore({score}))
+            this.data.Reply(this.renderSingleBestScore({ score }))
             return CommandResponseCodes.OK
         }
         const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent" })
@@ -146,7 +145,6 @@ class Recent implements CommandAbstract {
             .setColor(this.data.GetEmbedColor())
 
         const description = scores.map(score => {
-            //console.log(score)
             const { index, mods, rank: grade, max_combo: combo, accuracy, beatmapset: { title }, beatmap: { version, url, max_combo }, performance, performance: { normal: { total: pp } } } = score
             const fcpp = performance.improved ? performance.improved.total : undefined
             let rank: string = ""
@@ -157,7 +155,7 @@ class Recent implements CommandAbstract {
                     rank = `#${score.position}`
                 }
             }
-            return TextRenderer.render(`recent/best/list`, {
+            return TextRenderer.render(`recent/score`, {
                 index: index + 1, title: title, difficulty: version, beatmapUrl: url, mods: mods.length == 0 ? "NoMod" : mods.join(""), starRating: score.beatmap.difficulty_rating.roundFixed(2),
                 grade: EmojiFactory.GetEmoji(`Ranking${grade}`), pp: pp.roundFixed(3), fcpp: fcpp ? `/${fcpp.roundFixed(3)}pp` : "", accuracy: (accuracy * 100).roundFixed(2), rank: rank,
                 score: score.score.toLocaleString("en-US"), combo: FormatCombo(combo, max_combo, score.mode), hits: FormatHits(score.statistics, score.mode),
