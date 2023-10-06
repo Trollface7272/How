@@ -7,10 +7,11 @@ import { Fetcher } from "@src/class/api/osu/Fetcher"
 import { Gamemode } from "@src/class/api/osu/MiscTypes"
 import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts"
 import { EmojiFactory } from "@src/class/Emojis"
-import { FormatCombo, FormatHits, FormatProgress, GetFlag, HandleAsync } from "@src/Utils"
-import { EmbedBuilder, InteractionReplyOptions, MessageReplyOptions } from "discord.js"
+import { ButtonEmojis, FormatCombo, FormatHits, FormatProgress, GetFlag, HandleAsync } from "@src/Utils"
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions } from "discord.js"
 import { TextRenderer } from "@src/class/renderer/Text"
 import NodeCache from "node-cache"
+import { randomBytes } from "crypto"
 
 interface args {
     Gamemode?: Gamemode
@@ -23,14 +24,14 @@ interface args {
     List?: boolean
     Count?: boolean
     Map?: boolean
-    Scores?: Score.Recent[]
+    Scores?: Score.Recent[] | Score.Best[]
     OD?: number
 }
 
 const componentCache = new NodeCache({
     stdTTL: 60 * 60 * 24 * 7,
     checkperiod: 60 * 60 * 24,
-    maxKeys: 10000
+    maxKeys: 10000, useClones: false
 })
 
 class RecentData extends CommandData implements CommandDataAbstract {
@@ -55,30 +56,53 @@ class RecentData extends CommandData implements CommandDataAbstract {
             Gamemode, Specific, Page, Id, Best, Fails, List, Count, Map, OD, Username
         }
     }
+
+    public GetOldComponentId(): string {
+        if (!this.IsInteraction()) return
+        const interaction = this.data.GetInteraction()
+        if (interaction.isChatInputCommand()) return null
+        if (interaction.isMessageComponent()) return interaction.customId.split(";")[1]
+    }
 }
 
 class Recent implements CommandAbstract {
     public static readonly names: string[] = ["recent", "r", "rs", "recents", "recentscores", "recentscore"]
     private data: RecentData
+    private args: args
+    private componentId: string
+    private oldComponentId: string
 
     constructor(data: MessageEventData) {
+        this.componentId = randomBytes(16).toString("hex")
         this.data = new RecentData(data)
+        this.args = this.data.GetComandArgs()
+        this.oldComponentId = this.data.GetOldComponentId()
+        if (this.oldComponentId) this.args = componentCache.get<args>(this.oldComponentId)
+        componentCache.set(this.componentId, this.args)
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const client = this.data.GetClient()
         const user = this.data.GetUser()
         const response: InteractionReplyOptions | MessageReplyOptions = {}
-        const { Username, Id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.data.GetComandArgs()
+        const { Username, Id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.args
         const listPageSize = 5
         let Page = _Page
-        if (Specific.length == 1) {
-            Page = Specific.shift()
+        if (Specific?.length == 1) {
+            Page = Specific[0]
+            this.args.Page = Page
+        }
+        if (this.data.IsInteraction()) {
+            const interaction = this.data.GetInteraction()
+            if (interaction.isButton()) {
+                const [action, componentId, page] = interaction.customId.split(";")
+                Page = parseInt(page)
+            }
         }
 
         const fetcher = await Fetcher.Create(user.id)
-
         if (Best) {
-            const [allScores, err] = await HandleAsync(fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "best", Limit: 100 }))
+            const [allScores, err] = Scores?.length > 0 ? [Scores as Score.Best[], null] : await HandleAsync(fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "best", Limit: 100 }))
+            this.args.Scores = allScores
             allScores.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
             if (List) {
                 const scores =
@@ -91,28 +115,39 @@ class Recent implements CommandAbstract {
                 const performanceLoading = scores.map(score => Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)]))
                 await Promise.all(performanceLoading)
 
-                this.data.Reply(this.renderMultipleBestScores({ scores }))
+                this.data.Reply(this.renderMultipleBestScores({ scores, page: Page, maxPages: Math.ceil(allScores.length / listPageSize) }))
                 return CommandResponseCodes.OK
             }
 
             const score = allScores[Page]
             if (!score) return this.noScoresFound(Username, response)
-
             const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)])
             await loading
-            this.data.Reply(this.renderSingleBestScore({ score }))
+            this.data.Reply(this.renderSingleBestScore({ score, page: Page, maxPages: allScores.length }))
             return CommandResponseCodes.OK
         }
         const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent" })
+        this.args.Scores = allScores
 
         if (allScores.length == 0) return this.noScoresFound(Username, response)
 
         if (List) {
-            const scores = Specific.map(i => allScores[i])
+            const scores = (Specific?.length > 0 ?
+                Specific.slice(Page * listPageSize, Page * listPageSize + listPageSize).map(i => allScores[i]) :
+                allScores.slice(Page * listPageSize, Page * listPageSize + listPageSize))
             if (scores.length == 0) return this.noScoresFound(Username, response)
 
-            //this.renderMultipleScores(scores, response)
+            const performanceLoading = scores.map(score => Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)]))
+            await Promise.all(performanceLoading)
+            this.data.Reply(this.renderMultipleScores({ scores, page: Page, maxPages: Math.ceil(allScores.length / listPageSize) }))
+            return CommandResponseCodes.OK
         }
+
+        const score = allScores[Page]
+        if (!score) return this.noScoresFound(Username, response)
+        const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)])
+        await loading
+        this.data.Reply(this.renderSingleScore({ score, page: Page, maxPages: allScores.length }))
 
         await this.data.Reply(response)
         return CommandResponseCodes.OK
@@ -124,8 +159,8 @@ class Recent implements CommandAbstract {
         return CommandResponseCodes.OK
     }
 
-    private renderSingleBestScore({ score }: { score: Score.Best }) {
-        const data = this.renderMultipleBestScores({ scores: [score] })
+    private renderSingleBestScore({ score, page, maxPages }: { score: Score.Best, page: number, maxPages: number }) {
+        const data = this.renderMultipleBestScores({ scores: [score], page, maxPages })
 
         const embed = data.embeds[0]
         embed.setAuthor({
@@ -140,9 +175,37 @@ class Recent implements CommandAbstract {
         return data
     }
 
-    private renderMultipleBestScores({ scores }: { scores: Score.Best[] }) {
+    private renderSingleScore({ score, page, maxPages }: { score: Score.Recent, page: number, maxPages: number }) {
+        const embed = new EmbedBuilder()
+        const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
+        embed.setAuthor({
+            name: `Recent Play for ${score.user.username}`,
+            url: `https://osu.ppy.sh/users/${score.user.id}`,
+            iconURL: GetFlag(score.user.country_code)
+        })
+        embed.setFooter({
+            text: `Beatmap by ${score.beatmapset.creator}`,
+        })
+
+        return { embeds: [embed], components: [buttons] }
+    }
+
+    private renderMultipleScores({ scores, page, maxPages }: { scores: Score.Recent[], page: number, maxPages: number }) {
+        const resp = this.renderMultipleBestScores({ scores, page, maxPages })
+        const embed = resp.embeds[0]
+
+        embed.setAuthor({
+            name: `Recent Plays for ${scores[0].user.username}`,
+            url: `https://osu.ppy.sh/users/${scores[0].user.id}`,
+            iconURL: GetFlag(scores[0].user.country_code)
+        })
+        return resp
+    }
+
+    private renderMultipleBestScores({ scores, page, maxPages }: { scores: Score.Recent[], page: number, maxPages: number }) {
         const embed = new EmbedBuilder()
             .setColor(this.data.GetEmbedColor())
+        const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
 
         const description = scores.map(score => {
             const { index, mods, rank: grade, max_combo: combo, accuracy, beatmapset: { title }, beatmap: { version, url, max_combo }, performance, performance: { normal: { total: pp } } } = score
@@ -170,36 +233,38 @@ class Recent implements CommandAbstract {
         })
         embed.setDescription(description)
         embed.setThumbnail(`https://b.ppy.sh/thumb/${scores[0].beatmapset.id}l.jpg`)
+        embed.setFooter({
+            text: `Page ${page + 1}/${maxPages}`
+        })
 
-        return { embeds: [embed] }
+        return { embeds: [embed], components: [buttons] }
     }
 
-    private renderSingleScore(score: Score.Recent, response: InteractionReplyOptions | MessageReplyOptions) {
-        const { rank, pp, accuracy, score: total_score, max_combo, beatmap, mode, statistics, created_at } = score
-        const { max_combo: beatmap_max_combo } = score
-        const description = [
-            `▸ ${EmojiFactory.GetEmoji(`Ranking${rank}`)} ▸ **${pp}pp**/${pp}pp ▸ ${accuracy.roundFixed(2)}%`,
-            `▸ ${total_score.toLocaleString("en-US")} ▸ ${FormatCombo(max_combo, beatmap_max_combo, mode)} ▸ ${FormatHits(statistics, mode)}`,
-            `▸ Score set ${new Date(created_at).toDiscordToolTip()}`
-        ]
-        if (rank == "F")
-            description.push(`**Map Completion:** ${FormatProgress(mode, statistics, beatmap)}`)
-    }
-
-    private renderMultipleScores(scores: Score.Recent[], response: InteractionReplyOptions | MessageReplyOptions, { rank }: { rank?: number }) {
-        //scores.map(score => {
-        //    const { index, rank, pp, accuracy, replay, statistics, score: score_num, beatmapset: { title }, beatmap: { version, url, difficulty_rating } } = score
-        //    const mods = score.mods.length == 0 ? `No Mod` : score.mods.join("")
-        //    const description = [
-        //        `**${index + 1}. [${Escape(title)} [${Escape(version)}]](${url}) +${mods}** [${difficulty_rating.roundFixed(2)}★]\n`,
-        //        `▸ ${EmojiFactory.GetEmoji(`Ranking${rank}`)} ▸ **${pp.toFixed(3)}pp**/${pp.roundFixed(3)}pp ▸ ${(accuracy * 100).roundFixed(2)}%${rank ? ` ▸ ${formatRank(rank, replay, score.best_id, score.mode)}` : ""}\n`,
-        //        `▸ ${score_num.toLocaleString()} ▸ ${GetCombo(score.max_combo, attributes.max_combo, score.mode_int)} ▸ [${GetHits(statistics, score.mode_int)}]\n`,
-        //        `▸ Score Set ${new Date(score.created_at).toDiscordToolTip()}`
-        //    ]
-        //
-        //    if (score.rank === "F") description += `\n**▸ Map Completion:** ${CalculateProgress(score.statistics, { circles: score.beatmap.count_circles, sliders: score.beatmap.count_sliders, spinners: score.beatmap.count_spinners }, score.mode_int)}%`
-        //    return description
-        //})
+    private renderNavigationButtons({ curentPage, maxPage }: { curentPage: number, maxPage: number }) {
+        const row = new ActionRowBuilder<ButtonBuilder>()
+        row.addComponents(
+            new ButtonBuilder()
+                .setCustomId(`recent;${this.componentId};0;${randomBytes(4)}`)
+                .setLabel(ButtonEmojis.Start)
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(curentPage == 0),
+            new ButtonBuilder()
+                .setCustomId(`recent;${this.componentId};${curentPage - 1};${randomBytes(4)}`)
+                .setLabel(ButtonEmojis.Left)
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(curentPage == 0),
+            new ButtonBuilder()
+                .setCustomId(`recent;${this.componentId};${curentPage + 1};${randomBytes(4)}`)
+                .setLabel(ButtonEmojis.Right)
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(curentPage == maxPage),
+            new ButtonBuilder()
+                .setCustomId(`recent;${this.componentId};${maxPage};${randomBytes(4)}`)
+                .setLabel(ButtonEmojis.End)
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(curentPage == maxPage)
+        )
+        return row
     }
 }
 

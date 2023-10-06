@@ -1,0 +1,3 @@
+▸ {{grade}} ▸ **{{pp}}pp**{{fcpp}} ▸ {{accuracy}}% {{rank}}
+▸ {{score}} ▸ {{combo}} ▸ {{hits}}
+▸ Score set {{timestamp}}

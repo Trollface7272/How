@@ -80,8 +80,7 @@ export namespace Score {
         }
 
         public async fetchPosition(discordUserId: string) {
-            const score = await (await Fetcher.Create(discordUserId)).GetScoreById({ Gamemode: this.mode, id: this.id })
-            this.position = score.rank_global
+            this.position = await (await Fetcher.Create(discordUserId)).GetScorePosition({ Gamemode: this.mode, id: this.id })
         }
     }
 

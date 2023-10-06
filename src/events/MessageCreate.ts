@@ -41,17 +41,18 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
 
     public GetSpecific(): number[] {
+        const regex = /^[1-9][0-9]?$|^100$/
         const idxs = this.args.map((arg, index) => {
-            const num = Number(arg)
-            if (isNaN(num) || num > 100 || num < 1) return null
-            return index
+            if (regex.test(arg)) 
+                return index
+            return null
         }).filter(e => e !== null)
 
         const out = []
         for (const index of idxs) {
             const num = Number(this.args[index]) - 1
             out.push(num)
-            this.args.slice(index, 1)
+            this.args.splice(index, 1)
         }
         return out
     }
@@ -144,7 +145,7 @@ export class MessageCreate implements Event {
         try {
             const command = new commandData(data)
             const code = await command.Handle()
-            switch(code) {
+            switch (code) {
                 case CommandResponseCodes.OK:
                     return Event.ReturnCode.OK
                 default:

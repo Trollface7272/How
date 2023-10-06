@@ -1,5 +1,5 @@
 import { Event, EventData } from "@src/class/partials/Event";
-import { AnySelectMenuInteraction, ChatInputCommandInteraction, CommandInteraction, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, MessageInteraction, ReplyOptions } from "discord.js";
+import { Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, MessageInteraction, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Client } from "@src/class/Client";
@@ -38,7 +38,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public GetSpecific(): number[] {
-        return this.GetString("specific").split(",").map(e => Number(e) - 1)
+        return this.GetString("specific")?.split(",")?.map(e => Number(e) - 1) || []
     }
 
     public GetCommand(): string {

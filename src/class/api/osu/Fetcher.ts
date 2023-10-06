@@ -5,11 +5,14 @@ import { Gamemode } from "./MiscTypes"
 import { Profile } from "./Profile"
 import { Score } from "./Score"
 import { Endpoints } from "./Endpoints"
+import NodeCache from "node-cache"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
     MissingIdentifyScope
 }
+
+const BeatmapRankCache = new NodeCache({ stdTTL: 60 * 60 * 2 })
 
 const UsernameToIdCache = new Map<string, number>()
 const IdToUsernameCache = new Map<number, string>()
@@ -41,7 +44,8 @@ export class Fetcher {
                 "Content-Type": "application/json",
                 Accept: "application/json",
                 Authorization: `${oauth.token_type} ${oauth.access_token}`
-            }
+            },
+            
         })
     }
 
@@ -113,7 +117,7 @@ export class Fetcher {
         return history
     }
 
-    public async GetBeatmapUserScore({User, Beatmap, Gamemode, Mods}: {User: number, Beatmap: number, Gamemode: Gamemode, Mods?: string[]}) {
+    public async GetBeatmapUserScore({ User, Beatmap, Gamemode, Mods }: { User: number, Beatmap: number, Gamemode: Gamemode, Mods?: string[] }) {
         const resp = await this.axios.get(Endpoints.userBeatmapScore(Beatmap, User), {
             params: {
                 mode: Gamemode,
@@ -123,9 +127,15 @@ export class Fetcher {
         return new Score.BeatmapUserScore(resp.data)
     }
 
-    public async GetScoreById({id, Gamemode}: {id: number, Gamemode: Gamemode}) {
+    public async GetScorePosition({ id, Gamemode }: { id: number, Gamemode: Gamemode }) {
+        if (BeatmapRankCache.has(`${id}-${Gamemode}`)) return BeatmapRankCache.get<number>(`${id}-${Gamemode}`)
+        const resp = await this.GetScoreById({ id, Gamemode })
+        BeatmapRankCache.set(`${id}-${Gamemode}`, resp.rank_global)
+        return resp.rank_global
+    }
+
+    public async GetScoreById({ id, Gamemode }: { id: number, Gamemode: Gamemode }) {
         const resp = await this.axios.get(Endpoints.scoreById(Gamemode, id))
-        console.log(resp.data)
         return new Score.FromId(resp.data)
     }
 }
