@@ -9,6 +9,8 @@ import { Guild } from "@src/class/database/Guild";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Logger } from "@src/class/Logger";
 import { CommandResponseCodes } from "@src/class/partials/Command";
+import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 
 export class InteractionCreateData implements EventData, MessageEventData {
     private _user: User
@@ -24,6 +26,29 @@ export class InteractionCreateData implements EventData, MessageEventData {
     constructor(
         private interaction: Interaction
     ) { }
+
+    public async GetBeatmapFromConversation(): Promise<number> {
+        const map = this.GetString("beatmap")
+        if (map) {
+            if (map.isNumber()) return parseInt(map)
+            const id = matchForId(map)
+            if (id) return id
+        }
+
+        const messages = await this.interaction.channel.messages.fetch({ limit: 32 })
+        for (const msgData of messages) {
+            const id = searchMessage(msgData[1])
+            if (id) return id
+        }
+    }
+
+    public GetMods(): string[] {
+        return this.GetString("mods")?.split(/.{1,2}/gmi).map(el => el.toUpperCase()) || []
+    }
+
+    public GetGamemode(): Gamemode {
+        return this.GetString("gamemode") as Gamemode
+    }
 
     public GetInteraction(): Interaction {
         return this.interaction
@@ -49,7 +74,9 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public GetUsername(): string {
-        return this.GetString("username")
+        const name = this.GetString("username")
+        if (name == "") return null
+        return name
     }
 
     public GetString(key: string): string {

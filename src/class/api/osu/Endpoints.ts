@@ -7,4 +7,7 @@ export namespace Endpoints {
     export const userScores = (Id: number, Type: "best" | "recent" | "firsts" | "pinned") => `/users/${Id}/scores/${Type}`
     export const recentActivity = (id: number) => `/users/${id}/recent_activity`
     export const scoreById = (mode: string, id: number) => `/scores/${mode}/${id}`
+    export const beatmapById = (id: number) => `/beatmaps/${id}`
+    export const beatmapSetById = (id) => `/beatmapsets/${id}`
+
 }

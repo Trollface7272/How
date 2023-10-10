@@ -12,6 +12,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Interaction
 import { TextRenderer } from "@src/class/renderer/Text"
 import NodeCache from "node-cache"
 import { randomBytes } from "crypto"
+import { CalculateProgress } from "@src/class/api/osu/Utils"
 
 interface args {
     Gamemode?: Gamemode
@@ -38,15 +39,12 @@ class RecentData extends CommandData implements CommandDataAbstract {
     constructor(data: MessageEventData) { super(data) }
 
     public GetComandArgs(): args {
-        let Gamemode = this.data.GetString("gamemode", ["m", "mode", "-m", "-mode"]) as Gamemode ?? "osu"
-        if (!isNaN(Number(Gamemode)))
-            Gamemode = GamemodeNumToStr[Number(Gamemode)] ?? "osu"
-
+        const Gamemode = this.data.GetGamemode()
         const Specific = this.data.GetSpecific()
         const Page = 0
         const Id = this.data.GetNumber("id", ["id", "-id"]) ?? undefined
         const Best = this.data.GetBoolean("best", ["b", "best", "-b", "-best"]) ?? false
-        const Fails = this.data.GetBoolean("fails", ["pass", "p", "-pass", "-p"]) ?? false
+        const Fails = !(this.data.GetBoolean("fails", ["pass", "p", "-pass", "-p"]) ?? false)
         const List = this.data.GetBoolean("list", ["l", "list", "-l", "-list"]) ?? false
         const Count = this.data.GetBoolean("count", ["c", "count", "-c", "-count"]) ?? false
         const Map = this.data.GetBoolean("map", ["m", "map", "-m", "-map"]) ?? false
@@ -81,7 +79,6 @@ class Recent implements CommandAbstract {
         componentCache.set(this.componentId, this.args)
     }
     public async Handle(): Promise<CommandResponseCodes> {
-        const client = this.data.GetClient()
         const user = this.data.GetUser()
         const response: InteractionReplyOptions | MessageReplyOptions = {}
         const { Username, Id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.args
@@ -126,7 +123,7 @@ class Recent implements CommandAbstract {
             this.data.Reply(this.renderSingleBestScore({ score, page: Page, maxPages: allScores.length }))
             return CommandResponseCodes.OK
         }
-        const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent" })
+        const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails })
         this.args.Scores = allScores
 
         if (allScores.length == 0) return this.noScoresFound(Username, response)
@@ -145,11 +142,19 @@ class Recent implements CommandAbstract {
 
         const score = allScores[Page]
         if (!score) return this.noScoresFound(Username, response)
-        const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)])
-        await loading
-        this.data.Reply(this.renderSingleScore({ score, page: Page, maxPages: allScores.length }))
 
-        await this.data.Reply(response)
+        const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)]);
+
+        let tries = 0
+        for (let i = Page; i < allScores.length; i++) {
+            if (allScores[i].beatmap.id !== score.beatmap.id)
+                break
+            tries++
+        }
+
+        await loading
+
+        this.data.Reply(this.renderSingleScore({ score, page: Page, maxPages: allScores.length, tries }))
         return CommandResponseCodes.OK
     }
 
@@ -175,17 +180,37 @@ class Recent implements CommandAbstract {
         return data
     }
 
-    private renderSingleScore({ score, page, maxPages }: { score: Score.Recent, page: number, maxPages: number }) {
+    private renderSingleScore({ score, page, maxPages, tries }: { score: Score.Recent, page: number, maxPages: number, tries: number }) {
+        const { mods, rank: grade, mode, replay, mode_int, max_combo: combo, accuracy, statistics, user: { avatar_url }, beatmapset: { title }, beatmap: { version, difficulty_rating, url, max_combo, count_circles, count_sliders, count_spinners }, performance: { normal: { total: pp }, improved }, position: _rank } = score
         const embed = new EmbedBuilder()
         const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
+
+        let rank: string = ""
+        if (_rank) {
+            if (replay) {
+                rank = `[#${_rank}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
+            } else {
+                rank = `#${_rank}`
+            }
+        }
+
+        const description = TextRenderer.render(`recent/single`, {
+            grade: EmojiFactory.GetEmoji(`Ranking${grade}`), pp: pp.roundFixed(3), fcpp: improved ? `/${improved.total.roundFixed(3)}pp` : "", accuracy: (accuracy * 100).roundFixed(2), rank,
+            score: score.score.toLocaleString("en-US"), combo: FormatCombo(combo, max_combo, mode), hits: FormatHits(statistics, mode),
+            timestamp: new Date(score.created_at).toDiscordToolTip(),
+            completion: rank == "F" ? `\n▸ **Map Completion:** ${CalculateProgress(statistics, { circles: count_circles, sliders: count_sliders, spinners: count_spinners }, mode_int)}%` : ""
+        })
+
         embed.setAuthor({
-            name: `Recent Play for ${score.user.username}`,
-            url: `https://osu.ppy.sh/users/${score.user.id}`,
-            iconURL: GetFlag(score.user.country_code)
+            name: `${title} [${version}] +${mods.join("")} [${difficulty_rating.roundFixed(2)}★]`,
+            url: url,
+            iconURL: avatar_url
         })
         embed.setFooter({
-            text: `Beatmap by ${score.beatmapset.creator}`,
+            text: `Try #${tries} | Page ${page + 1}/${maxPages} | Beatmap by ${score.beatmapset.creator}`,
         })
+        embed.setThumbnail(`https://b.ppy.sh/thumb/${score.beatmapset.id}l.jpg`)
+        embed.setDescription(description)
 
         return { embeds: [embed], components: [buttons] }
     }
@@ -259,7 +284,7 @@ class Recent implements CommandAbstract {
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(curentPage == maxPage),
             new ButtonBuilder()
-                .setCustomId(`recent;${this.componentId};${maxPage};${randomBytes(4)}`)
+                .setCustomId(`recent;${this.componentId};${maxPage-1};${randomBytes(4)}`)
                 .setLabel(ButtonEmojis.End)
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(curentPage == maxPage)

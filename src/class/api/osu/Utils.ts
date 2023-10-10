@@ -2,6 +2,8 @@ import { createWriteStream } from "fs"
 import { BitModsShort } from "./Consts"
 import axios from "axios"
 import { Logger } from "@src/class/Logger"
+import { Score } from "./Score"
+import { Message } from "discord.js"
 
 export const toBitMods = (mods: string[]) => {
   if (typeof mods !== "object") return mods
@@ -48,4 +50,47 @@ export const DownloadFile = async (url: string, path: string) => {
 export const DisplayCombo = (combo: number, maxCombo: number, mode: number | string): string => {
   if (mode === 3 || mode === "mania") return `x${combo}`
   return `x${combo}/${maxCombo}`
+}
+
+export const CalculateProgress = ({ count_100, count_300, count_50, count_geki, count_katu, count_miss }: Score.Statistics, { circles, sliders, spinners }: { circles: number, sliders: number, spinners: number }, mode: 0 | 1 | 2 | 3) => {
+  switch (mode) {
+      case 1:
+      case 0:
+          return ((count_300 + count_100 + count_50 + count_miss) / (circles + sliders + spinners) * 100).roundFixed(2)
+      case 2:
+          return ((count_300 + count_100 + count_50 + count_miss + count_katu) / (circles + sliders + spinners) * 100).roundFixed(2)
+      case 3:
+          return ((count_geki + count_300 + count_katu + count_100 + count_50 + count_miss + count_katu) / (circles + sliders + spinners) * 100).roundFixed(2)
+      default:
+          Logger.Error(`Unknown gamemode: ${mode}`)
+          return "Unknown"
+  }
+}
+
+export const matchForId = (input: string) => {
+  if (!input) return
+  const regex = /https:\/\/osu\.ppy\.sh\/(b|beatmapsets|beatmap|beatmaps)\/([0-9]+)/gm
+  const fullRegex = /https:\/\/osu\.ppy\.sh\/(b|beatmapsets|beatmap|beatmaps)\/([0-9]+)#(?:osu|taiko|fruits|mania)\/([0-9]+)/gm
+  let matches = regex.exec(input)
+
+  if (!matches) return
+  if (matches[1] === "beatmapsets") {
+      matches = fullRegex.exec(input)
+      if (!matches) return
+      return parseInt(matches[3])
+  }
+  return parseInt(matches[2])
+}
+
+export const searchMessage = (msg: Message) => {
+  let matches = matchForId(msg.content)
+  if (matches) return matches
+  for (const embed of msg.embeds) {
+      matches = matchForId(embed.title) ?? matchForId(embed?.author?.url) ?? matchForId(embed.url) ?? matchForId(embed.description)
+      if (matches) return matches
+      for (const field of embed.fields) {
+          matches = matchForId(field.name) ?? matchForId(field.value)
+          if (matches) return matches
+      }
+  }
 }

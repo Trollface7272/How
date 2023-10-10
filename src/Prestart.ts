@@ -29,3 +29,14 @@ Number.prototype.asScientificNotation = function (this: number): string {
     })
     return item ? (this / item.value).toLocaleString(undefined, { maximumFractionDigits: 2 }).replace(rx, "$1") + item.symbol : "0"
 }
+
+Number.prototype.asTime = function (this: number): string {
+    let minutes = Math.floor(this / 60)
+    let seconds = this % 60
+    if (seconds < 10) seconds = Number(`0${seconds}`)
+    return `${minutes}:${seconds}`
+}
+
+String.prototype.isNumber = function (this: string): boolean {
+    return /^\d+$/.test(this)
+}

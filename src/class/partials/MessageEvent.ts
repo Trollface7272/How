@@ -4,6 +4,7 @@ import { RawUser } from "../RawUser";
 import { Event } from "./Event";
 import { User } from "../database/User";
 import { Guild } from "../database/Guild";
+import { Gamemode } from "../api/osu/MiscTypes";
 
 export abstract class MessageEventData {
     public get user(): User {
@@ -41,6 +42,14 @@ export abstract class MessageEventData {
         throw Event.ReturnCode.Unimplemented
     }
 
+    public GetGamemode(): Gamemode {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetMods(): string[] {
+        throw Event.ReturnCode.Unimplemented
+    }
+
     public GetUsername(): string {
         throw Event.ReturnCode.Unimplemented
     }
@@ -62,6 +71,10 @@ export abstract class MessageEventData {
     }
 
     public GetInteraction(): Interaction {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public async GetBeatmapFromConversation(): Promise<number> {
         throw Event.ReturnCode.Unimplemented
     }
 }

@@ -35,6 +35,7 @@ export class PerformanceCalculator {
     private starRatingMods: string[]
 
     public constructor(private beatmap: Beatmap.Base, private mods: string[]) {
+        if (!this.mods) this.mods = []
         this.starRatingMods = this.mods.filter(mod => difficulty_mods.includes(mod))
         this.starRatingMods.push("CL")
     }
@@ -66,6 +67,95 @@ export class PerformanceCalculator {
             }
         }
         cache.set(`${score.id}-${score.mode}`, resp)
+        this.beatmap.difficulty_rating = this.attributes.star_rating
+        this.beatmap.max_combo = this.attributes.max_combo
+        return resp
+    }
+
+    public async CalculateByAcc(acc: number) {
+        if (!this.attributes) await this.FetchAttributes()
+        if (!this.attributes) return null
+
+        const { mode } = this.beatmap
+        let resp: { normal: PerformanceContainer, improved?: PerformanceContainer }
+        switch (mode) {
+            case "osu": {
+                const attributes = this.attributes as Beatmap.StdAttributes
+                resp = new StdPerformance({
+                    aimDiff: attributes.aim_difficulty,
+                    approachRate: attributes.approach_rate,
+                    flDiff: attributes.flashlight_difficulty,
+                    maxCombo: attributes.max_combo,
+                    _mods: toBitMods(this.mods),
+                    overallDifficulty: attributes.overall_difficulty,
+                    sliders: this.beatmap.count_sliders,
+                    spinners: this.beatmap.count_spinners,
+                    circles: this.beatmap.count_circles,
+                    speedDiff: attributes.speed_difficulty,
+                    sliderFactor: attributes.slider_factor,
+                    speedNoteCount: attributes.speed_note_count,
+                    _num50: 0,
+                    _num100: 0,
+                    _num300: this.beatmap.count_circles + this.beatmap.count_sliders + this.beatmap.count_spinners,
+                    _numMiss: 0,
+                    _maxCombo: this.beatmap.max_combo,
+                    type: "normal",
+                    acc: acc
+                })
+            }
+            case "fruits": {
+                const attributes = this.attributes as Beatmap.CtbAttributes
+                resp = new CtbPerformance({
+                    approach: attributes.approach_rate,
+                    maxCombo: attributes.max_combo,
+                    _mods: toBitMods(this.mods),
+                    _num50: 0,
+                    _num100: 0,
+                    _num300: this.beatmap.count_circles + this.beatmap.count_sliders + this.beatmap.count_spinners,
+                    _numMiss: 0,
+                    _maxCombo: this.beatmap.max_combo,
+                    _numKatu: 0,
+                    aim: attributes.star_rating,
+                    type: "normal",
+                    acc: acc
+                })
+                break
+            }
+            case "taiko": {
+                const attributes = this.attributes as Beatmap.TaikoAttributes
+                resp = new TaikoPerformance({
+                    _mods: toBitMods(this.mods),
+                    _num50: 0,
+                    _num100: 0,
+                    _num300: this.beatmap.count_circles + this.beatmap.count_sliders + this.beatmap.count_spinners,
+                    _numMiss: 0,
+                    circles: this.beatmap.count_circles,
+                    sliders: this.beatmap.count_sliders,
+                    spinners: this.beatmap.count_spinners,
+                    strain: attributes.stamina_difficulty,
+                    perfectHitWindow: attributes.great_hit_window,
+                    type: "normal",
+                    acc: acc
+                })
+                break
+            }
+            case "mania": {
+                const attributes = this.attributes as Beatmap.ManiaAttributes
+                resp = new ManiaPerformance({
+                    _mods: toBitMods(this.mods),
+                    _num50: 0,
+                    _num100: 0,
+                    _num300: this.beatmap.count_circles + this.beatmap.count_sliders + this.beatmap.count_spinners,
+                    _numMiss: 0,
+                    _numGeki: 0,
+                    _numKatu: 0,
+                    strain: attributes.star_rating,
+                    type: "normal",
+                    acc: acc
+                })
+                break
+            }
+        }
         this.beatmap.difficulty_rating = this.attributes.star_rating
         this.beatmap.max_combo = this.attributes.max_combo
         return resp
@@ -155,6 +245,7 @@ export class PerformanceCalculator {
         }
         this.attributes = attributes
         cache.set(`${this.beatmap.id}-${toBitMods(this.starRatingMods)}`, this.attributes)
+        return attributes
     }
 
     private async GetAttributes() {
@@ -177,7 +268,7 @@ export class PerformanceCalculator {
         }
         const [parsed, errJson] = await ParseJson<{ errors: unknown[], results: { attributes: Difficulty[] } }>(response)
         if (errJson) {
-            Logger.Error("Performance Calculator - GetAttributes - JSON Parse", errJson)
+            Logger.Error("Performance Calculator - GetAttributes - JSON Parse", errJson, "raw ->", response, "command ->", command)
             return null
         }
         const attributes = parsed.results[0].attributes

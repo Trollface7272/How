@@ -8,6 +8,9 @@ import { Client } from "@src/class/Client";
 import { User } from "@src/class/database/User";
 import { Guild } from "@src/class/database/Guild";
 import { CommandResponseCodes } from "@src/class/partials/Command";
+import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
+import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 
 export class MessageCreateData implements EventData, MessageEventData {
     private _user: User
@@ -27,6 +30,48 @@ export class MessageCreateData implements EventData, MessageEventData {
         this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
     }
+    public async GetBeatmapFromConversation(): Promise<number> {
+        if (this.message.mentions.repliedUser) {
+            const id = searchMessage(await this.message.channel.messages.fetch(this.message.reference.messageId))
+            if (id) return id
+        }
+        for (let i = 0; i < this.args.length; i++) {
+            const el = this.args[i];
+            const matches = matchForId(el)
+            if (matches) {
+                this.args.slice(i, 1)
+                return matches
+            }
+            if (el.isNumber()) {
+                this.args.slice(i, 1)
+                return parseInt(el)
+            }
+        }
+        const messages = await this.message.channel.messages.fetch({ limit: 32, before: this.message.id })
+        for (const msgData of messages) {
+            const id = searchMessage(msgData[1])
+            if (id) return id
+        }
+    }
+
+    public GetMods(): string[] {
+        const regex = /^\+?(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi
+        for (let arg of this.args) {
+            if (regex.test(arg)) {
+                if (arg.startsWith("+")) arg = arg.substring(1)
+                const mods = arg.toUpperCase().split(/.{1,2}/g)
+                this.args.splice(this.args.indexOf(arg), 1)
+                return mods
+            }
+        }
+    }
+
+    public GetGamemode(): Gamemode {
+        let Gamemode = this.GetString("gamemode", ["m", "mode", "-m", "-mode"]) as Gamemode ?? "osu"
+        if (!isNaN(Number(Gamemode)))
+            Gamemode = GamemodeNumToStr[Number(Gamemode)] ?? "osu"
+        return Gamemode
+    }
 
     public GetInteraction(): Interaction {
         throw null
@@ -43,7 +88,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     public GetSpecific(): number[] {
         const regex = /^[1-9][0-9]?$|^100$/
         const idxs = this.args.map((arg, index) => {
-            if (regex.test(arg)) 
+            if (regex.test(arg))
                 return index
             return null
         }).filter(e => e !== null)
@@ -60,7 +105,10 @@ export class MessageCreateData implements EventData, MessageEventData {
         return this.GetContent().split(" ")[0]
     }
     public GetUsername(): string {
-        return this.args.join(" ")
+        if (this.args.length == 0) return null
+        const username = this.args.join(" ")
+        if (username == "") return null
+        return username
     }
 
     public GetString(key: string, aliases: string[]): string {
@@ -91,10 +139,11 @@ export class MessageCreateData implements EventData, MessageEventData {
         aliases.push(key)
         for (const alias of aliases) {
             const index = this.args.findIndex((arg) => arg === alias)
-            if (index === -1) return false
+            if (index === -1) continue
             this.args.splice(index, 1)
             return true
         }
+        return false
     }
 
     public async LoadDbData(): Promise<unknown> {

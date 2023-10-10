@@ -67,6 +67,7 @@ export namespace BeatmapSet {
 
         constructor(set: Base) {
             super(set)
+            Object.assign(this, set)
         }
     }
     //Beatmapset types for Beatmap endpoints
@@ -75,12 +76,14 @@ export namespace BeatmapSet {
             ratings: [number, number, number, number, number, number, number, number, number, number]
             constructor(set: FromId) {
                 super(set)
+                Object.assign(this, set)
             }
         }
         export class FromIds extends Compact {
             ratings: [number, number, number, number, number, number, number, number, number, number]
             constructor(set: FromIds) {
                 super(set)
+                Object.assign(this, set)
             }
         }
         export type Lookup = FromId
@@ -90,6 +93,7 @@ export namespace BeatmapSet {
 
         constructor(set: SearchSet) {
             super(set)
+            Object.assign(this, set)
             this.beatmaps = this.beatmaps.map(map => {
                 return new _Beatmap.Base(map)
             })
@@ -118,6 +122,7 @@ export namespace BeatmapSet {
         beatmaps: _Beatmap.Compact[]
         constructor(set: FromId) {
             super(set)
+            Object.assign(this, set)
             this.beatmaps = this.beatmaps.map(map => {
                 return new _Beatmap.Compact(map)
             })

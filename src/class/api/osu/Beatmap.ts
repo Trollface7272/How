@@ -76,6 +76,7 @@ export namespace Beatmap {
         max_combo?: number
         constructor(map: Base) {
             super(map)
+            Object.assign(this, map)
         }
     }
     export class FromId extends Base {
@@ -83,6 +84,7 @@ export namespace Beatmap {
         failtimes: { fail: number[], exit: number[] }
         constructor(map: FromId) {
             super(map)
+            Object.assign(this, map)
             this.beatmapset = new BeatmapSet.Beatmap.FromId(this.beatmapset)
         }
     }
@@ -91,6 +93,7 @@ export namespace Beatmap {
         failtimes: { fail: number[], exit: number[] }
         constructor(map: FromIds) {
             super(map)
+            Object.assign(this, map)
             this.beatmapset = new BeatmapSet.Beatmap.FromIds(this.beatmapset)
         }
     }

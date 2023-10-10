@@ -6,6 +6,8 @@ import { Profile } from "./Profile"
 import { Score } from "./Score"
 import { Endpoints } from "./Endpoints"
 import NodeCache from "node-cache"
+import { Beatmap } from "./Beatmap"
+import { BeatmapSet } from "./BeatmapSet"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
@@ -13,6 +15,10 @@ export enum OsuFetcherErrors {
 }
 
 const BeatmapRankCache = new NodeCache({ stdTTL: 60 * 60 * 2 })
+
+const beatmapCache = new NodeCache({
+    stdTTL: 60 * 60 * 24 * 7
+})
 
 const UsernameToIdCache = new Map<string, number>()
 const IdToUsernameCache = new Map<number, string>()
@@ -45,7 +51,7 @@ export class Fetcher {
                 Accept: "application/json",
                 Authorization: `${oauth.token_type} ${oauth.access_token}`
             },
-            
+
         })
     }
 
@@ -137,5 +143,25 @@ export class Fetcher {
     public async GetScoreById({ id, Gamemode }: { id: number, Gamemode: Gamemode }) {
         const resp = await this.axios.get(Endpoints.scoreById(Gamemode, id))
         return new Score.FromId(resp.data)
+    }
+
+    public async GetBeatmap({ id, Gamemode }: { id: number, Gamemode: Gamemode }) {
+        if (beatmapCache.has(`map-${id}`)) return beatmapCache.get<Beatmap.FromId>(`map-${id}`)
+        const resp = await this.axios.get(Endpoints.beatmapById(id), {
+            params: {
+                mode: Gamemode
+            }
+        })
+        const map = new Beatmap.FromId(resp.data)
+        beatmapCache.set(`map-${id}`, map)
+        return map
+    }
+
+    public async GetBeatmapSet({ id }: { id: number }) {
+        if (beatmapCache.has(`set-${id}`)) return beatmapCache.get<BeatmapSet.FromId>(`set-${id}`)
+        const resp = await this.axios.get(Endpoints.beatmapSetById(id))
+        const set = new BeatmapSet.FromId(resp.data)
+        beatmapCache.set(`set-${id}`, set)
+        return set
     }
 }

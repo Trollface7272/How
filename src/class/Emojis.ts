@@ -5,30 +5,30 @@ import { Logger } from "./Logger"
 
 const emojis = {
     Emojis: [
-        { name: "RankingXH", fileLocation: "/emojis/XH.png" },
-        { name: "RankingSH", fileLocation: "/emojis/SH.png" },
-        { name: "RankingX", fileLocation: "/emojis/X.png" },
-        { name: "RankingS", fileLocation: "/emojis/S.png" },
-        { name: "RankingA", fileLocation: "/emojis/A.png" },
-        { name: "RankingB", fileLocation: "/emojis/B.png" },
-        { name: "RankingC", fileLocation: "/emojis/C.png" },
-        { name: "RankingD", fileLocation: "/emojis/D.png" },
-        { name: "RankingF", fileLocation: "/emojis/F.png" },
-        { name: "ModeOsu", fileLocation: "/emojis/ModeOsu.webp" },
-        { name: "ModeTaiko", fileLocation: "/emojis/ModeTaiko.webp" },
-        { name: "ModeFruits", fileLocation: "/emojis/ModeFruits.webp" },
-        { name: "ModeMania", fileLocation: "/emojis/ModeMania.webp" },
+        { name: "RankingXH", fileLocation: "emojis/XH.png" },
+        { name: "RankingSH", fileLocation: "emojis/SH.png" },
+        { name: "RankingX", fileLocation: "emojis/X.png" },
+        { name: "RankingS", fileLocation: "emojis/S.png" },
+        { name: "RankingA", fileLocation: "emojis/A.png" },
+        { name: "RankingB", fileLocation: "emojis/B.png" },
+        { name: "RankingC", fileLocation: "emojis/C.png" },
+        { name: "RankingD", fileLocation: "emojis/D.png" },
+        { name: "RankingF", fileLocation: "emojis/F.png" },
+        { name: "ModeOsu", fileLocation: "emojis/ModeOsu.webp" },
+        { name: "ModeTaiko", fileLocation: "emojis/ModeTaiko.webp" },
+        { name: "ModeFruits", fileLocation: "emojis/ModeFruits.webp" },
+        { name: "ModeMania", fileLocation: "emojis/ModeMania.webp" },
     ],
     DifficultyEmojis: [
-        { name: "Beginner", spread: { min: 0, max: 1 }, fileLocation: "/emojis/{gamemode}-beginner.png" },
-        { name: "Easy", spread: { min: 1, max: 2 }, fileLocation: "/emojis/{gamemode}-easy.png" },
-        { name: "Normal", spread: { min: 2, max: 3 }, fileLocation: "/emojis/{gamemode}-normal.png" },
-        { name: "Hard", spread: { min: 3, max: 4 }, fileLocation: "/emojis/{gamemode}-hard.png" },
-        { name: "Insane", spread: { min: 4, max: 5 }, fileLocation: "/emojis/{gamemode}-insane.png" },
-        { name: "Extra", spread: { min: 5, max: 6 }, fileLocation: "/emojis/{gamemode}-extra.png" },
-        { name: "Expert", spread: { min: 6, max: 7 }, fileLocation: "/emojis/{gamemode}-expert.png" },
-        { name: "Extreme", spread: { min: 7, max: 8 }, fileLocation: "/emojis/{gamemode}-extreme.png" },
-        { name: "Ultra", spread: { min: 8, max: Infinity }, fileLocation: "/emojis/{gamemode}-ultra.png" },
+        { name: "Beginner", spread: { min: 0, max: 1 }, fileLocation: "emojis/{gamemode}-beginner.png" },
+        { name: "Easy", spread: { min: 1, max: 2 }, fileLocation: "emojis/{gamemode}-easy.png" },
+        { name: "Normal", spread: { min: 2, max: 3 }, fileLocation: "emojis/{gamemode}-normal.png" },
+        { name: "Hard", spread: { min: 3, max: 4 }, fileLocation: "emojis/{gamemode}-hard.png" },
+        { name: "Insane", spread: { min: 4, max: 5 }, fileLocation: "emojis/{gamemode}-insane.png" },
+        { name: "Extra", spread: { min: 5, max: 6 }, fileLocation: "emojis/{gamemode}-extra.png" },
+        { name: "Expert", spread: { min: 6, max: 7 }, fileLocation: "emojis/{gamemode}-expert.png" },
+        { name: "Extreme", spread: { min: 7, max: 8 }, fileLocation: "emojis/{gamemode}-extreme.png" },
+        { name: "Ultra", spread: { min: 8, max: Infinity }, fileLocation: "emojis/{gamemode}-ultra.png" },
     ]
 
 }
@@ -91,7 +91,7 @@ export class EmojiFactory {
     }
 
     public static GetDifficultyEmoji(diff: number, gamemode: string) {
-        const emoji = this.difficultyEmojis.find(val => val.range[0] <= diff && val.range[1] > diff && val.gamemode === gamemode)
+        const emoji = this.difficultyEmojis.find(val => val.range[0] <= diff && val.range[1] > diff && val.gamemode.toLowerCase() === gamemode.toLowerCase())
         return emoji ? emoji.Get() : ""
     }
 

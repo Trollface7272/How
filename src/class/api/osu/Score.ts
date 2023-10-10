@@ -1,8 +1,10 @@
+import { HandleAsync } from "@src/Utils"
 import { Beatmap } from "./Beatmap"
 import { BeatmapSet } from "./BeatmapSet"
 import { Fetcher } from "./Fetcher"
 import { PerformanceCalculator, PerformanceContainer } from "./PerformanceCalculator"
 import { Profile } from "./Profile"
+import { Logger } from "@src/class/Logger"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
 
@@ -80,7 +82,12 @@ export namespace Score {
         }
 
         public async fetchPosition(discordUserId: string) {
-            this.position = await (await Fetcher.Create(discordUserId)).GetScorePosition({ Gamemode: this.mode, id: this.id })
+            const [resp, err] = await HandleAsync((await Fetcher.Create(discordUserId)).GetScorePosition({ Gamemode: this.mode, id: this.best_id }))
+            if (err) {
+                Logger.Error("Fetch position error ->", err)
+                return
+            }
+            this.position = resp
         }
     }
 
