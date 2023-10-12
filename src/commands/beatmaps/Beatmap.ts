@@ -17,6 +17,7 @@ interface args {
   Gamemode: Gamemode
   Mods: string[]
   id: number
+  Acc: number
 }
 
 class BeatmapData extends CommandData implements CommandDataAbstract {
@@ -29,9 +30,10 @@ class BeatmapData extends CommandData implements CommandDataAbstract {
   public GetComandArgs(): args {
     const Gamemode = this.data.GetGamemode()
     const Mods = this.data.GetMods()
+    const Acc = this.data.GetNumber("accuracy", ["acc", "a", "-accuracy", "-acc", "-a"])
     const id = parseInt(this.data.GetUsername())
     return {
-      Gamemode, Mods, id
+      Gamemode, Mods, id: !isNaN(id) ? id : null, Acc: Acc
     }
   }
 }
@@ -45,8 +47,8 @@ class Beatmap implements CommandAbstract {
   }
   public async Handle(): Promise<CommandResponseCodes> {
     const user = this.data.GetUser()
-    let { Gamemode, Mods, id: _id } = this.data.GetComandArgs()
-
+    let { Gamemode, Mods, id: _id, Acc } = this.data.GetComandArgs()
+    console.log({ Gamemode, Mods, _id, Acc })
     if (this.data.IsInteraction()) {
       const interaction = this.data.GetInteraction()
       if (interaction.isStringSelectMenu()) {
@@ -76,23 +78,24 @@ class Beatmap implements CommandAbstract {
       Logger.Error("Fetch beatmap error ->", err)
       return CommandResponseCodes.UnknownError
     }
+    beatmap.setMods(Mods)
     const loadingSet = HandleAsync(fetcher.GetBeatmapSet({ id: beatmap.beatmapset.id }))
 
     const calc = new PerformanceCalculator(beatmap, Mods)
 
     await calc.FetchAttributes()
 
-    const { hit_length: drain, ar, drain: hp, accuracy: od, cs, id: mapid, version, max_combo, total_length: length, bpm, difficulty_rating, beatmapset: { id: setid, artist, creator, title, status: _status, ranked_date, favourite_count, submitted_date } } = beatmap
+    const { hit_length: drain, AR, drain: hp, accuracy: od, cs, id: mapid, version, max_combo, total_length: length, bpm, difficulty_rating, beatmapset: { id: setid, artist, creator, title, status: _status, ranked_date, favourite_count, submitted_date } } = beatmap
     const status = _status.charAt(0).toUpperCase() + _status.slice(1)
-    let accs = [100, 99, 98, 95]
+    let accs = [100, 99, 98, Acc ?? 95]
     const pps = await Promise.all([
-      calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(95)
+      calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(Acc ?? 95)
     ])
     let pp = pps.map((el, idx) => {
       const acc = accs[idx]
       const perf = el.normal.total
       return `○ **${Math.round(acc * 100) / 100}%-**${perf.roundFixed(2)}`
-    }).join(" ")
+    }).reverse().join(" ")
 
     const [beatmapset, err2] = await loadingSet
     if (err2) {
@@ -104,7 +107,7 @@ class Beatmap implements CommandAbstract {
 
     beatmapset.beatmaps.forEach(map => {
       difficultyOptions.push(
-      new StringSelectMenuOptionBuilder()
+        new StringSelectMenuOptionBuilder()
           .setLabel(`${map.difficulty_rating}★ - ${map.version}`)
           .setValue(map.id.toString())
           .setDefault(map.id === mapid)
@@ -145,7 +148,7 @@ class Beatmap implements CommandAbstract {
       setid: setid, id: mapid,
       difficulty: EmojiFactory.GetDifficultyEmoji(difficulty_rating, Gamemode), version: version,
       stars: difficulty_rating, maxCombo: max_combo,
-      ar: ar.roundFixed(1), od: od.roundFixed(1), hp: hp.roundFixed(1), cs: cs.roundFixed(1),
+      ar: AR.roundFixed(1), od: od.roundFixed(1), hp: hp.roundFixed(1), cs: cs.roundFixed(1),
       pp: pp
     })
     const embed = new EmbedBuilder()

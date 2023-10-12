@@ -102,6 +102,7 @@ export class PerformanceCalculator {
                     type: "normal",
                     acc: acc
                 })
+                break
             }
             case "fruits": {
                 const attributes = this.attributes as Beatmap.CtbAttributes
@@ -408,7 +409,7 @@ export class StdPerformance {
         }
         //console.log({type, acc, a: this})
         if (acc) this.FixHitcounts(acc)
-        //console.log({type, acc, a: this})
+        //console.log({type, acc, a: this, computedAcc: this.Accuracy()})
         this.computeEffectiveMissCount()
 
         this.computeAimValue()
@@ -418,7 +419,7 @@ export class StdPerformance {
 
         this.computeTotalValue()
 
-        //console.log("aim", this._aimValue, "speed", this._speedValue, "acc", this._accuracyValue, "fl", this._flashlightValue)
+        //console.log("aim", this._aimValue, "speed", this._speedValue, "acc", this._accuracyValue, "fl", this._flashlightValue, "total", this._totalValue)
         //console.log(this._num300, this._num100, this._num50, this._numMiss)
     }
 

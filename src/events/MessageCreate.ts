@@ -59,7 +59,9 @@ export class MessageCreateData implements EventData, MessageEventData {
         for (let arg of this.args) {
             if (regex.test(arg)) {
                 if (arg.startsWith("+")) arg = arg.substring(1)
-                const mods = arg.toUpperCase().split(/.{1,2}/g)
+                console.log(arg)
+                const mods = arg.toUpperCase().match(/.{1,2}/g)
+                console.log(mods)
                 this.args.splice(this.args.indexOf(arg), 1)
                 return mods
             }
@@ -115,9 +117,9 @@ export class MessageCreateData implements EventData, MessageEventData {
         aliases.push(key)
         for (const alias of aliases) {
             const index = this.args.findIndex((arg) => arg === alias)
-            if (index === -1) return null
+            if (index === -1) continue
             const val = this.args[index + 1]
-            if (val == null) return null
+            if (val == null) continue
             this.args.splice(index, 2)
             return val
         }
@@ -127,9 +129,9 @@ export class MessageCreateData implements EventData, MessageEventData {
         aliases.push(key)
         for (const alias of aliases) {
             const index = this.args.findIndex((arg) => arg === alias)
-            if (index === -1) return null
+            if (index === -1) continue
             const val = Number(this.args[index + 1])
-            if (isNaN(val) || val == null) return null
+            if (isNaN(val) || val == null) continue
             this.args.splice(index, 2)
             return val
         }

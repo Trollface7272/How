@@ -1,4 +1,5 @@
 import { BeatmapSet } from "./BeatmapSet"
+import { Clamp } from "./Utils"
 
 
 
@@ -80,12 +81,47 @@ export namespace Beatmap {
         }
     }
     export class FromId extends Base {
+        public get AR() {
+            let ar = this.ar
+            
+            if (this.mods.includes("HR")) {
+                ar = Math.min(10, ar * 1.4)
+            }
+
+            if (this.mods.includes("EZ")) {
+                ar = Math.max(0, ar * 0.5)
+            }
+
+            let ms: number = ar > 5 ? (1200 - 150 * (ar - 5)) : (1200 + 120 * (5 - ar))
+
+            if (this.mods.includes("DT")) {
+                ms /= 1.5
+            }
+            
+            if (this.mods.includes("HT")) {
+                ms /= 0.75   
+            }
+            
+            ar = ms < 1200 ? (13 - ms / 150) : (15 - ms / 120)
+
+            return Clamp(ar, -5, 11)
+        }
+
+
+
+
+        public mods: string[]
         beatmapset: BeatmapSet.Beatmap.FromId
         failtimes: { fail: number[], exit: number[] }
         constructor(map: FromId) {
             super(map)
             Object.assign(this, map)
             this.beatmapset = new BeatmapSet.Beatmap.FromId(this.beatmapset)
+            this.mods = []
+        }
+
+        public setMods(mods: string[]) {
+            this.mods = mods
         }
     }
     export class FromIds extends Base {
