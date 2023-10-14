@@ -237,7 +237,6 @@ export class PerformanceCalculator {
     }
 
     public async FetchAttributes() {
-
         let attributes: Difficulty = cache.get(`${this.beatmap.id}-${toBitMods(this.starRatingMods)}`)
         if (!attributes) attributes = await DifficultyFactory.GetDifficulty(this.beatmap.id, this.starRatingMods, this.beatmap.mode_int)
         if (!attributes || attributes.calculated_at < this.beatmap.lastUpdated) attributes = await this.GetAttributes()
@@ -246,6 +245,8 @@ export class PerformanceCalculator {
         }
         this.attributes = attributes
         cache.set(`${this.beatmap.id}-${toBitMods(this.starRatingMods)}`, this.attributes)
+        this.beatmap.difficulty_rating = this.attributes.star_rating
+        this.beatmap.max_combo = this.attributes.max_combo
         return attributes
     }
 

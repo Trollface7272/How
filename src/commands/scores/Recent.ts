@@ -13,6 +13,10 @@ import { TextRenderer } from "@src/class/renderer/Text"
 import NodeCache from "node-cache"
 import { randomBytes } from "crypto"
 import { CalculateProgress } from "@src/class/api/osu/Utils"
+import { Beatmap } from "@src/class/api/osu/Beatmap"
+import { BeatmapSet } from "@src/class/api/osu/BeatmapSet"
+import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
+import { CommandBase } from "@src/class/base/Command"
 
 interface args {
     Gamemode?: Gamemode
@@ -36,6 +40,7 @@ const componentCache = new NodeCache({
 })
 
 class RecentData extends CommandData implements CommandDataAbstract {
+    public args: args
     constructor(data: MessageEventData) { super(data) }
 
     public GetComandArgs(): args {
@@ -50,9 +55,11 @@ class RecentData extends CommandData implements CommandDataAbstract {
         const Map = this.data.GetBoolean("map", ["m", "map", "-m", "-map"]) ?? false
         const OD = this.data.GetNumber("od", ["od", "-od"]) ?? undefined
         const Username = this.data.GetUsername()
-        return {
+        const args = {
             Gamemode, Specific, Page, Id, Best, Fails, List, Count, Map, OD, Username
         }
+        this.args = args
+        return args
     }
 
     public GetOldComponentId(): string {
@@ -63,7 +70,7 @@ class RecentData extends CommandData implements CommandDataAbstract {
     }
 }
 
-class Recent implements CommandAbstract {
+class Recent extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["recent", "r", "rs", "recents", "recentscores", "recentscore"]
     private data: RecentData
     private args: args
@@ -71,6 +78,7 @@ class Recent implements CommandAbstract {
     private oldComponentId: string
 
     constructor(data: MessageEventData) {
+        super()
         this.componentId = randomBytes(16).toString("hex")
         this.data = new RecentData(data)
         this.args = this.data.GetComandArgs()
@@ -120,7 +128,7 @@ class Recent implements CommandAbstract {
             if (!score) return this.noScoresFound(Username, response)
             const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)])
             await loading
-            this.data.Reply(this.renderSingleBestScore({ score, page: Page, maxPages: allScores.length }))
+            this.data.Reply(await this.renderSingleBestScore({ score, page: Page, maxPages: allScores.length }))
             return CommandResponseCodes.OK
         }
         const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails })
@@ -154,7 +162,7 @@ class Recent implements CommandAbstract {
 
         await loading
 
-        this.data.Reply(this.renderSingleScore({ score, page: Page, maxPages: allScores.length, tries }))
+        this.data.Reply(await this.renderSingleScore({ score, page: Page, maxPages: allScores.length, tries }))
         return CommandResponseCodes.OK
     }
 
@@ -164,8 +172,42 @@ class Recent implements CommandAbstract {
         return CommandResponseCodes.OK
     }
 
-    private renderSingleBestScore({ score, page, maxPages }: { score: Score.Best, page: number, maxPages: number }) {
+    private async renderMap({ beatmap, beatmapset }: { beatmap: Beatmap.Base, beatmapset: BeatmapSet.Compact }) {
+        const { Drain: drain, AR: ar, HP: hp, OD: od, CS: cs, id: mapid, version, max_combo, Length: length, BPM: bpm, difficulty_rating, mods: Mods, mode: Gamemode, ranked } = beatmap
+        const { id: setid, status: _status, favourite_count } = beatmapset
+        
+        const calc = new PerformanceCalculator(beatmap, Mods)
+        await calc.FetchAttributes()
+        
+        const embed = new EmbedBuilder()
+        const pps = await Promise.all([
+            calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(95)
+        ])
+        
+        const status = _status.charAt(0).toUpperCase() + _status.slice(1)
+        const pp = this.RenderBeatmapPP(pps, [100, 99, 98, 95])
+
+        const description = TextRenderer.render("beatmap/beatmap", {
+            length: length.asTime(), drain: length != drain ? ` (${drain.asTime()})` : "", bpm: bpm, mods: Mods?.join("") ?? "No Mods",
+            setid: setid, id: mapid,
+            difficulty: EmojiFactory.GetDifficultyEmoji(difficulty_rating, Gamemode), version: version,
+            stars: difficulty_rating.roundFixed(2), maxCombo: max_combo,
+            ar: ar.roundDynamicFixed(1, 2), od: od.roundDynamicFixed(1, 2), hp: hp.roundDynamicFixed(1, 2), cs: cs.roundDynamicFixed(1, 2),
+            pp: pp
+        })
+        embed.setFooter({
+            text: `${status} | ${favourite_count} ❤︎`
+        })
+        embed.setDescription(description)
+        return embed
+    }
+
+    private async renderSingleBestScore({ score, page, maxPages }: { score: Score.Best, page: number, maxPages: number }) {
         const data = this.renderMultipleBestScores({ scores: [score], page, maxPages })
+
+        score.beatmap.setMods(score.mods)
+
+        if (this.data.args.Map) data.embeds[1] = await this.renderMap({ beatmap: score.beatmap, beatmapset: score.beatmapset })
 
         const embed = data.embeds[0]
         embed.setAuthor({
@@ -180,10 +222,16 @@ class Recent implements CommandAbstract {
         return data
     }
 
-    private renderSingleScore({ score, page, maxPages, tries }: { score: Score.Recent, page: number, maxPages: number, tries: number }) {
+    private async renderSingleScore({ score, page, maxPages, tries }: { score: Score.Recent, page: number, maxPages: number, tries: number }) {
         const { mods, rank: grade, mode, replay, mode_int, max_combo: combo, accuracy, statistics, user: { avatar_url }, beatmapset: { title }, beatmap: { version, difficulty_rating, url, max_combo, count_circles, count_sliders, count_spinners }, performance: { normal: { total: pp }, improved }, position: _rank } = score
         const embed = new EmbedBuilder()
         const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
+
+        let mapEmbed: Promise<EmbedBuilder>
+        score.beatmap.setMods(score.mods)
+
+
+        if (this.data.args.Map) mapEmbed = this.renderMap({ beatmap: score.beatmap, beatmapset: score.beatmapset })
 
         let rank: string = ""
         if (_rank) {
@@ -212,7 +260,7 @@ class Recent implements CommandAbstract {
         embed.setThumbnail(`https://b.ppy.sh/thumb/${score.beatmapset.id}l.jpg`)
         embed.setDescription(description)
 
-        return { embeds: [embed], components: [buttons] }
+        return { embeds: [embed, (await mapEmbed) || undefined], components: [buttons] }
     }
 
     private renderMultipleScores({ scores, page, maxPages }: { scores: Score.Recent[], page: number, maxPages: number }) {
@@ -284,7 +332,7 @@ class Recent implements CommandAbstract {
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(curentPage == maxPage),
             new ButtonBuilder()
-                .setCustomId(`recent;${this.componentId};${maxPage-1};${randomBytes(4)}`)
+                .setCustomId(`recent;${this.componentId};${maxPage - 1};${randomBytes(4)}`)
                 .setLabel(ButtonEmojis.End)
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(curentPage == maxPage)

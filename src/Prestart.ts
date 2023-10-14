@@ -2,6 +2,7 @@ import 'module-alias/register'
 import "dotenv/config"
 
 
+
 Date.prototype.toDiscordToolTip = function (): string {
     return `<t:${Math.floor(this.getTime() / 1000)}:R>`
 }
@@ -33,8 +34,13 @@ Number.prototype.asScientificNotation = function (this: number): string {
 Number.prototype.asTime = function (this: number): string {
     let minutes = Math.floor(this / 60)
     let seconds = this % 60
-    if (seconds < 10) seconds = Number(`0${seconds}`)
+    if (seconds < 10) return `${minutes}:0${seconds}`
     return `${minutes}:${seconds}`
+}
+
+Number.prototype.roundDynamicFixed = function (this: number, minDigits: number, maxDigits: number): string {
+    const digits = Math.min(maxDigits, Math.max(minDigits, parseFloat(this.toPrecision(5)).toString().split(".")[1]?.length ?? 0))
+    return this.roundFixed(digits)
 }
 
 String.prototype.isNumber = function (this: string): boolean {

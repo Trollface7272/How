@@ -53,34 +53,12 @@ export namespace Beatmap {
 
     }
     export class Base extends Compact {
+        public mods: string[]
+
         public get lastUpdated() {
             return new Date(this.last_updated)
         }
-        accuracy: number
-        ar: number
-        bpm: number
-        convert: boolean
-        count_circles: number
-        count_sliders: number
-        count_spinners: number
-        cs: number
-        deleted_at: string | null
-        drain: number
-        hit_length: number
-        is_scoreable: boolean
-        last_updated: string
-        mode_int: 0 | 1 | 2 | 3
-        passcount: string
-        playcount: string
-        ranked: string
-        url: string
-        max_combo?: number
-        constructor(map: Base) {
-            super(map)
-            Object.assign(this, map)
-        }
-    }
-    export class FromId extends Base {
+
         public get AR() {
             let ar = this.ar
             
@@ -107,22 +85,141 @@ export namespace Beatmap {
             return Clamp(ar, -5, 11)
         }
 
+        public get OD() {
+            let od = this.accuracy
 
+            if (this.mods.includes("HR")) {
+                od = Math.min(10, od * 1.4)
+            }
 
+            if (this.mods.includes("EZ")) {
+                od = Math.max(0, od * 0.5)
+            }
 
-        public mods: string[]
+            let ms = 80 - 6 * od
+
+            if (this.mods.includes("DT")) {
+                ms /= 1.5
+            }
+            
+            if (this.mods.includes("HT")) {
+                ms /= 0.75   
+            }
+            
+            od = Math.min(11, (80 - ms) / 6)
+
+            return Clamp(od, -5, 11)
+        }
+
+        public get CS() {
+            let cs = this.cs
+
+            if (this.mods.includes("HR")) {
+                cs = Math.min(10, cs * 1.3)
+            }
+
+            if (this.mods.includes("EZ")) {
+                cs = Math.max(0, cs * 0.5)
+            }
+
+            return Clamp(cs, 0, 10)
+        }
+
+        public get HP() {
+            let hp = this.drain
+
+            if (this.mods.includes("HR")) {
+                hp = Math.min(10, hp * 1.4)
+            }
+
+            if (this.mods.includes("EZ")) {
+                hp = Math.max(0, hp * 0.5)
+            }
+
+            return Clamp(hp, 0, 10)
+        }
+
+        public get BPM() {
+            let bpm = this.bpm
+
+            if (this.mods.includes("DT")) {
+                bpm *= 1.5
+            }
+
+            if (this.mods.includes("HT")) {
+                bpm *= 0.75
+            }
+
+            return bpm
+        }
+
+        public get Length() {
+            let length = this.total_length
+
+            if (this.mods.includes("DT")) {
+                length /= 1.5
+            }
+
+            if (this.mods.includes("HT")) {
+                length /= 0.75
+            }
+
+            return Math.round(length)
+        }
+
+        public get Drain() {
+            let drain = this.hit_length
+
+            if (this.mods.includes("DT")) {
+                drain /= 1.5
+            }
+
+            if (this.mods.includes("HT")) {
+                drain /= 0.75
+            }
+
+            return Math.round(drain)
+        }
+
+        accuracy: number
+        ar: number
+        bpm: number
+        convert: boolean
+        count_circles: number
+        count_sliders: number
+        count_spinners: number
+        cs: number
+        deleted_at: string | null
+        drain: number
+        hit_length: number
+        is_scoreable: boolean
+        last_updated: string
+        mode_int: 0 | 1 | 2 | 3
+        passcount: string
+        playcount: string
+        ranked: string
+        url: string
+        max_combo?: number
+        constructor(map: Base) {
+            super(map)
+            Object.assign(this, map)
+            this.mods = []
+        }
+
+        public setMods(mods: string[]) {
+            this.mods = mods ?? []
+        }
+    }
+    export class FromId extends Base {
         beatmapset: BeatmapSet.Beatmap.FromId
         failtimes: { fail: number[], exit: number[] }
         constructor(map: FromId) {
             super(map)
             Object.assign(this, map)
             this.beatmapset = new BeatmapSet.Beatmap.FromId(this.beatmapset)
-            this.mods = []
         }
 
-        public setMods(mods: string[]) {
-            this.mods = mods
-        }
+        
     }
     export class FromIds extends Base {
         beatmapset: BeatmapSet.Beatmap.FromIds //With rating

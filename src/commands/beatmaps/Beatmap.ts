@@ -12,12 +12,14 @@ import { TextRenderer } from "@src/class/renderer/Text";
 import { ActionRow, ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
 import { toBitMods } from "@src/class/api/osu/Utils";
+import { CommandBase } from "@src/class/base/Command";
 
 interface args {
   Gamemode: Gamemode
   Mods: string[]
   id: number
   Acc: number
+  Background: boolean
 }
 
 class BeatmapData extends CommandData implements CommandDataAbstract {
@@ -31,23 +33,25 @@ class BeatmapData extends CommandData implements CommandDataAbstract {
     const Gamemode = this.data.GetGamemode()
     const Mods = this.data.GetMods()
     const Acc = this.data.GetNumber("accuracy", ["acc", "a", "-accuracy", "-acc", "-a"])
+    const Background = this.data.GetBoolean("background", ["bg", "-background", "-bg"])
     const id = parseInt(this.data.GetUsername())
     return {
-      Gamemode, Mods, id: !isNaN(id) ? id : null, Acc: Acc
+      Gamemode, Mods, id: !isNaN(id) ? id : null, Acc: Acc, Background
     }
   }
 }
 
-class Beatmap implements CommandAbstract {
+class Beatmap extends CommandBase implements CommandAbstract {
   public static readonly names: string[] = ["map", "beatmap", "m"]
   private data: BeatmapData
 
   constructor(data: MessageEventData) {
+    super()
     this.data = new BeatmapData(data)
   }
   public async Handle(): Promise<CommandResponseCodes> {
     const user = this.data.GetUser()
-    let { Gamemode, Mods, id: _id, Acc } = this.data.GetComandArgs()
+    let { Gamemode, Mods, id: _id, Acc, Background } = this.data.GetComandArgs()
     console.log({ Gamemode, Mods, _id, Acc })
     if (this.data.IsInteraction()) {
       const interaction = this.data.GetInteraction()
@@ -78,6 +82,14 @@ class Beatmap implements CommandAbstract {
       Logger.Error("Fetch beatmap error ->", err)
       return CommandResponseCodes.UnknownError
     }
+
+    if (Background) {
+      this.data.Reply({
+        content: `https://assets.ppy.sh/beatmaps/${beatmap.beatmapset.id}/covers/raw.jpg`
+      })
+      return 
+    }
+
     beatmap.setMods(Mods)
     const loadingSet = HandleAsync(fetcher.GetBeatmapSet({ id: beatmap.beatmapset.id }))
 
@@ -85,17 +97,14 @@ class Beatmap implements CommandAbstract {
 
     await calc.FetchAttributes()
 
-    const { hit_length: drain, AR, drain: hp, accuracy: od, cs, id: mapid, version, max_combo, total_length: length, bpm, difficulty_rating, beatmapset: { id: setid, artist, creator, title, status: _status, ranked_date, favourite_count, submitted_date } } = beatmap
+    const { Drain: drain, AR: ar, HP: hp, OD: od, CS: cs, id: mapid, version, max_combo, Length: length, BPM: bpm, difficulty_rating, beatmapset: { id: setid, artist, creator, title, status: _status, ranked_date, favourite_count, submitted_date } } = beatmap
     const status = _status.charAt(0).toUpperCase() + _status.slice(1)
     let accs = [100, 99, 98, Acc ?? 95]
     const pps = await Promise.all([
       calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(Acc ?? 95)
     ])
-    let pp = pps.map((el, idx) => {
-      const acc = accs[idx]
-      const perf = el.normal.total
-      return `○ **${Math.round(acc * 100) / 100}%-**${perf.roundFixed(2)}`
-    }).reverse().join(" ")
+    
+    let pp = this.RenderBeatmapPP(pps, accs)
 
     const [beatmapset, err2] = await loadingSet
     if (err2) {
@@ -147,8 +156,8 @@ class Beatmap implements CommandAbstract {
       length: length.asTime(), drain: length != drain ? ` (${drain.asTime()})` : "", bpm: bpm, mods: Mods?.join("") ?? "No Mods",
       setid: setid, id: mapid,
       difficulty: EmojiFactory.GetDifficultyEmoji(difficulty_rating, Gamemode), version: version,
-      stars: difficulty_rating, maxCombo: max_combo,
-      ar: AR.roundFixed(1), od: od.roundFixed(1), hp: hp.roundFixed(1), cs: cs.roundFixed(1),
+      stars: difficulty_rating.roundFixed(2), maxCombo: max_combo,
+      ar: ar.roundDynamicFixed(1, 2), od: od.roundDynamicFixed(1, 2), hp: hp.roundDynamicFixed(1, 2), cs: cs.roundDynamicFixed(1, 2),
       pp: pp
     })
     const embed = new EmbedBuilder()
