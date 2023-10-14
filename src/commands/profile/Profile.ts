@@ -21,7 +21,11 @@ interface args {
 }
 
 class ProfileData extends CommandData implements CommandDataAbstract {
-  constructor(data: MessageEventData) { super(data) }
+  public args: args
+  constructor(data: MessageEventData) {
+    super(data)
+    this.args = this.GetComandArgs()
+  }
 
   private aliasToGamemode = {
     "osu": "osu",
@@ -59,7 +63,7 @@ class Profile extends CommandBase implements CommandAbstract {
 
     let {
       mode, username, events
-    } = this.data.GetComandArgs()
+    } = this.data.args
 
     let page = 1
     const perPage = 15
@@ -285,7 +289,7 @@ class Profile extends CommandBase implements CommandAbstract {
     return TextRenderer.render(`events/${event.type}`, data)
   }
 
-  private RenderEvents({ events, profile, page, perPage }: { events: OsuProfile.RecentActivity[], profile: OsuProfile.FromId, page: number, perPage: number }): InteractionReplyOptions|MessageReplyOptions {
+  private RenderEvents({ events, profile, page, perPage }: { events: OsuProfile.RecentActivity[], profile: OsuProfile.FromId, page: number, perPage: number }): InteractionReplyOptions | MessageReplyOptions {
     const row = this.EventsArrows(profile.username, page)
     if (perPage > events.length) row.components[1].setDisabled(true)
     const embed = new EmbedBuilder()

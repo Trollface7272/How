@@ -23,7 +23,11 @@ interface args {
 }
 
 class BeatmapData extends CommandData implements CommandDataAbstract {
-  constructor(data: MessageEventData) { super(data) }
+  public args: args
+  constructor(data: MessageEventData) {
+    super(data)
+    this.args = this.GetComandArgs()
+  }
 
   public GetBeatmap() {
     return this.data.GetBeatmapFromConversation()
@@ -51,7 +55,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
   }
   public async Handle(): Promise<CommandResponseCodes> {
     const user = this.data.GetUser()
-    let { Gamemode, Mods, id: _id, Acc, Background } = this.data.GetComandArgs()
+    let { Gamemode, Mods, id: _id, Acc, Background } = this.data.args
     console.log({ Gamemode, Mods, _id, Acc })
     if (this.data.IsInteraction()) {
       const interaction = this.data.GetInteraction()
@@ -87,7 +91,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
       this.data.Reply({
         content: `https://assets.ppy.sh/beatmaps/${beatmap.beatmapset.id}/covers/raw.jpg`
       })
-      return 
+      return
     }
 
     beatmap.setMods(Mods)
@@ -103,7 +107,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
     const pps = await Promise.all([
       calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(Acc ?? 95)
     ])
-    
+
     let pp = this.RenderBeatmapPP(pps, accs)
 
     const [beatmapset, err2] = await loadingSet

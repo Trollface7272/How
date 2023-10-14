@@ -5,9 +5,9 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter"
 import { Score } from "@src/class/api/osu/Score"
 import { Fetcher } from "@src/class/api/osu/Fetcher"
 import { Gamemode } from "@src/class/api/osu/MiscTypes"
-import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts"
+import { GamemodeNames } from "@src/class/api/osu/Consts"
 import { EmojiFactory } from "@src/class/Emojis"
-import { ButtonEmojis, FormatCombo, FormatHits, FormatProgress, GetFlag, HandleAsync } from "@src/Utils"
+import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync } from "@src/Utils"
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions } from "discord.js"
 import { TextRenderer } from "@src/class/renderer/Text"
 import NodeCache from "node-cache"
@@ -41,7 +41,10 @@ const componentCache = new NodeCache({
 
 class RecentData extends CommandData implements CommandDataAbstract {
     public args: args
-    constructor(data: MessageEventData) { super(data) }
+    constructor(data: MessageEventData) {
+        super(data)
+        this.args = this.GetComandArgs()
+    }
 
     public GetComandArgs(): args {
         const Gamemode = this.data.GetGamemode()
@@ -55,11 +58,9 @@ class RecentData extends CommandData implements CommandDataAbstract {
         const Map = this.data.GetBoolean("map", ["m", "map", "-m", "-map"]) ?? false
         const OD = this.data.GetNumber("od", ["od", "-od"]) ?? undefined
         const Username = this.data.GetUsername()
-        const args = {
+        return {
             Gamemode, Specific, Page, Id, Best, Fails, List, Count, Map, OD, Username
         }
-        this.args = args
-        return args
     }
 
     public GetOldComponentId(): string {
@@ -81,7 +82,7 @@ class Recent extends CommandBase implements CommandAbstract {
         super()
         this.componentId = randomBytes(16).toString("hex")
         this.data = new RecentData(data)
-        this.args = this.data.GetComandArgs()
+        this.args = this.data.args
         this.oldComponentId = this.data.GetOldComponentId()
         if (this.oldComponentId) this.args = componentCache.get<args>(this.oldComponentId)
         componentCache.set(this.componentId, this.args)
@@ -175,15 +176,15 @@ class Recent extends CommandBase implements CommandAbstract {
     private async renderMap({ beatmap, beatmapset }: { beatmap: Beatmap.Base, beatmapset: BeatmapSet.Compact }) {
         const { Drain: drain, AR: ar, HP: hp, OD: od, CS: cs, id: mapid, version, max_combo, Length: length, BPM: bpm, difficulty_rating, mods: Mods, mode: Gamemode, ranked } = beatmap
         const { id: setid, status: _status, favourite_count } = beatmapset
-        
+
         const calc = new PerformanceCalculator(beatmap, Mods)
         await calc.FetchAttributes()
-        
+
         const embed = new EmbedBuilder()
         const pps = await Promise.all([
             calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(95)
         ])
-        
+
         const status = _status.charAt(0).toUpperCase() + _status.slice(1)
         const pp = this.RenderBeatmapPP(pps, [100, 99, 98, 95])
 
