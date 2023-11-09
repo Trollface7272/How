@@ -36,7 +36,7 @@ export class PerformanceCalculator {
 
     public constructor(private beatmap: Beatmap.Base, private mods: string[]) {
         if (!this.mods) this.mods = []
-        this.starRatingMods = this.mods.filter(mod => difficulty_mods.includes(mod))
+        this.starRatingMods = this.mods.filter(mod => difficulty_mods.includes(mod)).map(el => el.replace("NC", "DT"))
         this.starRatingMods.push("CL")
     }
 
@@ -273,6 +273,7 @@ export class PerformanceCalculator {
             Logger.Error("Performance Calculator - GetAttributes - JSON Parse", errJson, "raw ->", response, "command ->", command)
             return null
         }
+        console.log(parsed, response)
         const attributes = parsed.results[0].attributes
         //console.log(response, parsed, attributes)
         attributes.id = this.beatmap.id
@@ -515,8 +516,8 @@ export class StdPerformance {
 
         const numTotalHits = this.TotalHits()
 
-        const lengthBonus = 0.95 + 0.4 * Math.min(1, numTotalHits / 2000) +
-            (numTotalHits > 2000 ? Math.log10(numTotalHits / 2000) * 0.5 : 0)
+        const lengthBonus = 1 //( 0.95 + 0.4 * Math.min(1, numTotalHits / 2000) +
+            //(numTotalHits > 2000 ? Math.log10(numTotalHits / 2000) * 0.5 : 0))
         this._aimValue *= lengthBonus
 
         // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
@@ -558,8 +559,8 @@ export class StdPerformance {
 
         const numTotalHits = this.TotalHits()
 
-        const lengthBonus = 0.95 + 0.4 * Math.min(1, numTotalHits / 2000) +
-            (numTotalHits > 2000 ? Math.log10(numTotalHits / 2000) * 0.5 : 0)
+        const lengthBonus = 1 //0.95 + 0.4 * Math.min(1, numTotalHits / 2000) +
+            //(numTotalHits > 2000 ? Math.log10(numTotalHits / 2000) * 0.5 : 0)
         this._speedValue *= lengthBonus
 
         // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.

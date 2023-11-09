@@ -109,7 +109,7 @@ class Recent extends CommandBase implements CommandAbstract {
         if (Best) {
             const [allScores, err] = Scores?.length > 0 ? [Scores as Score.Best[], null] : await HandleAsync(fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "best", Limit: 100 }))
             this.args.Scores = allScores
-            allScores.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            //allScores.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
             if (List) {
                 const scores =
                     (Specific?.length > 0 ?
@@ -151,7 +151,7 @@ class Recent extends CommandBase implements CommandAbstract {
 
         const score = allScores[Page]
         if (!score) return this.noScoresFound(Username, response)
-
+        console.log("difficulty pre", score.beatmap.difficulty_rating, score.mods)
         const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)]);
 
         let tries = 0
@@ -162,6 +162,7 @@ class Recent extends CommandBase implements CommandAbstract {
         }
 
         await loading
+        console.log("difficulty post", score.beatmap.difficulty_rating, score.mods)
 
         this.data.Reply(await this.renderSingleScore({ score, page: Page, maxPages: allScores.length, tries }))
         return CommandResponseCodes.OK
@@ -205,7 +206,6 @@ class Recent extends CommandBase implements CommandAbstract {
 
     private async renderSingleBestScore({ score, page, maxPages }: { score: Score.Best, page: number, maxPages: number }) {
         const data = this.renderMultipleBestScores({ scores: [score], page, maxPages })
-
         score.beatmap.setMods(score.mods)
 
         if (this.data.args.Map) data.embeds[1] = await this.renderMap({ beatmap: score.beatmap, beatmapset: score.beatmapset })
@@ -261,7 +261,7 @@ class Recent extends CommandBase implements CommandAbstract {
         embed.setThumbnail(`https://b.ppy.sh/thumb/${score.beatmapset.id}l.jpg`)
         embed.setDescription(description)
 
-        return { embeds: [embed, (await mapEmbed) || undefined], components: [buttons] }
+        return { embeds: [embed, (await mapEmbed)].filter(el => el != null), components: [buttons] }
     }
 
     private renderMultipleScores({ scores, page, maxPages }: { scores: Score.Recent[], page: number, maxPages: number }) {

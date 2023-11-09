@@ -96,6 +96,9 @@ export namespace Score {
         constructor(score: Firsts) {
             super(score)
             Object.assign(this, score)
+            this.beatmap = new Beatmap.Base(this.beatmap)
+            this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
+            this.user = new Profile.Compact(this.user)
         }
     }
 
@@ -103,6 +106,9 @@ export namespace Score {
         constructor(score: Pinned) {
             super(score)
             Object.assign(this, score)
+            this.beatmap = new Beatmap.Base(this.beatmap)
+            this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
+            this.user = new Profile.Compact(this.user)
         }
     }
 
@@ -112,6 +118,9 @@ export namespace Score {
             super(score)
             Object.assign(this, score)
             this.weight = score.weight
+            this.beatmap = new Beatmap.Base(this.beatmap)
+            this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
+            this.user = new Profile.Compact(this.user)
         }
     }
 
