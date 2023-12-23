@@ -27,6 +27,10 @@ export class InteractionCreateData implements EventData, MessageEventData {
         private interaction: Interaction
     ) { }
 
+    public GetBeatmap(): number {
+        return matchForId(this.GetString("beatmap"))
+    }
+
     public async GetBeatmapFromConversation(): Promise<number> {
         const map = this.GetString("beatmap")
         if (map) {

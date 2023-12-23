@@ -77,4 +77,8 @@ export abstract class MessageEventData {
     public async GetBeatmapFromConversation(): Promise<number> {
         throw Event.ReturnCode.Unimplemented
     }
+
+    public GetBeatmap(): number {
+        throw Event.ReturnCode.Unimplemented
+    }
 }

@@ -123,14 +123,29 @@ export class Fetcher {
         return history
     }
 
-    public async GetBeatmapUserScore({ User, Beatmap, Gamemode, Mods }: { User: number, Beatmap: number, Gamemode: Gamemode, Mods?: string[] }) {
-        const resp = await this.axios.get(Endpoints.userBeatmapScore(Beatmap, User), {
+    public async GetBeatmapUserScore({ Username, Id, Beatmap, Gamemode, Mods }: { Username: string, Id: number, Beatmap: number, Gamemode: Gamemode, Mods: string[] }) {
+        if (!Id && Username) {
+            UsernameToIdCache.has(Username) ? Id = UsernameToIdCache.get(Username) : Id = (await this.GetProfile({ Gamemode, Username })).id
+        }
+        const resp = await this.axios.get(Endpoints.userBeatmapScore(Beatmap, Id), {
             params: {
                 mode: Gamemode,
                 mods: Mods
             }
         })
         return new Score.BeatmapUserScore(resp.data)
+    }
+
+    public async GetBeatmapUserScores({ Username, Id, Beatmap, Gamemode }: { Username: string, Id: number, Beatmap: number, Gamemode: Gamemode }) {
+        if (!Id && Username) {
+            UsernameToIdCache.has(Username) ? Id = UsernameToIdCache.get(Username) : Id = (await this.GetProfile({ Gamemode, Username })).id
+        }
+        const resp = await this.axios.get(Endpoints.userBeatmapScores(Beatmap, Id), {
+            params: {
+                mode: Gamemode
+            }
+        })
+        return resp.data.scores.map(score => new Score.BaseScore(score)) as Score.BaseScore[]
     }
 
     public async GetScorePosition({ id, Gamemode }: { id: number, Gamemode: Gamemode }) {

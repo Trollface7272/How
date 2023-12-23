@@ -30,6 +30,18 @@ export class MessageCreateData implements EventData, MessageEventData {
         this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
     }
+
+    public GetBeatmap(): number {
+        for (let i = 0; i < this.args.length; i++) {
+            const el = this.args[i];
+            const matches = matchForId(el)
+            if (matches) {
+                this.args.slice(i, 1)
+                return matches
+            }
+        }
+    }
+
     public async GetBeatmapFromConversation(): Promise<number> {
         if (this.message.mentions.repliedUser) {
             const id = searchMessage(await this.message.channel.messages.fetch(this.message.reference.messageId))

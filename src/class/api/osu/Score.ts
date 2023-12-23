@@ -164,6 +164,11 @@ export namespace Score {
         }
     }
     export class FromId extends BaseScore {
+        performance?: {
+            normal: PerformanceContainer
+            improved?: PerformanceContainer
+        }
+        
         type: "score_best_osu"
         current_user_attributes: UserAttributes
         beatmap: Beatmap.Base
@@ -177,6 +182,11 @@ export namespace Score {
             this.beatmap = new Beatmap.Base(this.beatmap)
             this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
             this.user = new Profile.Compact(this.user)
+        }
+
+        public async fetchPerformance() {
+            const calc = new PerformanceCalculator(this.beatmap, this.mods)
+            this.performance = await calc.Calculate(this)
         }
     }
 }
