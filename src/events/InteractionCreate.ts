@@ -91,7 +91,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
 
     public GetBoolean(key: string): boolean {
         if (!this.interaction.isChatInputCommand()) return null
-        return this.interaction.options.getBoolean(key)
+        return this.interaction.options.getBoolean(key) ?? false
     }
 
     public async LoadDbData(): Promise<unknown> {
@@ -120,13 +120,27 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public async Reply(msg: ReplyOptions): Promise<Message<boolean> | InteractionResponse> {
-        if (this.interaction.isAnySelectMenu() || this.interaction.isButton())
+        if (this.interaction.isAnySelectMenu() || this.interaction.isButton()) {
+            if (this.interaction.deferred) {
+                return this.interaction.editReply(msg as MessageEditOptions)
+            }   
             return this.interaction.update(msg as MessageEditOptions)
+        }
         if (this.interaction.isCommand()) {
             if (this.interaction.replied) return
             return this.interaction.reply(msg as InteractionReplyOptions)
         }
 
+    }
+
+    public async defer() {
+        if (this.interaction.isCommand()) {
+            if (this.interaction.replied) return
+            return this.interaction.deferReply()
+        }
+        if (this.interaction.isMessageComponent()) {
+            return this.interaction.deferUpdate()
+        }
     }
 }
 
@@ -141,6 +155,7 @@ export class InteractionCreate implements Event {
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
         try {
+            data.defer()
             const command = new commandData(data)
             const code = await command.Handle()
             switch (code) {

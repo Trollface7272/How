@@ -4,6 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { EmbedBuilder, version } from "discord.js";
 import { totalmem } from "os";
+import { CommandBase } from "@src/class/base/Command";
 
 interface args {
 
@@ -17,17 +18,18 @@ class InfoData extends CommandData implements CommandDataAbstract {
     }
 }
 
-class Info implements CommandAbstract {
+class Info extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["info"]
     private data: InfoData
 
     constructor(data: MessageEventData) {
+        super()
         this.data = new InfoData(data)
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const client = this.data.GetClient()
         const user = this.data.GetUser()
-        const embed = new EmbedBuilder()
+        const embed = this.GetBaseEmbed()
             .addFields({ name: "Build", value: process.env.NODE_ENV == "development" ? "Development" : "Production", inline: true },
                 { name: "Uptime", value: `${new Date(Date.now() - (process.uptime() * 1000)).toDiscordToolTip()}`, inline: true },
                 { name: "Memory Usage", value: `${(process.memoryUsage().heapUsed / (1024 * 1024)).toFixed(2)}/${(totalmem() / (1024 * 1024)).toFixed(0)} MB`, inline: true },

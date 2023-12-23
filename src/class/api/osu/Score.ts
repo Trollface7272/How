@@ -82,7 +82,7 @@ export namespace Score {
         }
 
         public async fetchPosition(discordUserId: string) {
-            if (this.rank == "F") return
+            if (this.rank == "F" || !this.beatmap.is_scoreable) return
             const [resp, err] = await HandleAsync((await Fetcher.Create(discordUserId)).GetScorePosition({ Gamemode: this.mode, id: this.best_id }))
             if (err) {
                 Logger.Error("Fetch position error ->", err)

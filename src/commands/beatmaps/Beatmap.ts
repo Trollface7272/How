@@ -164,7 +164,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
       ar: ar.roundDynamicFixed(1, 2), od: od.roundDynamicFixed(1, 2), hp: hp.roundDynamicFixed(1, 2), cs: cs.roundDynamicFixed(1, 2),
       pp: pp
     })
-    const embed = new EmbedBuilder()
+    const embed = this.GetBaseEmbed()
     embed.setDescription(description)
     embed.setAuthor({
       name: `${artist} - ${title} by ${creator}`,

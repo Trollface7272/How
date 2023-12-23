@@ -106,7 +106,7 @@ class Profile extends CommandBase implements CommandAbstract {
   }
 
   private RenderProfile({ profile, mode }: { profile: OsuProfile.FromId, mode: Gamemode }) {
-    const embed = new EmbedBuilder()
+    const embed = this.GetBaseEmbed()
     const { statistics, username, country_code, is_online } = profile
     const { global_rank, level, pp, hit_accuracy: accuracy, ranked_score, total_score, grade_counts, play_count, play_time, country_rank } = statistics
     const { current: currentLevel, progress: levelProgress } = level
@@ -292,7 +292,7 @@ class Profile extends CommandBase implements CommandAbstract {
   private RenderEvents({ events, profile, page, perPage }: { events: OsuProfile.RecentActivity[], profile: OsuProfile.FromId, page: number, perPage: number }): InteractionReplyOptions | MessageReplyOptions {
     const row = this.EventsArrows(profile.username, page)
     if (perPage > events.length) row.components[1].setDisabled(true)
-    const embed = new EmbedBuilder()
+    const embed = this.GetBaseEmbed()
     embed.setAuthor({
       name: `Recent Activity for ${profile.username}`,
       iconURL: GetFlag(profile.country_code),
@@ -323,7 +323,7 @@ class Profile extends CommandBase implements CommandAbstract {
   }
 
   private RenderUserNotFound({ username }: { username: string }) {
-    const embed = new EmbedBuilder()
+    const embed = this.GetBaseEmbed()
       .setTitle(`User ${username} not found`)
     return {
       embeds: [embed]

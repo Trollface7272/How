@@ -3,12 +3,17 @@ import { Client } from "../Client";
 import { MessageEventData } from "../partials/MessageEvent";
 import { RawUser } from "../RawUser";
 import { User } from "../database/User";
+import { Logger } from "../Logger";
 
 export class CommandData {
     constructor(protected data: MessageEventData) { }
 
     public Reply(msg: MessageReplyOptions | InteractionReplyOptions) {
         return this.data.Reply(msg)
+            .catch(err => {
+                Logger.Error("Error responding to command", err)
+                Logger.Trace()
+            })
     }
 
     public GetUser(): User {

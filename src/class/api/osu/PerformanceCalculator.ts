@@ -10,6 +10,9 @@ import { Clamp, DownloadFile, toBitMods } from "./Utils";
 import { BitMods } from "./Consts";
 import { resolve } from "path";
 
+type performance = { normal: PerformanceContainer, improved?: PerformanceContainer }
+type difficulty = { stars: number, maxCombo: number }
+type cached = { performance: performance, difficulty: difficulty }
 const cache = new NodeCache({
     checkperiod: 600,
     stdTTL: 3600,
@@ -40,9 +43,12 @@ export class PerformanceCalculator {
         this.starRatingMods.push("CL")
     }
 
-    public async Calculate(score: Score.BaseScore): Promise<{ normal: PerformanceContainer, improved?: PerformanceContainer }> {
-        if (cache.get(`${score.id}-${score.mode}`)) {
-            return cache.get(`${score.id}-${score.mode}`)
+    public async Calculate(score: Score.BaseScore): Promise<performance> {
+        if (cache.get<cached>(`${score.id}-${score.mode}`)) {
+            const cached = cache.get<cached>(`${score.id}-${score.mode}`)
+            this.beatmap.difficulty_rating = cached.difficulty.stars
+            this.beatmap.max_combo = cached.difficulty.maxCombo
+            return cached.performance
         }
         if (!this.attributes) await this.FetchAttributes()
         if (!this.attributes) return null
@@ -66,7 +72,10 @@ export class PerformanceCalculator {
                 break
             }
         }
-        cache.set(`${score.id}-${score.mode}`, resp)
+        cache.set<cached>(`${score.id}-${score.mode}`, {
+            difficulty: {maxCombo: this.beatmap.max_combo, stars: this.beatmap.difficulty_rating},
+            performance: resp
+        })
         this.beatmap.difficulty_rating = this.attributes.star_rating
         this.beatmap.max_combo = this.attributes.max_combo
         return resp
@@ -273,9 +282,7 @@ export class PerformanceCalculator {
             Logger.Error("Performance Calculator - GetAttributes - JSON Parse", errJson, "raw ->", response, "command ->", command)
             return null
         }
-        console.log(parsed, response)
         const attributes = parsed.results[0].attributes
-        //console.log(response, parsed, attributes)
         attributes.id = this.beatmap.id
         attributes.gamemode = this.beatmap.mode_int
         const data = new Difficulty(attributes)
@@ -516,8 +523,8 @@ export class StdPerformance {
 
         const numTotalHits = this.TotalHits()
 
-        const lengthBonus = 1 //( 0.95 + 0.4 * Math.min(1, numTotalHits / 2000) +
-            //(numTotalHits > 2000 ? Math.log10(numTotalHits / 2000) * 0.5 : 0))
+        const lengthBonus = ( 0.95 + 0.4 * Math.min(1, numTotalHits / 2000) +
+            (numTotalHits > 2000 ? Math.log10(numTotalHits / 2000) * 0.5 : 0))
         this._aimValue *= lengthBonus
 
         // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.
@@ -559,8 +566,8 @@ export class StdPerformance {
 
         const numTotalHits = this.TotalHits()
 
-        const lengthBonus = 1 //0.95 + 0.4 * Math.min(1, numTotalHits / 2000) +
-            //(numTotalHits > 2000 ? Math.log10(numTotalHits / 2000) * 0.5 : 0)
+        const lengthBonus = 0.95 + 0.4 * Math.min(1, numTotalHits / 2000) +
+            (numTotalHits > 2000 ? Math.log10(numTotalHits / 2000) * 0.5 : 0)
         this._speedValue *= lengthBonus
 
         // Penalize misses by assessing # of misses relative to the total # of objects. Default a 3% reduction for any # of misses.

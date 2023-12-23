@@ -8,7 +8,7 @@ import { Gamemode } from "@src/class/api/osu/MiscTypes"
 import { GamemodeNames } from "@src/class/api/osu/Consts"
 import { EmojiFactory } from "@src/class/Emojis"
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync } from "@src/Utils"
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions } from "discord.js"
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, Utils, escapeMarkdown } from "discord.js"
 import { TextRenderer } from "@src/class/renderer/Text"
 import NodeCache from "node-cache"
 import { randomBytes } from "crypto"
@@ -87,16 +87,26 @@ class Recent extends CommandBase implements CommandAbstract {
         if (this.oldComponentId) this.args = componentCache.get<args>(this.oldComponentId)
         componentCache.set(this.componentId, this.args)
     }
+
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
         const response: InteractionReplyOptions | MessageReplyOptions = {}
-        const { Username, Id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.args
+        //Map is unused here
+        const { Username: _username, Id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.args
+        const Username = Id?.toString() ?? _username ?? user.username
+
+        if (!Username) {
+            await this.data.Reply(this.RenderNoUserError())
+            return CommandResponseCodes.OK
+        }
+
         const listPageSize = 5
         let Page = _Page
         if (Specific?.length == 1) {
             Page = Specific[0]
             this.args.Page = Page
         }
+
         if (this.data.IsInteraction()) {
             const interaction = this.data.GetInteraction()
             if (interaction.isButton()) {
@@ -106,10 +116,23 @@ class Recent extends CommandBase implements CommandAbstract {
         }
 
         const fetcher = await Fetcher.Create(user.id)
+
+        if (Count) {
+            const profile = await fetcher.GetProfile({ Username: Username, Gamemode: Gamemode })
+            const scores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: true, Id: Id })
+
+            const passes = profile.scores_recent_count
+            const fails = scores.filter(score => score.rank == "F").length
+            const total = passes + fails
+            const embed = this.renderCount({ passes, fails, total })
+            this.data.Reply({ embeds: [embed] })
+            return CommandResponseCodes.OK
+        }
+
         if (Best) {
             const [allScores, err] = Scores?.length > 0 ? [Scores as Score.Best[], null] : await HandleAsync(fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "best", Limit: 100 }))
             this.args.Scores = allScores
-            //allScores.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            allScores.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
             if (List) {
                 const scores =
                     (Specific?.length > 0 ?
@@ -132,7 +155,7 @@ class Recent extends CommandBase implements CommandAbstract {
             this.data.Reply(await this.renderSingleBestScore({ score, page: Page, maxPages: allScores.length }))
             return CommandResponseCodes.OK
         }
-        const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails })
+        const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails, Id: Id })
         this.args.Scores = allScores
 
         if (allScores.length == 0) return this.noScoresFound(Username, response)
@@ -151,7 +174,6 @@ class Recent extends CommandBase implements CommandAbstract {
 
         const score = allScores[Page]
         if (!score) return this.noScoresFound(Username, response)
-        console.log("difficulty pre", score.beatmap.difficulty_rating, score.mods)
         const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)]);
 
         let tries = 0
@@ -162,10 +184,17 @@ class Recent extends CommandBase implements CommandAbstract {
         }
 
         await loading
-        console.log("difficulty post", score.beatmap.difficulty_rating, score.mods)
 
         this.data.Reply(await this.renderSingleScore({ score, page: Page, maxPages: allScores.length, tries }))
         return CommandResponseCodes.OK
+    }
+
+    private renderCount({ fails, passes, total }: { passes: number, fails: number, total: number }) {
+        const embed = this.GetBaseEmbed()
+        embed.setDescription(TextRenderer.render("recent/count", {
+            passes: passes, fails: fails, total: total
+        }))
+        return embed
     }
 
     private async noScoresFound(username: string, resp: InteractionReplyOptions | MessageReplyOptions) {
@@ -181,7 +210,7 @@ class Recent extends CommandBase implements CommandAbstract {
         const calc = new PerformanceCalculator(beatmap, Mods)
         await calc.FetchAttributes()
 
-        const embed = new EmbedBuilder()
+        const embed = this.GetBaseEmbed()
         const pps = await Promise.all([
             calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(95)
         ])
@@ -225,7 +254,7 @@ class Recent extends CommandBase implements CommandAbstract {
 
     private async renderSingleScore({ score, page, maxPages, tries }: { score: Score.Recent, page: number, maxPages: number, tries: number }) {
         const { mods, rank: grade, mode, replay, mode_int, max_combo: combo, accuracy, statistics, user: { avatar_url }, beatmapset: { title }, beatmap: { version, difficulty_rating, url, max_combo, count_circles, count_sliders, count_spinners }, performance: { normal: { total: pp }, improved }, position: _rank } = score
-        const embed = new EmbedBuilder()
+        const embed = this.GetBaseEmbed()
         const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
 
         let mapEmbed: Promise<EmbedBuilder>
@@ -237,9 +266,9 @@ class Recent extends CommandBase implements CommandAbstract {
         let rank: string = ""
         if (_rank) {
             if (replay) {
-                rank = `[#${_rank}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
+                rank = `▸ [#${_rank}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
             } else {
-                rank = `#${_rank}`
+                rank = `▸ #${_rank}`
             }
         }
 
@@ -277,7 +306,7 @@ class Recent extends CommandBase implements CommandAbstract {
     }
 
     private renderMultipleBestScores({ scores, page, maxPages }: { scores: Score.Recent[], page: number, maxPages: number }) {
-        const embed = new EmbedBuilder()
+        const embed = this.GetBaseEmbed()
             .setColor(this.data.GetEmbedColor())
         const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
 
@@ -287,13 +316,13 @@ class Recent extends CommandBase implements CommandAbstract {
             let rank: string = ""
             if (score.position) {
                 if (score.replay) {
-                    rank = `[#${score.position}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
+                    rank = `▸ [#${score.position}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
                 } else {
-                    rank = `#${score.position}`
+                    rank = `▸ #${score.position}`
                 }
             }
             return TextRenderer.render(`recent/score`, {
-                index: index + 1, title: title, difficulty: version, beatmapUrl: url, mods: mods.length == 0 ? "NoMod" : mods.join(""), starRating: score.beatmap.difficulty_rating.roundFixed(2),
+                index: index + 1, title: escapeMarkdown(title), difficulty: escapeMarkdown(version), beatmapUrl: url, mods: mods.length == 0 ? "NoMod" : mods.join(""), starRating: score.beatmap.difficulty_rating.roundFixed(2),
                 grade: EmojiFactory.GetEmoji(`Ranking${grade}`), pp: pp.roundFixed(3), fcpp: fcpp ? `/${fcpp.roundFixed(3)}pp` : "", accuracy: (accuracy * 100).roundFixed(2), rank: rank,
                 score: score.score.toLocaleString("en-US"), combo: FormatCombo(combo, max_combo, score.mode), hits: FormatHits(score.statistics, score.mode),
                 timestamp: new Date(score.created_at).toDiscordToolTip()
