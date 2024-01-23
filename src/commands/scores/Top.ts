@@ -3,13 +3,13 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import NodeCache from "node-cache";
 import { Logger } from "@src/class/Logger";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, escapeMarkdown } from "discord.js";
-import { Score } from "@src/class/api/osu/Score";
+import { Score } from "@src/class/api/osu/class/Score";
 import { randomBytes, randomInt } from "crypto";
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag } from "@src/Utils";
 import { EmojiFactory } from "@src/class/Emojis";
@@ -126,8 +126,8 @@ class Top extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        const { GreaterThan, Gamemode, Id, Mods, Page: _Page, Random, Recent, Reversed, Sort, Specific, Type, Username: _username } = this.args
-        const Username = Id?.toString() ?? _username ?? user.username
+        const { GreaterThan, Gamemode, Id: _id, Mods, Page: _Page, Random, Recent, Reversed, Sort, Specific, Type, Username } = this.args
+        const Id = !Username && !_id ? user.osu.userId : _id
 
         const listPageSize = 5
         let Page = _Page
@@ -173,10 +173,6 @@ class Top extends CommandBase implements CommandAbstract {
             scores.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
         }
 
-        if (Reversed) {
-            scores.reverse()
-        }
-
         if (Sort) {
             const key = this.GetSortKey(Sort).split(".")
             scores.sort((a, b) => {
@@ -184,6 +180,10 @@ class Top extends CommandBase implements CommandAbstract {
                 const sortByB = key.reduce((o, i) => o[i], b)
                 return sortByB - sortByA
             })
+        }
+
+        if (this.args.Reversed) {
+            scores.reverse()
         }
 
         let pickedScores: Score.Firsts[] = scores.slice(Page * listPageSize, Page * listPageSize + listPageSize)
@@ -228,6 +228,7 @@ class Top extends CommandBase implements CommandAbstract {
     }
 
     private GetSortKey(inp: string) {
+        if (inp.startsWith("r") && inp != "replay") this.args.Reversed = true
         switch (inp) {
             case "pp":
                 return "pp"

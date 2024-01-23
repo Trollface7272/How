@@ -3,10 +3,10 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { TextRenderer } from "@src/class/renderer/Text";
-import { Score } from "@src/class/api/osu/Score";
+import { Score } from "@src/class/api/osu/class/Score";
 import { ButtonEmojis, FormatCombo, FormatHits } from "@src/Utils";
 import { EmojiFactory } from "@src/class/Emojis";
 import NodeCache from "node-cache";
@@ -83,10 +83,10 @@ class Compare extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        const { Gamemode, Beatmap: _Beatmap, Username: _username, Id, Page: _Page } = this.data.args
-        const Username = !_username && !Id ? user.username : _username
-        const Beatmap = _Beatmap || await this.data.GetBeatmapFromConversation()
+        const { Gamemode, Beatmap: _Beatmap, Username, Id: _id, Page: _Page } = this.data.args
+        const Id = !Username && !_id ? user.osu.userId : _id
 
+        const Beatmap = _Beatmap || await this.data.GetBeatmapFromConversation()
         let Page = _Page
         if (this.data.IsInteraction()) {
             const interaction = this.data.GetInteraction()
@@ -96,7 +96,6 @@ class Compare extends CommandBase implements CommandAbstract {
                 this.args.Page = Page
             }
         }
-
         if (!Beatmap) {
             const embed = this.BeatmapNotFoundInConversation()
             this.data.Reply({ embeds: [embed] })
@@ -116,7 +115,7 @@ class Compare extends CommandBase implements CommandAbstract {
             score.index = this.args.Page * 3 + i + 1
         })
         await Promise.all(pickedScores.map((score: Score.FromId) => score.fetchPerformance()))
-        
+
         const embed = this.RenderScores({ scores: pickedScores, totalScores: scores.length })
         const buttons = Math.ceil(scores.length / 3) == 1 ? undefined : this.RenderButtons({ curentPage: this.args.Page, maxPage: Math.ceil(scores.length / 3) })
         this.data.Reply({ embeds: [embed], components: buttons ? [buttons] : undefined })
@@ -140,7 +139,7 @@ class Compare extends CommandBase implements CommandAbstract {
         const embed = this.GetBaseEmbed()
         const { user_id, beatmapset: { title, creator, id: beatmapsetId }, beatmap: { version, url } } = scores[0]
         const description = scores.map(score => {
-            const { created_at, index, mods, rank: grade, score: scoreNum, max_combo: combo, statistics, accuracy, performance: { normal: { total: pp }, improved }, beatmap: { max_combo, mode, difficulty_rating: stars } } = score
+            const { created_at, index, mods: _mods, rank: grade, score: scoreNum, max_combo: combo, statistics, accuracy, performance: { normal: { total: pp }, improved }, beatmap: { max_combo, mode, difficulty_rating: stars } } = score
             const fcpp = improved ? improved.total : undefined
             let rank: string = ""
             if (score.rank_global) {
@@ -150,6 +149,7 @@ class Compare extends CommandBase implements CommandAbstract {
                     rank = `▸ #${score.rank_global}`
                 }
             }
+            let mods = _mods.length == 0 ? "No Mod" : _mods.join("")
             return TextRenderer.render("compare", {
                 index: index, mods: mods, stars: stars.roundFixed(2),
                 grade: EmojiFactory.GetEmoji(`Ranking${grade}`), pp: pp.roundFixed(3), fcpp: fcpp ? `/${fcpp.roundFixed(3)}pp` : "", acc: (accuracy * 100).roundFixed(2), rank: rank,

@@ -2,38 +2,76 @@ import { CommandAbstract, CommandDataAbstract, CommandResponseCodes } from "@src
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
-import { SlashCommandBuilder } from "discord.js";
+import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { randomBytes } from "crypto";
+import { CommandBase } from "@src/class/base/Command";
 
 interface args {
-
+    Friends: boolean
 }
-
-const interactionData = new SlashCommandBuilder()
-    .setName("link")
-    .setDescription("Link your osu! account")
 
 class LinkData extends CommandData implements CommandDataAbstract {
     constructor(data: MessageEventData) { super(data) }
 
     public GetComandArgs(): args {
-        return {}
+        return {
+            Friends: this.data.GetBoolean("friends", [])
+        }
     }
 }
 
-class Link implements CommandAbstract {
-    public static readonly names: string[] = []
-    public static readonly interactionData: SlashCommandBuilder = interactionData
+class Link extends CommandBase implements CommandAbstract {
+    public static readonly names: string[] = ["link"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: LinkData
+    private args: args
 
     constructor(data: MessageEventData) {
+        super()
         this.data = new LinkData(data)
+        this.args = this.data.GetComandArgs()
     }
     public async Handle(): Promise<CommandResponseCodes> {
+        if (!this.data.IsInteraction()) {
+            const embed = this.GetBaseEmbed()
+                .setDescription("Use the slash command")
+            this.data.Reply({
+                embeds: [embed],
+                ephemeral: true
+            })
+            return CommandResponseCodes.OK
+        }
+        const user = this.data.GetUser()
 
+        const temp = randomBytes(16).toString("hex")
+        const scopes = []
+        scopes.push("identify")
+        scopes.push("public")
+        if (this.args.Friends) scopes.push("friends.read")
+        await user.AddOsuTemp(temp, scopes)
+        
+        const url = `https://osu.ppy.sh/oauth/authorize?response_type=code&client_id=${process.env.OSU_ID}&redirect_uri=${process.env.OSU_REDIRECT_URL}&state=${temp}&scope=${scopes.join("+")}`
+        const embed = this.GetBaseEmbed()
+            .setAuthor({ name: "Click here to link your osu! account", url: url })
+        this.data.Reply({
+            embeds: [embed],
+            ephemeral: true
+        })
         return CommandResponseCodes.OK
     }
 
 }
 
+Link.interactionData
+    .setName("link")
+    .setDescription("Link your osu! account")
+    .setDMPermission(true)
+    .addBooleanOption(option =>
+        option.setName("friends")
+            .setDescription("Allow the bot to read your friends list (not required for friends leaderboards)")
+            .setRequired(true)
+    )
 
 CommandEmitterInstance.AddCommand(Link, Link.names)
+InteractionRegistrerInstance.AddInteraction(Link.interactionData)

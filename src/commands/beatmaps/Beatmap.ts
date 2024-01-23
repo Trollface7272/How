@@ -2,7 +2,7 @@ import { CommandAbstract, CommandDataAbstract, CommandResponseCodes } from "@src
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
-import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { HandleAsync } from "@src/Utils";
 import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator";

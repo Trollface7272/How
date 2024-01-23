@@ -1,8 +1,8 @@
 import { escapeMarkdown } from "discord.js"
 import { Logger } from "./class/Logger"
-import { Beatmap } from "./class/api/osu/Beatmap"
-import { Gamemode } from "./class/api/osu/MiscTypes"
-import { Score } from "./class/api/osu/Score"
+import { Beatmap } from "./class/api/osu/class/Beatmap"
+import { Gamemode } from "./class/api/osu/types/MiscTypes"
+import { Score } from "./class/api/osu/class/Score"
 import { exec } from "child_process"
 
 

@@ -1,5 +1,5 @@
 import { BeatmapSet } from "./BeatmapSet"
-import { Clamp } from "./Utils"
+import { Clamp } from "../Utils"
 
 
 

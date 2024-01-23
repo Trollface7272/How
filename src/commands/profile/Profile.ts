@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
-import { Profile as OsuProfile } from "@src/class/api/osu/Profile";
+import { Profile as OsuProfile } from "@src/class/api/osu/class/Profile";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
 import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts";
@@ -11,8 +11,9 @@ import { ButtonEmojis, GetFlag, HandleAsync } from "@src/Utils";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { AxiosError } from "axios";
 import { CommandBase } from "@src/class/base/Command";
-import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Logger } from "@src/class/Logger";
+import { FetcherError, FetcherErrors } from "@src/class/api/osu/class/FetcherError";
 
 interface args {
   username: string
@@ -94,8 +95,11 @@ class Profile extends CommandBase implements CommandAbstract {
       if (err) return await this.ApiError(err, username)
       replyOptions = this.RenderEvents({ events, page, profile, perPage })
     } else {
+      console.log(1)
       const [profile, err] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: "osu" }))
+      console.log(2)
       if (err) return await this.ApiError(err, username)
+      console.log(3)
       replyOptions = this.RenderProfile({ profile, mode })
     }
 
@@ -162,6 +166,23 @@ class Profile extends CommandBase implements CommandAbstract {
           default:
             Logger.Error("Profile - ApiError", err)
             return CommandResponseCodes.UnknownError
+        }
+      } else {
+        if (err instanceof FetcherError) {
+          switch (err.code) {
+            case FetcherErrors.UserNotLinked: {
+              await this.data.Reply(this.RenderUserNotFound({ username }))
+              return CommandResponseCodes.OK
+            }
+            case FetcherErrors.MissingIdentifyScope: {
+              await this.data.Reply(this.RenderApiError())
+              return CommandResponseCodes.OsuApiDown
+            }
+            default:
+              Logger.Error("Profile - ApiError", err)
+              return CommandResponseCodes.UnknownError
+          }
+        
         }
       }
     }

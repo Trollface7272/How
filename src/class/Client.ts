@@ -6,6 +6,7 @@ import { Connect } from "./database/Main";
 import { EmojiFactory } from "./Emojis";
 import { CommandEmitterInstance } from "./CommandEmitter";
 import { HandleAsync } from "@src/Utils";
+import { InteractionRegistrerInstance } from "./InteractionRegisterer";
 export class Client extends DiscordClient {
     public EventEmitter: EventEmitter
     constructor() {
@@ -34,6 +35,7 @@ export class Client extends DiscordClient {
     }
 
     private async LoadInteractions() {
+        InteractionRegistrerInstance.RegisterAll()
         return
         const commandClasses = CommandEmitterInstance.GetAllCommands()
         const commands = commandClasses.map(cmd => cmd.interactionData).filter(cmd => cmd !== null)

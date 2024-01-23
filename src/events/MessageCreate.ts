@@ -8,7 +8,7 @@ import { Client } from "@src/class/Client";
 import { User } from "@src/class/database/User";
 import { Guild } from "@src/class/database/Guild";
 import { CommandResponseCodes } from "@src/class/partials/Command";
-import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 

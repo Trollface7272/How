@@ -3,6 +3,7 @@ import { Document, ObjectId } from "mongodb"
 import { db } from "./Main"
 import { RawUser } from "../RawUser"
 import { OAuth } from "../api/osu/OAuth"
+import { Fetcher } from "../api/osu/Fetcher"
 
 type Osu = {
     token: string
@@ -95,6 +96,21 @@ export class User extends RawUser {
         this.osu.token = auth.access_token
         this.osu.expiresIn = auth.expires_in
         this.osu.tokenType = auth.token_type as "Bearer"
+        const fetcher = new Fetcher(auth, true)
+        const profile = await fetcher.GetOwnProfile({ Gamemode: "osu" })
+        this.osu.username = profile.username
+        this.osu.userId = profile.id
+        this.osu.country = profile.country.code
+        this.osu.pp = profile.statistics.pp
+        this.osu.rank = profile.statistics.global_rank
+        this.osu.countryRank = profile.statistics.country_rank
+        return this.Save()
+    }
+
+    public async AddOsuTemp(temp: string, scopes: string[]) {
+        this.osuTemp = temp
+        if (!this.osu) this.osu = {} as Osu
+        this.osu.scopes = scopes
         return this.Save()
     }
 
@@ -126,6 +142,14 @@ class cUserFactory {
     public async GetUser(id: string) {
         const user = await db.collection("users").findOne({
             id: id
+        })
+        if (!user) return false
+        return new User(user)
+    }
+
+    public async GetByTempCode(code: string) {
+        const user = await db.collection("users").findOne({
+            osuTemp: code
         })
         if (!user) return false
         return new User(user)

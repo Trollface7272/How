@@ -1,11 +1,11 @@
 import { existsSync, mkdirSync } from "fs";
-import { Beatmap } from "./Beatmap";
+import { Beatmap } from "./class/Beatmap";
 import { stat } from "fs/promises";
 import { HandleAsync, ParseJson, RunProcess } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
 import { Difficulty, DifficultyFactory } from "@src/class/database/Difficulty";
 import NodeCache from "node-cache";
-import { Score } from "./Score";
+import { Score } from "./class/Score";
 import { Clamp, DownloadFile, toBitMods } from "./Utils";
 import { BitMods } from "./Consts";
 import { resolve } from "path";

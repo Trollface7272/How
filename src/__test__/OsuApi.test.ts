@@ -2,7 +2,7 @@ import "dotenv/config"
 import { afterAll, beforeAll, test } from "@jest/globals"
 import { Connect, Disconnect } from "../class/database/Main"
 import { Fetcher } from "../class/api/osu/Fetcher"
-import { Profile } from "../class/api/osu/Profile"
+import { Profile } from "../class/api/osu/class/Profile"
 
 const testUserId = "552546198918004757"
 

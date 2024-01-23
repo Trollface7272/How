@@ -4,7 +4,7 @@ import { RawUser } from "../RawUser";
 import { Event } from "./Event";
 import { User } from "../database/User";
 import { Guild } from "../database/Guild";
-import { Gamemode } from "../api/osu/MiscTypes";
+import { Gamemode } from "../api/osu/types/MiscTypes";
 
 export abstract class MessageEventData {
     public get user(): User {

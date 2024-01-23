@@ -1,8 +1,8 @@
 import { HandleAsync } from "@src/Utils"
 import { Beatmap } from "./Beatmap"
 import { BeatmapSet } from "./BeatmapSet"
-import { Fetcher } from "./Fetcher"
-import { PerformanceCalculator, PerformanceContainer } from "./PerformanceCalculator"
+import { Fetcher } from "../Fetcher"
+import { PerformanceCalculator, PerformanceContainer } from "../PerformanceCalculator"
 import { Profile } from "./Profile"
 import { Logger } from "@src/class/Logger"
 

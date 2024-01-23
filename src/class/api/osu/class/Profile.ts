@@ -1,4 +1,4 @@
-import { Gamemode } from "./MiscTypes"
+import { Gamemode } from "../types/MiscTypes"
 
 export namespace Profile {
     //Helper Types

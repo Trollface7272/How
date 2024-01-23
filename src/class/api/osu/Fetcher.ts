@@ -1,13 +1,14 @@
 import { AxiosInstance } from "axios"
 import { OAuth, OAuthGenerator } from "./OAuth"
 import axios from "axios"
-import { Gamemode } from "./MiscTypes"
-import { Profile } from "./Profile"
-import { Score } from "./Score"
+import { Gamemode } from "./types/MiscTypes"
+import { Profile } from "./class/Profile"
+import { Score } from "./class/Score"
 import { Endpoints } from "./Endpoints"
 import NodeCache from "node-cache"
-import { Beatmap } from "./Beatmap"
-import { BeatmapSet } from "./BeatmapSet"
+import { Beatmap } from "./class/Beatmap"
+import { BeatmapSet } from "./class/BeatmapSet"
+import { FetcherMissingIdentifyScopeError, FetcherUserNotLinkedError } from "./class/FetcherError"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
@@ -58,8 +59,8 @@ export class Fetcher {
     public async GetOwnProfile({ Gamemode }: {
         Gamemode: Gamemode
     }) {
-        if (!this.isUser) throw OsuFetcherErrors.UserNotLinked
-        if (!this.oauth.scope.includes("identify")) throw OsuFetcherErrors.MissingIdentifyScope
+        if (!this.isUser) throw new FetcherUserNotLinkedError()
+        if (!this.oauth.scope.includes("identify")) throw new FetcherMissingIdentifyScopeError()
         const resp = await this.axios.get(Endpoints.self(Gamemode))
         const profile = resp.data as Profile.Self
         setCache(profile.id, profile.username)

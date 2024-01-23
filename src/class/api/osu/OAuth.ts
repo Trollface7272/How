@@ -113,6 +113,27 @@ class cOAuthGenerator {
 
         return oauth
     }
+
+    public async GetTokenFromCode(code: string, userId: string) {
+        const resp = await axios.post("https://osu.ppy.sh/oauth/token", {
+            client_id: process.env.OSU_ID,
+            client_secret: process.env.OSU_CLIENT_SECRET,
+            code: code,
+            grant_type: "authorization_code",
+            redirect_uri: process.env.OSU_REDIRECT_URL
+        })
+        const data = resp.data
+        const user = await UserFactory.GetUser(userId)
+        if (!user) return 
+        const oauth = new OAuth({
+            access_token: data.access_token,
+            refresh_token: data.refresh_token,
+            expires_in: new Date(Date.now() + (data.expires_in * 1000)),
+            token_type: data.token_type,
+            scope: user.osu.scopes as OAuthScopes[]
+        } as unknown as OAuth, tokenEndpoint, userId)
+        return oauth
+    }
 }
 
 export const OAuthGenerator = new cOAuthGenerator()

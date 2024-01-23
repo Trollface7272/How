@@ -2,7 +2,7 @@ import { createWriteStream } from "fs"
 import { BitModsShort } from "./Consts"
 import axios from "axios"
 import { Logger } from "@src/class/Logger"
-import { Score } from "./Score"
+import { Score } from "./class/Score"
 import { Message } from "discord.js"
 
 export const toBitMods = (mods: string[]) => {

@@ -5,7 +5,7 @@ declare global {
             DATABASE_URL: string
             DATABASE_NAME: string
             DISCORD_TOKEN: string
-            OSU_REDDIRECT_URL: string
+            OSU_REDIRECT_URL: string
             OSU_ID: number
             OSU_CLIENT_SECRET: string
             PORT: number

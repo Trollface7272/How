@@ -9,7 +9,7 @@ import { Guild } from "@src/class/database/Guild";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Logger } from "@src/class/Logger";
 import { CommandResponseCodes } from "@src/class/partials/Command";
-import { Gamemode } from "@src/class/api/osu/MiscTypes";
+import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 
 export class InteractionCreateData implements EventData, MessageEventData {
@@ -72,7 +72,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
 
     public GetCommand(): string {
         if (this.interaction.isChatInputCommand())
-            return this.interaction.command.name
+            return this.interaction.commandName
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton())
             return this.interaction.customId.split(";")[0]
     }
@@ -142,6 +142,9 @@ export class InteractionCreateData implements EventData, MessageEventData {
             if (this.interaction.replied) return
             return this.interaction.deferReply()
         }
+    }
+
+    public async deferButton() {
         if (this.interaction.isMessageComponent()) {
             return this.interaction.deferUpdate()
         }
@@ -159,7 +162,7 @@ export class InteractionCreate implements Event {
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
         try {
-            data.defer()
+            data.deferButton()
             const command = new commandData(data)
             const code = await command.Handle()
             switch (code) {

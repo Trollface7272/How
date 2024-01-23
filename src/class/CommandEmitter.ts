@@ -1,4 +1,3 @@
-import { Client } from "./Client";
 import { Logger } from "./Logger";
 import { CommandAbstract } from "./partials/Command";
 import { MessageEventData } from "./partials/MessageEvent";

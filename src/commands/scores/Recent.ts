@@ -2,9 +2,9 @@ import { CommandAbstract, CommandDataAbstract, CommandResponseCodes } from "@src
 import { MessageEventData } from "@src/class/partials/MessageEvent"
 import { CommandData } from "@src/class/base/CommandData"
 import { CommandEmitterInstance } from "@src/class/CommandEmitter"
-import { Score } from "@src/class/api/osu/Score"
+import { Score } from "@src/class/api/osu/class/Score"
 import { Fetcher } from "@src/class/api/osu/Fetcher"
-import { Gamemode } from "@src/class/api/osu/MiscTypes"
+import { Gamemode } from "@src/class/api/osu/types/MiscTypes"
 import { GamemodeNames } from "@src/class/api/osu/Consts"
 import { EmojiFactory } from "@src/class/Emojis"
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync } from "@src/Utils"
@@ -13,8 +13,8 @@ import { TextRenderer } from "@src/class/renderer/Text"
 import NodeCache from "node-cache"
 import { randomBytes } from "crypto"
 import { CalculateProgress } from "@src/class/api/osu/Utils"
-import { Beatmap } from "@src/class/api/osu/Beatmap"
-import { BeatmapSet } from "@src/class/api/osu/BeatmapSet"
+import { Beatmap } from "@src/class/api/osu/class/Beatmap"
+import { BeatmapSet } from "@src/class/api/osu/class/BeatmapSet"
 import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
 import { CommandBase } from "@src/class/base/Command"
 
@@ -92,8 +92,8 @@ class Recent extends CommandBase implements CommandAbstract {
         const user = this.data.GetUser()
         const response: InteractionReplyOptions | MessageReplyOptions = {}
         //Map is unused here
-        const { Username: _username, Id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.args
-        const Username = Id?.toString() ?? _username ?? user.username
+        const { Username, Id: _id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.args
+        const Id = !Username && !_id ? user.osu.userId : _id
 
         if (!Username) {
             await this.data.Reply(this.RenderNoUserError())
