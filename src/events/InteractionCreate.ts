@@ -88,9 +88,9 @@ export class InteractionCreateData implements EventData, MessageEventData {
         return this.interaction.options.getString(key)
     }
 
-    public GetNumber(key: string): number {
+    public GetNumber(key: string, {}, def: number): number {
         if (!this.interaction.isChatInputCommand()) return null
-        return this.interaction.options.getNumber(key)
+        return this.interaction.options.getNumber(key) ?? def
     }
 
     public GetBoolean(key: string): boolean {

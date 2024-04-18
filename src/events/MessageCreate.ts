@@ -137,7 +137,7 @@ export class MessageCreateData implements EventData, MessageEventData {
         }
     }
 
-    public GetNumber(key: string, aliases: string[]): number {
+    public GetNumber(key: string, aliases: string[], def?: number): number {
         aliases.push(key)
         for (const alias of aliases) {
             const index = this.args.findIndex((arg) => arg === alias)
@@ -147,6 +147,7 @@ export class MessageCreateData implements EventData, MessageEventData {
             this.args.splice(index, 2)
             return val
         }
+        return def
     }
 
     public GetBoolean(key: string, aliases: string[]): boolean {

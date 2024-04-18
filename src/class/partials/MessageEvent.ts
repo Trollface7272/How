@@ -34,7 +34,7 @@ export abstract class MessageEventData {
         throw Event.ReturnCode.Unimplemented
     }
 
-    public GetNumber(key: string, aliases: string[]): number {
+    public GetNumber(key: string, aliases: string[], def?: number): number {
         throw Event.ReturnCode.Unimplemented
     }
 
