@@ -9,7 +9,7 @@ import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
 import { Logger } from "@src/class/Logger";
 import { AxiosError } from "axios";
 import { TextRenderer } from "@src/class/renderer/Text";
-import { ActionRow, ActionRowBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRow, ActionRowBuilder, EmbedBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
 import { toBitMods } from "@src/class/api/osu/Utils";
 import { CommandBase } from "@src/class/base/Command";
@@ -47,7 +47,8 @@ class BeatmapData extends CommandData implements CommandDataAbstract {
 
 class Beatmap extends CommandBase implements CommandAbstract {
   public static readonly names: string[] = ["map", "beatmap", "m"]
-  private data: BeatmapData
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    private data: BeatmapData
 
   constructor(data: MessageEventData) {
     super()
