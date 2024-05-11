@@ -114,6 +114,8 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
 
         const { Id: _id, Username, Gamemode, Reversed, Random, Page, Sort, Filter, Mods, Anyone } = this.args
         const Id = _id ?? await fetcher.LookupId(Username)
+        const Limit = Random ? 1 : 5
+
         const sortQuery: Sort = {}
         for (const sort of Sort) {
             const sign = sort.startsWith("r") ? 1 : -1
@@ -147,13 +149,13 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
 
 
         const profileQuery = HandleAsync(fetcher.GetProfile({ Username: Username ?? Id, Gamemode: Gamemode }))
-        const [score, err] = await HandleAsync(ScoreFactory.GetScoresByUser(Id, filterQuery, sortQuery, 5, (Page - 1) * 5))
+        const [score, err] = await HandleAsync(ScoreFactory.GetScoresByUser(Id, filterQuery, sortQuery, Limit, (Page - 1) * Limit, Random))
         if (err) {
             Logger.Error(err)
             await this.data.Reply(this.RenderApiError())
             return CommandResponseCodes.UnknownError
         }
-        const { scores, total } = score
+        const { scores, total, randomOffset } = score
 
         if (total == 0) {
             await this.data.Reply(this.RenderNoImportedScoresError())
@@ -161,9 +163,10 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         }
 
         const description = scores.map((score, i) => {
+            const index = Random ? randomOffset + 1 : (Page - 1) * 5 + i + 1
             if (score.mods.length === 0) score.mods.push("NoMod")
             return TextRenderer.render("score/score", {
-                index: (Page - 1) * 5 + i + 1, title: escapeMarkdown(score.beatmap.title, { escape: false }), version: escapeMarkdown(score.beatmap.version, { escape: false }), url: score.beatmap.url, mods: score.mods.join(""), difficulty: score.beatmap.difficulty.stars.total.roundFixed(2),
+                index: index, title: escapeMarkdown(score.beatmap.title, { escape: false }), version: escapeMarkdown(score.beatmap.version, { escape: false }), url: score.beatmap.url, mods: score.mods.join(""), difficulty: score.beatmap.difficulty.stars.total.roundFixed(2),
                 grade: EmojiFactory.GetEmoji(`Ranking${score.rank}`), pp: score.pp.roundFixed(3), improvedPp: score.improvedPp.roundFixed(3), accuracy: score.accuracy.roundFixed(2),
                 score: score.score.toLocaleString(), combo: FormatCombo(score.combo, score.beatmap.difficulty.combo, score.beatmap.mode), counts: FormatHits({ count_100: score.counts[100], count_300: score.counts[300], count_50: score.counts[50], count_miss: score.counts.misses, count_geki: 0, count_katu: 0 }, GamemodeNumToStr[score.beatmap.mode] as Gamemode),
                 setAt: score.setAt.toDiscordToolTip()
@@ -206,7 +209,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         const row = new ActionRowBuilder<ButtonBuilder>()
         if (this.args.Random) {
             const button = new ButtonBuilder()
-                .setCustomId(`score;${this.componentId};0;${randomBytes(4)}`)
+                .setCustomId(`score;${this.componentId};1;${randomBytes(4)}`)
                 .setLabel("?")
                 .setStyle(ButtonStyle.Primary)
             row.addComponents(button)

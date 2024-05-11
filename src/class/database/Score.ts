@@ -154,22 +154,31 @@ export class Score {
 export class ScoreQueryResult {
     public scores: Score[]
     public total: number
-    constructor(scores: Score[], total: number) {
+    public randomOffset: number
+    constructor(scores: Score[], total: number, randomOffset?: number) {
         this.scores = scores
         this.total = total
+        this.randomOffset = randomOffset
     }
 
 }
 
 class cScoreFactory {
     constructor() { }
-    public async GetScoresByUser(userId: number, filters: Filter<Document>, sort: Sort, limit: number, offset: number): Promise<ScoreQueryResult> {
-        return this.GetAllScores({ userId: userId, ...filters }, sort, limit, offset)
+    public async GetScoresByUser(userId: number, filters: Filter<Document>, sort: Sort, limit: number, offset: number, Random: boolean): Promise<ScoreQueryResult> {
+        return this.GetAllScores({ userId: userId, ...filters }, sort, limit, offset, Random)
     }
-    public async GetAllScores(filters: Filter<Document>, sort: Sort, limit: number, offset: number): Promise<ScoreQueryResult> {
+    public async GetAllScores(filters: Filter<Document>, sort: Sort, limit: number, offset: number, Random: boolean): Promise<ScoreQueryResult> {
+        if (Random) {
+            const cursor = db.collection("scores").find(filters).sort(sort).limit(limit)
+            const count = await db.collection("scores").countDocuments(filters)
+            const rand = Math.floor(Math.random() * count)
+            const query = cursor.skip(rand).toArray()
+            return new ScoreQueryResult((await query).map(score => new Score(score)), count, rand)
+        }
+
         const cursor = db.collection("scores").find(filters).sort(sort).limit(limit).skip(offset).toArray()
         const count = db.collection("scores").countDocuments(filters)
-        console.log(filters)
         return new ScoreQueryResult((await cursor).map(score => new Score(score)), await count)
     }
 }
