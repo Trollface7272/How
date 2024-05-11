@@ -137,6 +137,11 @@ export namespace Profile {
         pm_friends_only: boolean
         profile_colour: string
         username: string
+
+        get url() {
+            return `https://osu.ppy.sh/u/${this.id}`
+        }
+        
         constructor(profile: Compact) {
             Object.assign(this, profile)
         }

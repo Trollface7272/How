@@ -44,6 +44,7 @@ export class Fetcher {
     }
 
     private axios: AxiosInstance
+    private userCache = new Map<number, Profile.FromId>()
     public constructor(private oauth: OAuth, private isUser: boolean) {
         this.axios = axios.create({
             baseURL: "https://osu.ppy.sh/api/v2",
@@ -56,6 +57,12 @@ export class Fetcher {
         })
     }
 
+    public async LookupId(username: string) {
+        if (UsernameToIdCache.has(username)) return UsernameToIdCache.get(username)
+        const resp = await this.GetProfile({ Gamemode: "osu", Username: username })
+        return resp.id
+    }
+
     public async GetOwnProfile({ Gamemode }: {
         Gamemode: Gamemode
     }) {
@@ -64,16 +71,24 @@ export class Fetcher {
         const resp = await this.axios.get(Endpoints.self(Gamemode))
         const profile = resp.data as Profile.Self
         setCache(profile.id, profile.username)
+
+        this.userCache.set(profile.id, profile)
+
         return new Profile.Self(profile)
     }
 
     public async GetProfile({ Gamemode, Username }: {
         Gamemode: Gamemode,
-        Username: string
+        Username: string|number
     }) {
+        const cachedId = UsernameToIdCache.get(Username as string)
+        if (this.userCache.has(cachedId)) return this.userCache.get(cachedId)
         const resp = await this.axios.get(Endpoints.profile(Gamemode, Username))
         const profile = resp.data as Profile.FromId
         setCache(profile.id, profile.username)
+
+        this.userCache.set(profile.id, profile)
+
         return new Profile.FromId(profile)
     }
 

@@ -9,7 +9,7 @@ import { Guild } from "@src/class/database/Guild";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Logger } from "@src/class/Logger";
 import { CommandResponseCodes } from "@src/class/partials/Command";
-import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
+import { Gamemode, ParsedMods } from "@src/class/api/osu/types/MiscTypes";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 
 export class InteractionCreateData implements EventData, MessageEventData {
@@ -47,7 +47,20 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public GetMods(): string[] {
-        return this.GetString("mods")?.split(/.{1,2}/gmi).map(el => el.toUpperCase()) || []
+        return this._GetMods("mods")
+    }
+
+    private _GetMods(key: string) {
+        return this.GetString(key)?.split(/.{1,2}/gmi).map(el => el.toUpperCase()) || []
+    }
+
+    public GetExactMods() {
+        return {
+            exactExclude: { mods: this._GetMods("mods-exact-exclude"), exact: true },
+            exactInclude: { mods: this._GetMods("mods-exact-include"), exact: true },
+            exclude: { mods: this._GetMods("mods-exclude"), exact: false },
+            include: { mods: this._GetMods("mods-include"), exact: false }
+        }
     }
 
     public GetGamemode(): Gamemode {
@@ -88,7 +101,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
         return this.interaction.options.getString(key)
     }
 
-    public GetNumber(key: string, {}, def: number): number {
+    public GetNumber(key: string, { }, def: number): number {
         if (!this.interaction.isChatInputCommand()) return null
         return this.interaction.options.getNumber(key) ?? def
     }
@@ -127,7 +140,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton()) {
             if (this.interaction.deferred) {
                 return this.interaction.editReply(msg as MessageEditOptions)
-            }   
+            }
             return this.interaction.update(msg as MessageEditOptions)
         }
         if (this.interaction.isCommand()) {

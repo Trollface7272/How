@@ -84,3 +84,77 @@ export const ButtonEmojis = {
     Left: "←",
     Right: "→"
 }
+
+export const lookupScoresColumn = (col: string) => {
+    switch (col) {
+        case "ar":
+        case "od":
+        case "cs":
+        case "hp":
+            return `beatmap.difficulty.${col}`
+
+        case "miss":
+        case "misses":
+            return `counts.misses`
+
+        case "replay":
+            return "hasReplay"
+
+
+        case "pp":
+        case "accuracy":
+        case "combo":
+        case "score":
+        case "rank":
+            return col
+
+
+        case "setid":
+            return "beatmap.setId"
+
+
+        case "playcount":
+        case "pascount":
+        case "rating":
+        case "storyboard":
+        case "video":
+        case "bpm":
+        case "id":
+            return `beatmap.${col}`
+
+        case "stars":
+            return `beatmap.difficulty.stars.total`
+        case "aimstars":
+            return `beatmap.difficulty.stars.aim`
+        case "speedstars":
+            return `beatmap.difficulty.stars.speed`
+        case "flstars":
+            return `beatmap.difficulty.stars.fl`
+
+        case "length":
+        case "drain":
+            return `beatmap.length.${col}`
+
+        case "acc":
+            return `accuracy`
+
+        case "date":
+            return "setAt"
+
+        default: return null
+    }
+}
+
+export function merge(target: { [key: string]: any }, source: { [key: string]: any }) {
+    for (const [key, val] of Object.entries(source)) {
+        if (val !== null && typeof val === `object`) {
+            if (target[key] === undefined) {
+                target[key] = new val.__proto__.constructor();
+            }
+            target[key] = merge(target[key], val);
+        } else {
+            target[key] = val;
+        }
+    }
+    return target;
+}

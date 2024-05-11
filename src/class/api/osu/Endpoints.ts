@@ -2,7 +2,7 @@ import { Gamemode } from "./types/MiscTypes";
 
 export namespace Endpoints {
     export const self = (Gamemode: Gamemode) => `/me/${Gamemode}`
-    export const profile = (Gamemode: Gamemode, Username: string) => `/users/${Username}/${Gamemode}`
+    export const profile = (Gamemode: Gamemode, Username: string|number) => `/users/${Username}/${Gamemode}`
     export const userBeatmapScore = (Beatmap: number, User: number) => `/beatmaps/${Beatmap}/scores/users/${User}`
     export const userBeatmapScores = (Beatmap: number, User: number) => `/beatmaps/${Beatmap}/scores/users/${User}/all`
     export const userScores = (Id: number, Type: "best" | "recent" | "firsts" | "pinned") => `/users/${Id}/scores/${Type}`

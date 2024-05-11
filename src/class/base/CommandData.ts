@@ -39,4 +39,11 @@ export class CommandData {
     public GetInteraction(): Interaction {
         return this.data.GetInteraction()
     }
+
+    public GetOldComponentId(): string {
+        if (!this.IsInteraction()) return
+        const interaction = this.data.GetInteraction()
+        if (interaction.isChatInputCommand()) return null
+        if (interaction.isMessageComponent()) return interaction.customId.split(";")[1]
+    }
 }

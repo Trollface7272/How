@@ -98,13 +98,6 @@ class TopData extends CommandData implements CommandDataAbstract {
                 return "best"
         }
     }
-
-    public GetOldComponentId(): string {
-        if (!this.IsInteraction()) return
-        const interaction = this.data.GetInteraction()
-        if (interaction.isChatInputCommand()) return null
-        if (interaction.isMessageComponent()) return interaction.customId.split(";")[1]
-    }
 }
 
 class Top extends CommandBase implements CommandAbstract {
@@ -145,7 +138,7 @@ class Top extends CommandBase implements CommandAbstract {
             }
         }
 
-        if (!Username) {
+        if (!Username && !Id) {
             await this.data.Reply(this.RenderNoUserError())
             return CommandResponseCodes.OK
         }

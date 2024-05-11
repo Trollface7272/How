@@ -4,7 +4,7 @@ import { RawUser } from "../RawUser";
 import { Event } from "./Event";
 import { User } from "../database/User";
 import { Guild } from "../database/Guild";
-import { Gamemode } from "../api/osu/types/MiscTypes";
+import { Gamemode, ParsedMods } from "../api/osu/types/MiscTypes";
 
 export abstract class MessageEventData {
     public get user(): User {
@@ -47,6 +47,10 @@ export abstract class MessageEventData {
     }
 
     public GetMods(): string[] {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetExactMods(): ParsedMods {
         throw Event.ReturnCode.Unimplemented
     }
 

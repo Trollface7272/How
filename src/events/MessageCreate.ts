@@ -8,10 +8,17 @@ import { Client } from "@src/class/Client";
 import { User } from "@src/class/database/User";
 import { Guild } from "@src/class/database/Guild";
 import { CommandResponseCodes } from "@src/class/partials/Command";
-import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
+import { Gamemode, ParsedMods } from "@src/class/api/osu/types/MiscTypes";
 import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 
+const regexes = {
+    normal: /^\+?(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi,
+    include: /^\+(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi,
+    exactInclude: /^\+(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+!$/gi,
+    exclude: /^\-(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi,
+    exactExclude: /^\-(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+!$/gi,
+}
 export class MessageCreateData implements EventData, MessageEventData {
     private _user: User
     private _guild: Guild
@@ -67,17 +74,36 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
 
     public GetMods(): string[] {
-        const regex = /^\+?(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi
+        const regex = regexes.normal
         for (let arg of this.args) {
             if (regex.test(arg)) {
                 if (arg.startsWith("+")) arg = arg.substring(1)
-                console.log(arg)
                 const mods = arg.toUpperCase().match(/.{1,2}/g)
-                console.log(mods)
                 this.args.splice(this.args.indexOf(arg), 1)
                 return mods
             }
         }
+    }
+
+    public GetExactMods() {
+        const mods = { }
+        for (const key in regexes) {
+            const regex = regexes[key]
+            for (let arg of this.args) {
+                if (regex.test(arg)) {
+                    let exact = false
+                    arg = arg.substring(1)
+                    if (arg.endsWith("!")) {
+                        exact = true
+                        arg = arg.substring(0, arg.length - 1)
+                    }
+                    const mods = arg.toUpperCase().match(/.{1,2}/g)
+                    this.args.splice(this.args.indexOf(arg), 1)
+                    mods[key] = {mods, exact}
+                }
+            }
+        }
+        return mods as ParsedMods
     }
 
     public GetGamemode(): Gamemode {

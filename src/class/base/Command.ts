@@ -1,4 +1,7 @@
+import { randomBytes } from "crypto"
 import { EmbedBuilder } from "discord.js"
+import { CommandData } from "./CommandData"
+import { MessageEventData } from "../partials/MessageEvent"
 
 export class CommandBase {
     public constructor() { }
@@ -31,5 +34,18 @@ export class CommandBase {
     protected GetBaseEmbed(): EmbedBuilder {
         return new EmbedBuilder()
             .setColor("Random")
+    }
+}
+
+export class CommandWithComponentsBase extends CommandBase {
+    protected componentId: string
+    protected oldComponentId: string
+    protected data: CommandData
+
+    constructor(data: MessageEventData) {
+        super()
+        this.data = new CommandData(data)
+        this.componentId = randomBytes(16).toString("hex")
+        this.oldComponentId = this.data.GetOldComponentId()
     }
 }
