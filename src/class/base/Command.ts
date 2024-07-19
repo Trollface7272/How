@@ -2,26 +2,10 @@ import { randomBytes } from "crypto"
 import { EmbedBuilder } from "discord.js"
 import { CommandData } from "./CommandData"
 import { MessageEventData } from "../partials/MessageEvent"
+import { ErrorRenderer } from "./ErrorRenderer"
 
-export class CommandBase {
-    public constructor() { }
-
-    protected RenderApiError() {
-
-        const embed = this.GetBaseEmbed()
-            .setTitle(`Error contacting osu!api`)
-        return {
-            embeds: [embed]
-        }
-    }
-
-    protected RenderNoUserError() {
-        const embed = this.GetBaseEmbed()
-            .setDescription(`**Please link your osu! account using /link**`)
-        return {
-            embeds: [embed]
-        }
-    }
+export class CommandBase extends ErrorRenderer {
+    public constructor() { super() }
 
     protected RenderBeatmapPP(pps: { normal: { total: number } }[], accs: number[]) {
         return pps.map((el, idx) => {
@@ -29,11 +13,6 @@ export class CommandBase {
             const perf = el.normal.total
             return `○ **${Math.round(acc * 100) / 100}%-**${perf.roundFixed(2)}`
         }).reverse().join(" ")
-    }
-
-    protected GetBaseEmbed(): EmbedBuilder {
-        return new EmbedBuilder()
-            .setColor("Random")
     }
 }
 

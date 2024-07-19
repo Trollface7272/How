@@ -1,4 +1,0 @@
-**{{index}}.** `{{mods}}` **Score** [{{stars}}★]
-▸ {{grade}} ▸ **{{pp}}pp**{{fcpp}} ▸ {{acc}}% {{rank}}
-▸ {{score}} ▸ {{combo}} ▸ {{hits}}
-▸ Score Set {{setTime}}

@@ -37,16 +37,18 @@ class CompareData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         let beatmap = this.data.GetBeatmap()
+        let Page = 0
         if (this.IsInteraction()) {
             const interaction = this.data.GetInteraction()
             if (interaction.isButton()) {
                 const [action, componentId, page] = interaction.customId.split(";")
                 beatmap = matchForId(interaction?.message?.embeds?.[0]?.url ?? "")
+                Page = parseInt(page)
             }
         }
         return {
             Gamemode: this.data.GetGamemode(),
-            Page: 0,
+            Page: Page,
             Id: this.data.GetNumber("id", []),
             Beatmap: beatmap,
             Username: this.data.GetUsername(),

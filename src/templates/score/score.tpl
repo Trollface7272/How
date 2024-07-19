@@ -1,4 +1,0 @@
-**{{index}}. [{{title}} [{{version}}]]({{url}}) +{{mods}}** [{{difficulty}}★]
-▸ {{grade}} ▸ **{{pp}}pp**/{{improvedPp}}pp ▸ {{accuracy}}%
-▸ {{score}} ▸ {{combo}} ▸ {{counts}}
-▸ Score Set {{setAt}}

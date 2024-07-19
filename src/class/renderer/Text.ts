@@ -1,3 +1,4 @@
+import { render } from "ejs"
 import { readFileSync } from "fs"
 
 
@@ -5,11 +6,8 @@ class cTextRenderer {
     constructor() { }
 
     public render(template: string, data: { [key: string]: any }) {
-        let tpl = readFileSync(`src/templates/${template}.tpl`, "utf-8")
-        const keys = Object.keys(data)
-        keys.forEach(key => {
-            tpl = tpl.replaceAll(`{{${key}}}`, data[key])
-        })
+        let tpl = readFileSync(`src/templates/${template}.ejs`, "utf-8")
+        tpl = render(tpl, data)
         return tpl
     }
 }

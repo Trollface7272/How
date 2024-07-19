@@ -1,1 +1,0 @@
-▸ {{beatmapName}} has been deleted {{timestamp}}

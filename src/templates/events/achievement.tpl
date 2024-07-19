@@ -1,1 +1,0 @@
-▸ Unlocked {{achievement}} {{timestamp}}

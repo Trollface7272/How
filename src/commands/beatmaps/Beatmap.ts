@@ -57,7 +57,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
   public async Handle(): Promise<CommandResponseCodes> {
     const user = this.data.GetUser()
     let { Gamemode, Mods, id: _id, Acc, Background } = this.data.args
-    console.log({ Gamemode, Mods, _id, Acc })
+    
     if (this.data.IsInteraction()) {
       const interaction = this.data.GetInteraction()
       if (interaction.isStringSelectMenu()) {

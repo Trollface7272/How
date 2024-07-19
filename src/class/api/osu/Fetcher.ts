@@ -195,4 +195,15 @@ export class Fetcher {
         beatmapCache.set(`set-${id}`, set)
         return set
     }
+
+    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: string[], gamemode: Gamemode, type: 0|1|2 }) {
+        const resp = await this.axios.get(Endpoints.leaderboards(id), {
+            params: {
+                mode: gamemode,
+                mods: mods,
+                type
+            }
+        })
+        return resp.data as Score.Leaderboards
+    }
 }

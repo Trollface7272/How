@@ -1,3 +1,0 @@
-Total: {{total}}
-Passes: {{passes}}
-Fails: {{fails}}

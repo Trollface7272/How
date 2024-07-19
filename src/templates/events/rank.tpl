@@ -1,1 +1,0 @@
-▸ {{grade}} Achieved `#{{rank}}` on [{{beatmapName}}]({{beatmapUrl}}) {{timestamp}}

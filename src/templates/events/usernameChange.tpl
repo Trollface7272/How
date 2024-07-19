@@ -1,1 +1,0 @@
-▸ Changed username from {{oldUsername}} to {{newUsername}} {{timestamp}}

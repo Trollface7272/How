@@ -1,1 +1,0 @@
-{{username}} has {{scores}} scores greater than {{pp}}pp

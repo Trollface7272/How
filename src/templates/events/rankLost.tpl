@@ -1,1 +1,0 @@
-▸ Lost first place on [{{beatmapName}}]({{beatmapUrl}}) {{timestamp}}

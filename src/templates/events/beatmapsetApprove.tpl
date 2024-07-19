@@ -1,1 +1,0 @@
-▸ [{{beatmapName}}]({{beatmapUrl}}) has been {{approval}} {{timestamp}}

@@ -14,6 +14,7 @@ import { randomBytes, randomInt } from "crypto";
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag } from "@src/Utils";
 import { EmojiFactory } from "@src/class/Emojis";
 import { GamemodeNames } from "@src/class/api/osu/Consts";
+import { render, renderFile } from "ejs"
 
 interface args {
     Gamemode: Gamemode
@@ -260,7 +261,8 @@ class Top extends CommandBase implements CommandAbstract {
 
     private RenderGreaterThan({ user, total, pp }: { user: string, total: number, pp: number }) {
         const embed = this.GetBaseEmbed()
-        embed.setDescription(TextRenderer.render("top/greaterThan", { username: user, scores: total, pp: pp }))
+        const text = TextRenderer.render("top/greaterThan", { username: user, scores: total, pp: pp })
+        embed.setDescription(text)
         return embed
 
     }
