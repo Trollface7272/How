@@ -1,0 +1,4 @@
+<%_ for(const score of scores) { _%>
+**<%- score.index + 1 %>.** <% if (score.user.id == author) { %>__<% } %>**[<%- score.user.username %>](<%- score.user.url %>)**<% if (score.user.id == author) { %>__<% } %> <%- score.user.global_rank ? `**#${score.user.global_rank.toLocaleString()}**` : "" %> **<%- score.pp?.roundFixed(2) || 0 %>pp** **<%- (score.accuracy * 100).roundFixed(2) %>%** **+<%- score.mods.length == 0 ? "Nomod" : score.mods.join("") %>**
+▸ <%- score.grade %> <%- score.score.toLocaleString() %> **<%- score.max_combo %>x**/<%- beatmap.max_combo %>x <%- score.statistics.count_miss > 0 ? `**${score.statistics.count_miss}** ❌ ` : "" %><%- new Date(score.created_at).toDiscordToolTip() %>    
+<%_ } _%>

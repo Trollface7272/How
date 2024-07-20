@@ -196,7 +196,7 @@ export class Fetcher {
         return set
     }
 
-    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: string[], gamemode: Gamemode, type: 0|1|2 }) {
+    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: string[], gamemode: Gamemode, type: string }) {
         const resp = await this.axios.get(Endpoints.leaderboards(id), {
             params: {
                 mode: gamemode,
@@ -204,6 +204,16 @@ export class Fetcher {
                 type
             }
         })
-        return resp.data as Score.Leaderboards
+        resp.data.scores.forEach((score, i) => score.index = i)
+        return new Score.Leaderboards(resp.data)
+    }
+
+    public async GetByUserIds({ ids }: { ids: number[] }) {
+        const resp = await this.axios.get(Endpoints.fromUserIds(), {
+            params: {
+                ids
+            }
+        })
+        return resp.data.users.map(el => new Profile.FromIds(el))
     }
 }

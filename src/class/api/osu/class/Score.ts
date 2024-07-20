@@ -5,6 +5,7 @@ import { Fetcher } from "../Fetcher"
 import { PerformanceCalculator, PerformanceContainer } from "../PerformanceCalculator"
 import { Profile } from "./Profile"
 import { Logger } from "@src/class/Logger"
+import { EmojiFactory } from "@src/class/Emojis"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
 
@@ -55,6 +56,10 @@ export namespace Score {
         replay: boolean
         constructor(score: BaseScore) {
             Object.assign(this, score)
+        }
+
+        get grade() {
+            return EmojiFactory.GetEmoji(`Ranking${this.rank}`)
         }
     }
 
@@ -128,6 +133,7 @@ export namespace Score {
         user: Profile.Compact
         constructor(score: LeaderboardScore) {
             super(score)
+            Object.assign(this, score)
             this.user = new Profile.Compact(this.user)
         }
     }

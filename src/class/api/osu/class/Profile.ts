@@ -138,6 +138,8 @@ export namespace Profile {
         profile_colour: string
         username: string
 
+        global_rank?: number
+
         get url() {
             return `https://osu.ppy.sh/u/${this.id}`
         }

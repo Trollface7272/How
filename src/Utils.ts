@@ -141,7 +141,14 @@ export const lookupScoresColumn = (col: string) => {
         case "date":
             return "setAt"
 
-        default: return null
+        case "n100":
+            return "counts.100"
+        case "n50":
+            return "counts.50"
+        case "n300":
+            return "counts.300"
+
+        default: return col
     }
 }
 

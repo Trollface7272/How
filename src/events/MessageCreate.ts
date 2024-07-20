@@ -23,6 +23,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     private _user: User
     private _guild: Guild
     private args: string[]
+    private command: string
 
     public get user() {
         return this._user
@@ -142,7 +143,7 @@ export class MessageCreateData implements EventData, MessageEventData {
         return out
     }
     public GetCommand(): string {
-        return this.GetContent().split(" ")[0]
+        return this.command
     }
     public GetUsername(): string {
         if (this.args.length == 0) return null
@@ -215,6 +216,10 @@ export class MessageCreateData implements EventData, MessageEventData {
     public async Reply(msg: ReplyOptions): Promise<Message<boolean>> {
         return await this.message.reply(msg)
     }
+
+    public setCommand(cmd: string) {
+        this.command = cmd
+    }
 }
 
 export class MessageCreate implements Event {
@@ -227,6 +232,8 @@ export class MessageCreate implements Event {
         if (!content.startsWith(prefix)) return 0
 
         const [command, ...args] = content.substring(prefix.length).split(" ")
+
+        data.setCommand(command)
 
         Logger.Info(`Running command ->`, command)
 
