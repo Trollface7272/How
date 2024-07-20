@@ -53,7 +53,7 @@ class Avatar extends CommandBase implements CommandAbstract {
             .setImage(avatar)
             .setFooter({text: `Currently ${profile.is_online ? "Online" : "Offline"}`})
 
-        this.data.Reply({embeds: [embed]})
+        await this.data.Reply({embeds: [embed]})
         return CommandResponseCodes.OK
     }
 
