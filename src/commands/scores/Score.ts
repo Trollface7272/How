@@ -11,7 +11,6 @@ import { ScoreFactory } from "@src/class/database/Score";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown, InteractionType, MessageComponentInteraction } from "discord.js";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { EmojiFactory } from "@src/class/Emojis";
-import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { randomBytes } from "crypto";
 import NodeCache from "node-cache";
@@ -168,7 +167,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
             return TextRenderer.render("score/score", {
                 index: index, title: escapeMarkdown(score.beatmap.title, { escape: false }), version: escapeMarkdown(score.beatmap.version, { escape: false }), url: score.beatmap.url, mods: score.mods.join(""), difficulty: score.beatmap.difficulty.stars.total.roundFixed(2),
                 grade: EmojiFactory.GetEmoji(`Ranking${score.rank}`), pp: score.pp.roundFixed(3), improvedPp: score.improvedPp.roundFixed(3), accuracy: score.accuracy.roundFixed(2),
-                score: score.score.toLocaleString(), combo: FormatCombo(score.combo, score.beatmap.difficulty.combo, score.beatmap.mode), counts: FormatHits({ count_100: score.counts[100], count_300: score.counts[300], count_50: score.counts[50], count_miss: score.counts.misses, count_geki: 0, count_katu: 0 }, GamemodeNumToStr[score.beatmap.mode] as Gamemode),
+                score: score.score.toLocaleString(), combo: FormatCombo(score.combo, score.beatmap.difficulty.combo, score.beatmap.mode), counts: FormatHits({ ok: score.counts[100], great: score.counts[300], meh: score.counts[50], miss: score.counts.misses }, score.beatmap.mode),
                 setAt: score.setAt.toDiscordToolTip()
             })
         }).join("\n")

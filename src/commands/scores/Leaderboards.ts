@@ -26,7 +26,7 @@ interface args {
     Gamemode: Gamemode
     Map: number
     Page: number
-    Mods: string[]
+    Mods: Score.ModList
 }
 
 interface cache {
@@ -70,6 +70,10 @@ class LeaderboardsData extends CommandData implements CommandDataAbstract {
         }
     }
 
+    public GetCommand() {
+        return this.data.GetCommand()
+    }
+
     public GetBeatmapFromConversation(): Promise<number> {
         return this.data.GetBeatmapFromConversation()
     }
@@ -103,6 +107,21 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             }
         }
 
+        const fetcher = await Fetcher.Create(user.id)
+
+        if (this.data.GetCommand().startsWith("r")) {
+            const [recent, recentErr] = await HandleAsync(fetcher.GetUserScores({ Id: user.osu.userId, Limit: 1, Type: "recent", Gamemode: this.args.Gamemode }))
+            if (recentErr) {
+                Logger.Error(recentErr)
+                return CommandResponseCodes.UnknownError
+            }
+            if (recent.length === 0) {
+                await this.data.Reply(this.RenderNoScores())
+                return CommandResponseCodes.OK
+            }
+            this.args.Map = recent[0].BeatmapId
+        }
+
         const { Type, Gamemode, Page, Mods } = this.args
         const cached = isButton ? cache.get<cache>(this.oldComponentId) : null
 
@@ -113,7 +132,6 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             return CommandResponseCodes.OK
         }
 
-        const fetcher = await Fetcher.Create(user.id)
 
         const [map, mapErr] = isButton ? [cached.map] : await HandleAsync(fetcher.GetBeatmap({ id: Map, Gamemode }))
         if (mapErr) {
@@ -139,18 +157,28 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             return CommandResponseCodes.OK
         }
  
-        const userids = lb.scores.map(score => score.user_id)
+        const userids = lb.scores.map(score => score.UserId)
         const users = isButton ? cached.users : await fetcher.GetByUserIds({ ids: userids })
         const userRanks: { [key: number]: Profile.FromIds } = {}
         users.forEach(user => userRanks[user.id] = user)
-        scores.forEach(score => score.user.global_rank = userRanks[score.user_id].statistics_rulesets[Gamemode].global_rank)
-       
+        scores.forEach(score => score.User.global_rank = userRanks[score.UserId].statistics_rulesets[Gamemode].global_rank)
+        console.log(typeof scores[0].Mods, scores[0].Mods)
+        const ejsScoresData = scores.map(score => {
+            return {
+                index: score.index, userId: score.UserId, username: score.User.username, userUrl: score.User.url,
+                userRank: score.User.global_rank, pp: score.PP, accuracy: score.Accuracy, mods: score.Mods.Formatted,
+                grade: score.Grade, score: score.Score, combo: score.MaxCombo, max_combo: map.max_combo, misses: score.Statistics.miss, created_at: score.EndedAt
+            }
+        })
+
         const embed = this.GetBaseEmbed()
-        const text = TextRenderer.render("leaderboards", { scores: scores, user_score: Page == 4 ? user_score : null, map, author: user.osu.userId, beatmap: map })
+        const text = TextRenderer.render("leaderboards", {
+            scores: ejsScoresData, user_score: user_score, author: user.osu.userId
+        })
 
         embed.setDescription(text)
             .setAuthor({
-                name: `Top ${Page * 10 + 1}-${Math.min((Page + 1) * 10, lb.scores.length)} ${Type == lbType.friend ? "Friend" : Type == lbType.country ? "Country" : "Global"} Scores On ${map.beatmapset.title} [${map.version}]`, iconURL: GetFlag(scores[0].user.country_code), url: map.url
+                name: `Top ${Page * 10 + 1}-${Math.min((Page + 1) * 10, lb.scores.length)} ${Type == lbType.friend ? "Friend" : Type == lbType.country ? "Country" : "Global"} Scores On ${map.beatmapset.title} [${map.version}]`, iconURL: GetFlag(scores[0].User.country_code), url: map.url
             })
             .setThumbnail(map.beatmapset.covers["list@2x"])
 

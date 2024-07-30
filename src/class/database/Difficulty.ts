@@ -1,5 +1,6 @@
 import { Document, ObjectId } from "mongodb";
 import { db } from "./Main";
+import { Score } from "../api/osu/class/Score";
 
 export class Difficulty {
     public _id: ObjectId
@@ -69,13 +70,13 @@ export class Difficulty {
 }
 
 class cDifficultyFactory {
-    public async GetDifficulty(id: number, mods: string[], gamemode: number) {
+    public async GetDifficulty(id: number, mods: Score.ModList, gamemode: number) {
         const difficulty = await db.collection("difficulty").findOne({
             id: id,
             gamemode: gamemode,
             mods: {
-                $size: mods.length,
-                $all: mods
+                $size: mods.Mods.length,
+                $all: mods.Mods
             }
         })
         if(!difficulty) return null

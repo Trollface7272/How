@@ -1,7 +1,7 @@
 import { AxiosInstance } from "axios"
 import { OAuth, OAuthGenerator } from "./OAuth"
 import axios from "axios"
-import { Gamemode } from "./types/MiscTypes"
+import { Gamemode, RulesetIds } from "./types/MiscTypes"
 import { Profile } from "./class/Profile"
 import { Score } from "./class/Score"
 import { Endpoints } from "./Endpoints"
@@ -51,6 +51,7 @@ export class Fetcher {
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
+                "x-api-version": "20240529",
                 Authorization: `${oauth.token_type} ${oauth.access_token}`
             },
 
@@ -164,14 +165,14 @@ export class Fetcher {
         return resp.data.scores.map(score => new Score.BaseScore(score)) as Score.BaseScore[]
     }
 
-    public async GetScorePosition({ id, Gamemode }: { id: number, Gamemode: Gamemode }) {
+    public async GetScorePosition({ id, Gamemode }: { id: number, Gamemode: RulesetIds }) {
         if (BeatmapRankCache.has(`${id}-${Gamemode}`)) return BeatmapRankCache.get<number>(`${id}-${Gamemode}`)
         const resp = await this.GetScoreById({ id, Gamemode })
-        BeatmapRankCache.set(`${id}-${Gamemode}`, resp.rank_global)
-        return resp.rank_global
+        BeatmapRankCache.set(`${id}-${Gamemode}`, resp.RankGlobal)
+        return resp.RankGlobal
     }
 
-    public async GetScoreById({ id, Gamemode }: { id: number, Gamemode: Gamemode }) {
+    public async GetScoreById({ id, Gamemode }: { id: number, Gamemode: RulesetIds }) {
         const resp = await this.axios.get(Endpoints.scoreById(Gamemode, id))
         return new Score.FromId(resp.data)
     }
@@ -183,7 +184,7 @@ export class Fetcher {
                 mode: Gamemode
             }
         })
-        const map = new Beatmap.FromId(resp.data)
+        const map = new Beatmap.FromId(resp.data, new Score.ModList([]))
         beatmapCache.set(`map-${id}`, map)
         return map
     }
@@ -196,11 +197,11 @@ export class Fetcher {
         return set
     }
 
-    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: string[], gamemode: Gamemode, type: string }) {
+    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: Score.ModList, gamemode: Gamemode, type: string }) {
         const resp = await this.axios.get(Endpoints.leaderboards(id), {
             params: {
                 mode: gamemode,
-                mods: mods,
+                mods: mods.Mods,
                 type
             }
         })

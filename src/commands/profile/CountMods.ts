@@ -54,8 +54,7 @@ class CountMods extends CommandBase implements CommandAbstract {
         
         const mods = new Map<string, { count: number, mods: string, pp: number }>()
         for (const score of scores) {
-            let mod = score.mods.join("")
-            if (mod == "") mod = "Nomod"
+            let mod = score.Mods.Formatted
             if (mods.has(mod)) {
                 const val = mods.get(mod)
                 val.count++
@@ -78,9 +77,9 @@ class CountMods extends CommandBase implements CommandAbstract {
         const description = data.map(el => `**${el.mods}**: ${el.count} (${Math.round(el.pp * 100) / 100}pp)`).join("\n")
         
         const embed = this.GetBaseEmbed()
-            .setAuthor({ name: `Mods in ${GamemodeNames[Gamemode]} Top Plays for ${scores[0].user.username}`, iconURL: GetFlag(scores[0].user.country_code), url: `https://osu.ppy.sh/users/${scores[0].user.id}` })
+            .setAuthor({ name: `Mods in ${GamemodeNames[Gamemode]} Top Plays for ${scores[0].User.username}`, iconURL: GetFlag(scores[0].User.country_code), url: `https://osu.ppy.sh/users/${scores[0].User.id}` })
             .setDescription(description)
-            .setThumbnail(scores[0].user.avatar_url)
+            .setThumbnail(scores[0].User.avatar_url)
 
         await this.data.Reply({ embeds: [embed] })
         return CommandResponseCodes.OK

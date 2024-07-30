@@ -8,7 +8,7 @@ import { Gamemode } from "@src/class/api/osu/types/MiscTypes"
 import { GamemodeNames } from "@src/class/api/osu/Consts"
 import { EmojiFactory } from "@src/class/Emojis"
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync } from "@src/Utils"
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, Utils, escapeMarkdown } from "discord.js"
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, escapeMarkdown } from "discord.js"
 import { TextRenderer } from "@src/class/renderer/Text"
 import NodeCache from "node-cache"
 import { randomBytes } from "crypto"
@@ -95,7 +95,7 @@ class Recent extends CommandBase implements CommandAbstract {
         const { Username, Id: _id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.args
         const Id = !Username && !_id ? user.osu.userId : _id
 
-        if (!Username) {
+        if (!Username && !Id) {
             await this.data.Reply(this.RenderNoUserError())
             return CommandResponseCodes.OK
         }
@@ -122,7 +122,7 @@ class Recent extends CommandBase implements CommandAbstract {
             const scores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: true, Id: Id })
 
             const passes = profile.scores_recent_count
-            const fails = scores.filter(score => score.rank == "F").length
+            const fails = scores.filter(score => !score.Passed).length
             const total = passes + fails
             const embed = this.renderCount({ passes, fails, total })
             this.data.Reply({ embeds: [embed] })
@@ -132,7 +132,7 @@ class Recent extends CommandBase implements CommandAbstract {
         if (Best) {
             const [allScores, err] = Scores?.length > 0 ? [Scores as Score.Best[], null] : await HandleAsync(fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "best", Limit: 100 }))
             this.args.Scores = allScores
-            allScores.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            allScores.sort((a, b) => b.EndedAt.getTime() - a.EndedAt.getTime())
             if (List) {
                 const scores =
                     (Specific?.length > 0 ?
@@ -178,7 +178,7 @@ class Recent extends CommandBase implements CommandAbstract {
 
         let tries = 0
         for (let i = Page; i < allScores.length; i++) {
-            if (allScores[i].beatmap.id !== score.beatmap.id)
+            if (allScores[i].BeatmapId !== score.BeatmapId)
                 break
             tries++
         }
@@ -204,10 +204,7 @@ class Recent extends CommandBase implements CommandAbstract {
     }
 
     private async renderMap({ beatmap, beatmapset }: { beatmap: Beatmap.Base, beatmapset: BeatmapSet.Compact }) {
-        const { Drain: drain, AR: ar, HP: hp, OD: od, CS: cs, id: mapid, version, max_combo, Length: length, BPM: bpm, difficulty_rating, mods: Mods, mode: Gamemode, ranked } = beatmap
-        const { id: setid, status: _status, favourite_count } = beatmapset
-
-        const calc = new PerformanceCalculator(beatmap, Mods)
+        const calc = new PerformanceCalculator(beatmap, beatmap.mods)
         await calc.FetchAttributes()
 
         const embed = this.GetBaseEmbed()
@@ -215,19 +212,19 @@ class Recent extends CommandBase implements CommandAbstract {
             calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(95)
         ])
 
-        const status = _status.charAt(0).toUpperCase() + _status.slice(1)
+        const status = beatmap.status.charAt(0).toUpperCase() + beatmap.status.slice(1)
         const pp = this.RenderBeatmapPP(pps, [100, 99, 98, 95])
 
         const description = TextRenderer.render("beatmap/beatmap", {
-            length: length.asTime(), drain: length != drain ? ` (${drain.asTime()})` : "", bpm: bpm, mods: Mods?.join("") ?? "No Mods",
-            setid: setid, id: mapid,
-            difficulty: EmojiFactory.GetDifficultyEmoji(difficulty_rating, Gamemode), version: version,
-            stars: difficulty_rating.roundFixed(2), maxCombo: max_combo,
-            ar: ar.roundDynamicFixed(1, 2), od: od.roundDynamicFixed(1, 2), hp: hp.roundDynamicFixed(1, 2), cs: cs.roundDynamicFixed(1, 2),
+            length: length.asTime(), drain: length != beatmap.drain ? ` (${beatmap.drain.asTime()})` : "", bpm: beatmap.bpm, mods: beatmap.mods.Formatted,
+            setid: beatmapset.id, id: beatmap.id,
+            difficulty: EmojiFactory.GetDifficultyEmoji(beatmap.difficulty_rating, beatmap.mode), version: beatmap.version,
+            stars: beatmap.difficulty_rating.roundFixed(2), maxCombo: beatmap.max_combo,
+            ar: beatmap.AR.roundDynamicFixed(1, 2), od: beatmap.OD.roundDynamicFixed(1, 2), hp: beatmap.HP.roundDynamicFixed(1, 2), cs: beatmap.CS.roundDynamicFixed(1, 2),
             pp: pp
         })
         embed.setFooter({
-            text: `${status} | ${favourite_count} ❤︎`
+            text: `${status} | ${beatmapset.favourite_count} ❤︎`
         })
         embed.setDescription(description)
         return embed
@@ -235,59 +232,56 @@ class Recent extends CommandBase implements CommandAbstract {
 
     private async renderSingleBestScore({ score, page, maxPages }: { score: Score.Best, page: number, maxPages: number }) {
         const data = this.renderMultipleBestScores({ scores: [score], page, maxPages })
-        score.beatmap.setMods(score.mods)
 
-        if (this.data.args.Map) data.embeds[1] = await this.renderMap({ beatmap: score.beatmap, beatmapset: score.beatmapset })
+        if (this.data.args.Map) data.embeds[1] = await this.renderMap({ beatmap: score.Beatmap, beatmapset: score.Beatmapset })
 
         const embed = data.embeds[0]
         embed.setAuthor({
-            name: `Recent Top ${GamemodeNames[score.mode]} Play for ${score.user.username}`,
-            url: `https://osu.ppy.sh/users/${score.user.id}`,
-            iconURL: GetFlag(score.user.country_code)
+            name: `Recent Top ${GamemodeNames[score.RulesetId]} Play for ${score.User.username}`,
+            url: `https://osu.ppy.sh/users/${score.UserId}`,
+            iconURL: GetFlag(score.User.country_code)
         })
         embed.setFooter({
-            text: `Beatmap by ${score.beatmapset.creator}`,
+            text: `Beatmap by ${score.Beatmapset.creator}`,
         })
 
         return data
     }
 
     private async renderSingleScore({ score, page, maxPages, tries }: { score: Score.Recent, page: number, maxPages: number, tries: number }) {
-        const { mods, rank: grade, mode, replay, mode_int, max_combo: combo, accuracy, statistics, user: { avatar_url }, beatmapset: { title }, beatmap: { version, difficulty_rating, url, max_combo, count_circles, count_sliders, count_spinners }, performance: { normal: { total: pp }, improved }, position: _rank } = score
         const embed = this.GetBaseEmbed()
         const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
 
         let mapEmbed: Promise<EmbedBuilder>
-        score.beatmap.setMods(score.mods)
 
 
-        if (this.data.args.Map) mapEmbed = this.renderMap({ beatmap: score.beatmap, beatmapset: score.beatmapset })
+        if (this.data.args.Map) mapEmbed = this.renderMap({ beatmap: score.Beatmap, beatmapset: score.Beatmapset })
 
         let rank: string = ""
-        if (_rank) {
-            if (replay) {
-                rank = `▸ [#${_rank}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
+        if (score.RankGlobal) {
+            if (score.HasReplay) {
+                rank = `▸ [#${score.RankGlobal}](https://osu.ppy.sh/scores/${score.Id}/download)`
             } else {
-                rank = `▸ #${_rank}`
+                rank = `▸ #${score.RankGlobal}`
             }
         }
 
         const description = TextRenderer.render(`recent/single`, {
-            grade: EmojiFactory.GetEmoji(`Ranking${grade}`), pp: pp.roundFixed(3), fcpp: improved ? `/${improved.total.roundFixed(3)}pp` : "", accuracy: (accuracy * 100).roundFixed(2), rank,
-            score: score.score.toLocaleString("en-US"), combo: FormatCombo(combo, max_combo, mode), hits: FormatHits(statistics, mode),
-            timestamp: new Date(score.created_at).toDiscordToolTip(),
-            completion: rank == "F" ? `\n▸ **Map Completion:** ${CalculateProgress(statistics, { circles: count_circles, sliders: count_sliders, spinners: count_spinners }, mode_int)}%` : ""
+            grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance.improved ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", accuracy: (score.Accuracy * 100).roundFixed(2), rank,
+            score: score.Score.toLocaleString("en-US"), combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+            timestamp: score.EndedAt.toDiscordToolTip(),
+            completion: !score.Passed ? `\n▸ **Map Completion:** ${CalculateProgress(score.Statistics, { circles: score.Beatmap.count_circles, sliders: score.Beatmap.count_sliders, spinners: score.Beatmap.count_spinners }, score.RulesetId)}%` : ""
         })
 
         embed.setAuthor({
-            name: `${title} [${version}] +${mods.join("")} [${difficulty_rating.roundFixed(2)}★]`,
-            url: url,
-            iconURL: avatar_url
+            name: `${score.Beatmapset.title} [${score.Beatmap.version}] +${score.Mods.Formatted} [${score.Beatmap.difficulty_rating.roundFixed(2)}★]`,
+            url: score.Beatmap.url,
+            iconURL: score.User.avatar_url
         })
         embed.setFooter({
-            text: `Try #${tries} | Page ${page + 1}/${maxPages} | Beatmap by ${score.beatmapset.creator}`,
+            text: `Try #${tries} | Page ${page + 1}/${maxPages} | Beatmap by ${score.Beatmapset.creator}`,
         })
-        embed.setThumbnail(`https://b.ppy.sh/thumb/${score.beatmapset.id}l.jpg`)
+        embed.setThumbnail(`https://b.ppy.sh/thumb/${score.Beatmapset.id}l.jpg`)
         embed.setDescription(description)
 
         return { embeds: [embed, (await mapEmbed)].filter(el => el != null), components: [buttons] }
@@ -298,9 +292,9 @@ class Recent extends CommandBase implements CommandAbstract {
         const embed = resp.embeds[0]
 
         embed.setAuthor({
-            name: `Recent Plays for ${scores[0].user.username}`,
-            url: `https://osu.ppy.sh/users/${scores[0].user.id}`,
-            iconURL: GetFlag(scores[0].user.country_code)
+            name: `Recent Plays for ${scores[0].User.username}`,
+            url: `https://osu.ppy.sh/users/${scores[0].User.id}`,
+            iconURL: GetFlag(scores[0].User.country_code)
         })
         return resp
     }
@@ -311,31 +305,29 @@ class Recent extends CommandBase implements CommandAbstract {
         const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
 
         const description = scores.map(score => {
-            const { index, mods, rank: grade, max_combo: combo, accuracy, beatmapset: { title }, beatmap: { version, url, max_combo }, performance, performance: { normal: { total: pp } } } = score
-            const fcpp = performance.improved ? performance.improved.total : undefined
             let rank: string = ""
-            if (score.position) {
-                if (score.replay) {
-                    rank = `▸ [#${score.position}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
+            if (score.RankGlobal) {
+                if (score.HasReplay) {
+                    rank = `▸ [#${score.RankGlobal}](https://osu.ppy.sh/scores/osu/${score.Id}/download)`
                 } else {
-                    rank = `▸ #${score.position}`
+                    rank = `▸ #${score.RankGlobal}`
                 }
             }
             return TextRenderer.render(`recent/score`, {
-                index: index + 1, title: escapeMarkdown(title), difficulty: escapeMarkdown(version), beatmapUrl: url, mods: mods.length == 0 ? "NoMod" : mods.join(""), starRating: score.beatmap.difficulty_rating.roundFixed(2),
-                grade: EmojiFactory.GetEmoji(`Ranking${grade}`), pp: pp.roundFixed(3), fcpp: fcpp ? `/${fcpp.roundFixed(3)}pp` : "", accuracy: (accuracy * 100).roundFixed(2), rank: rank,
-                score: score.score.toLocaleString("en-US"), combo: FormatCombo(combo, max_combo, score.mode), hits: FormatHits(score.statistics, score.mode),
-                timestamp: new Date(score.created_at).toDiscordToolTip()
+                index: score.index + 1, title: escapeMarkdown(score.Beatmapset.title), difficulty: escapeMarkdown(score.Beatmap.version), beatmapUrl: score.Beatmap.url, mods: score.Mods.Formatted, starRating: score.Beatmap.difficulty_rating.roundFixed(2),
+                grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance.improved.total ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", accuracy: (score.Accuracy * 100).roundFixed(2), rank: rank,
+                score: score.Score.toLocaleString("en-US"), combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+                timestamp: score.EndedAt.toDiscordToolTip()
             })
         }).join("\n")
 
         embed.setAuthor({
-            name: `Recent Top ${GamemodeNames[scores[0].mode]} Plays for ${scores[0].user.username}`,
-            url: `https://osu.ppy.sh/users/${scores[0].user.id}`,
-            iconURL: GetFlag(scores[0].user.country_code)
+            name: `Recent Top ${GamemodeNames[scores[0].RulesetId]} Plays for ${scores[0].User.username}`,
+            url: `https://osu.ppy.sh/users/${scores[0].User.id}`,
+            iconURL: GetFlag(scores[0].User.country_code)
         })
         embed.setDescription(description)
-        embed.setThumbnail(`https://b.ppy.sh/thumb/${scores[0].beatmapset.id}l.jpg`)
+        embed.setThumbnail(`https://b.ppy.sh/thumb/${scores[0].Beatmapset.id}l.jpg`)
         embed.setFooter({
             text: `Page ${page + 1}/${maxPages}`
         })

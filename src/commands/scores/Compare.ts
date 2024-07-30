@@ -8,7 +8,6 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { Score } from "@src/class/api/osu/class/Score";
 import { ButtonEmojis, FormatCombo, FormatHits } from "@src/Utils";
-import { EmojiFactory } from "@src/class/Emojis";
 import NodeCache from "node-cache";
 import { randomBytes } from "crypto";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
@@ -85,7 +84,7 @@ class Compare extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        const { Gamemode, Beatmap: _Beatmap, Username, Id: _id, Page: _Page } = this.data.args
+        const { Gamemode, Beatmap: _Beatmap, Username, Id: _id, Page: _Page } = this.args
         const Id = !Username && !_id ? user.osu.userId : _id
 
         const Beatmap = _Beatmap || await this.data.GetBeatmapFromConversation()
@@ -111,8 +110,8 @@ class Compare extends CommandBase implements CommandAbstract {
             this.data.Reply({ embeds: [embed] })
             return CommandResponseCodes.OK
         }
-        const pickedScoreIds = scores.slice(this.args.Page * 3, this.args.Page * 3 + 3).map((el: Score.BaseScore) => el.id)
-        const pickedScores = await Promise.all(pickedScoreIds.map((el: number) => fetcher.GetScoreById({ id: el, Gamemode: Gamemode })))
+        const pickedScoreIds = scores.slice(this.args.Page * 3, this.args.Page * 3 + 3).map((el: Score.BaseScore) => el.Id)
+        const pickedScores = await Promise.all(pickedScoreIds.map((el: number) => fetcher.GetScoreById({ id: el, Gamemode: scores[0].RulesetId })))
         pickedScores.forEach((score, i) => {
             score.index = this.args.Page * 3 + i + 1
         })
@@ -138,31 +137,29 @@ class Compare extends CommandBase implements CommandAbstract {
     }
 
     private RenderScores({ scores, totalScores }: { scores: Score.FromId[], totalScores: number }) {
+        console.log(scores[0].Mods)
         const embed = this.GetBaseEmbed()
-        const { user_id, beatmapset: { title, creator, id: beatmapsetId }, beatmap: { version, url } } = scores[0]
+        const { Beatmap: beatmap, Beatmapset: beatmapset, User: user } = scores[0]
         const description = scores.map(score => {
-            const { created_at, index, mods: _mods, rank: grade, score: scoreNum, max_combo: combo, statistics, accuracy, performance: { normal: { total: pp }, improved }, beatmap: { max_combo, mode, difficulty_rating: stars } } = score
-            const fcpp = improved ? improved.total : undefined
             let rank: string = ""
-            if (score.rank_global) {
-                if (score.replay) {
-                    rank = `▸ [#${score.rank_global}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
+            if (score.RankGlobal) {
+                if (score.HasReplay) {
+                    rank = `▸ [#${score.RankGlobal}](https://osu.ppy.sh/scores/${score.Id}/download)`
                 } else {
-                    rank = `▸ #${score.rank_global}`
+                    rank = `▸ #${score.RankGlobal}`
                 }
             }
-            let mods = _mods.length == 0 ? "No Mod" : _mods.join("")
             return TextRenderer.render("compare", {
-                index: index, mods: mods, stars: stars.roundFixed(2),
-                grade: EmojiFactory.GetEmoji(`Ranking${grade}`), pp: pp.roundFixed(3), fcpp: fcpp ? `/${fcpp.roundFixed(3)}pp` : "", acc: (accuracy * 100).roundFixed(2), rank: rank,
-                score: scoreNum.toLocaleString(), combo: FormatCombo(combo, max_combo, mode), hits: FormatHits(statistics, mode),
-                setTime: new Date(created_at).toDiscordToolTip(),
+                index: score.index, mods: score.Mods.Formatted, stars: score.Beatmap.difficulty_rating.roundFixed(2),
+                grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance.improved.total ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", acc: (score.Accuracy * 100).roundFixed(2), rank: rank,
+                score: score.Score.toLocaleString(), combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+                setTime: score.EndedAt.toDiscordToolTip(),
             })
         }).join("\n")
         embed
             .setDescription(description)
-            .setAuthor({ name: `${title} [${version}] by ${creator}`, iconURL: `https://a.ppy.sh/${user_id}`, url: url })
-            .setThumbnail(`https://b.ppy.sh/thumb/${beatmapsetId}l.jpg`)
+            .setAuthor({ name: `${beatmapset.title} [${beatmap.version}] by ${beatmapset.creator}`, iconURL: `https://a.ppy.sh/${user.id}`, url: beatmap.url })
+            .setThumbnail(`https://b.ppy.sh/thumb/${beatmapset.id}l.jpg`)
             .setFooter({ text: `Page ${this.args.Page + 1} of ${Math.ceil(totalScores / 3)}` })
         return embed
 

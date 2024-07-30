@@ -9,14 +9,14 @@ import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
 import { Logger } from "@src/class/Logger";
 import { AxiosError } from "axios";
 import { TextRenderer } from "@src/class/renderer/Text";
-import { ActionRow, ActionRowBuilder, EmbedBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
-import { toBitMods } from "@src/class/api/osu/Utils";
 import { CommandBase } from "@src/class/base/Command";
+import { Score } from "@src/class/api/osu/class/Score";
 
 interface args {
   Gamemode: Gamemode
-  Mods: string[]
+  Mods: Score.ModList
   id: number
   Acc: number
   Background: boolean
@@ -65,7 +65,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
         Gamemode = gamemode as Gamemode
         if (type === "mods") {
           _id = parseInt(id)
-          Mods = interaction.values
+          Mods = new Score.ModList(interaction.values)
         } else if (type === "difficulty") {
           _id = parseInt(interaction.values[0])
         }
@@ -137,19 +137,18 @@ class Beatmap extends CommandBase implements CommandAbstract {
           .setCustomId(`beatmap;difficulty;${id};${Gamemode}`)
       )
 
-    let mods = toBitMods(Mods)
     const modsSelect = new ActionRowBuilder<StringSelectMenuBuilder>()
       .addComponents(
         new StringSelectMenuBuilder()
           .addOptions(
-            this.modSelectMenuOption((mods & 1) > 0, "NoFail", "NF", "<:NoFail:586217719632887808>"),
-            this.modSelectMenuOption((mods & 2) > 0, "Easy", "EZ", "<:Easy:586217683188580377>"),
-            this.modSelectMenuOption((mods & 8) > 0, "Hidden", "HD", "<:Hidden:586217719129440256>"),
-            this.modSelectMenuOption((mods & 16) > 0, "Hard Rock", "HR", "<:HardRock:586217719125245952>"),
-            this.modSelectMenuOption((mods & 64) > 0, "Double Time", "DT", "<:DoubleTime:586217676276367361>"),
-            this.modSelectMenuOption((mods & 256) > 0, "Half Time", "hT", "<:HalfTime:586217719104405504>"),
-            this.modSelectMenuOption((mods & 1024) > 0, "Flashlight", "FL", "<:Flashlight:586217710371733536>"),
-            this.modSelectMenuOption((mods & 4096) > 0, "Spun Out", "SO", "<:SpunOut:586217719318315030>")
+            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.NoFail), "NoFail", "NF", "<:NoFail:586217719632887808>"),
+            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.Easy), "Easy", "EZ", "<:Easy:586217683188580377>"),
+            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.Hidden), "Hidden", "HD", "<:Hidden:586217719129440256>"),
+            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.HardRock), "Hard Rock", "HR", "<:HardRock:586217719125245952>"),
+            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.DoubleTime), "Double Time", "DT", "<:DoubleTime:586217676276367361>"),
+            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.HalfTime), "Half Time", "HT", "<:HalfTime:586217719104405504>"),
+            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.Flashlight), "Flashlight", "FL", "<:Flashlight:586217710371733536>"),
+            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.SpunOut), "Spun Out", "SO", "<:SpunOut:586217719318315030>")
           )
           .setMinValues(0)
           .setMaxValues(8)
@@ -158,7 +157,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
 
 
     const description = TextRenderer.render("beatmap/beatmap", {
-      length: length.asTime(), drain: length != drain ? ` (${drain.asTime()})` : "", bpm: bpm, mods: Mods?.join("") ?? "No Mods",
+      length: length.asTime(), drain: length != drain ? ` (${drain.asTime()})` : "", bpm: bpm, mods: Mods.Formatted ?? "No Mods",
       setid: setid, id: mapid,
       difficulty: EmojiFactory.GetDifficultyEmoji(difficulty_rating, Gamemode), version: version,
       stars: difficulty_rating.roundFixed(2), maxCombo: max_combo,

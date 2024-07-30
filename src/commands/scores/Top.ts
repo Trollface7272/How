@@ -8,13 +8,11 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import NodeCache from "node-cache";
 import { Logger } from "@src/class/Logger";
 import { TextRenderer } from "@src/class/renderer/Text";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, escapeMarkdown } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown } from "discord.js";
 import { Score } from "@src/class/api/osu/class/Score";
 import { randomBytes, randomInt } from "crypto";
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag } from "@src/Utils";
-import { EmojiFactory } from "@src/class/Emojis";
 import { GamemodeNames } from "@src/class/api/osu/Consts";
-import { render, renderFile } from "ejs"
 
 interface args {
     Gamemode: Gamemode
@@ -28,7 +26,7 @@ interface args {
     Page: number
     Type: "best" | "firsts" | "pinned"
     Sort: string
-    Mods: string[]
+    Mods: Score.ModList
 }
 
 const componentCache = new NodeCache({
@@ -154,8 +152,8 @@ class Top extends CommandBase implements CommandAbstract {
         }
 
         if (GreaterThan) {
-            let username = scores[0].user.username
-            scores = scores.filter(el => el.pp > GreaterThan)
+            let username = scores[0].User.username
+            scores = scores.filter(el => el.PP > GreaterThan)
             if (!Recent && !Random && !Reversed) {
                 const embed = this.RenderGreaterThan({ user: username, total: scores.length, pp: GreaterThan })
                 this.data.Reply({ embeds: [embed] })
@@ -164,7 +162,7 @@ class Top extends CommandBase implements CommandAbstract {
         }
 
         if (Recent) {
-            scores.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+            scores.sort((a, b) => b.EndedAt.getTime() - a.EndedAt.getTime())
         }
 
         if (Sort) {
@@ -270,31 +268,28 @@ class Top extends CommandBase implements CommandAbstract {
     private RenderScores({ scores, totalScores }: { scores: Score.Firsts[], totalScores: number }) {
         const embed = this.GetBaseEmbed()
         const description = scores.map((score: Score.Firsts) => {
-            const { score: scoreNum, created_at, index, accuracy, max_combo: combo, mode, statistics, replay, position: _rank, rank: grade, mods,
-                performance: { normal: { total: pp }, improved }, beatmap: { max_combo, url, version, difficulty_rating }, beatmapset: { title }
-            } = score
             let rank: string = ""
-            if (_rank) {
-                if (replay) {
-                    rank = `▸ [#${_rank}](https://osu.ppy.sh/scores/osu/${score.id}/download)`
+            if (score.RankGlobal) {
+                if (score.HasReplay) {
+                    rank = `▸ [#${score.RankGlobal}](https://osu.ppy.sh/scores/${score.Id}/download)`
                 } else {
-                    rank = `▸ #${_rank}`
+                    rank = `▸ #${score.RankGlobal}`
                 }
             }
             return TextRenderer.render("top/scores", {
-                index: index + 1, title: escapeMarkdown(title), version: escapeMarkdown(version), url: url, mods: mods.length == 0 ? "NoMod" : mods.join(""), stars: difficulty_rating.roundFixed(2),
-                grade: EmojiFactory.GetEmoji(`Ranking${grade}`), pp: pp.roundFixed(3), fcpp: improved ? `/${improved.total.roundFixed(3)}pp` : "", acc: (accuracy * 100).roundFixed(2), rank: rank,
-                score: scoreNum.toLocaleString(), combo: FormatCombo(combo, max_combo, mode), hits: FormatHits(statistics, mode),
-                setTime: new Date(created_at).toDiscordToolTip()
+                index: score.index + 1, title: escapeMarkdown(score.Beatmapset.title), version: escapeMarkdown(score.Beatmap.version), url: score.Beatmap.url, mods: score.Mods.Formatted, stars: score.Beatmap.difficulty_rating.roundFixed(2),
+                grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: `/${score.performance.improved.total.roundFixed(3)}pp`, acc: (score.Accuracy * 100).roundFixed(2), rank: rank,
+                score: score.Score.toLocaleString(), combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+                setTime: new Date(score.EndedAt).toDiscordToolTip()
             })
         }).join("\n")
         embed
             .setDescription(description)
             .setAuthor({
-                name: `Top ${Math.min(scores.length, 5)} ${GamemodeNames[scores[0].mode]} Play${scores.length > 1 ? "s" : ""} for ${scores[0].user.username}`,
-                iconURL: GetFlag(scores[0].user.country_code), url: `https://osu.ppy.sh/users/${scores[0].user.id}`
+                name: `Top ${Math.min(scores.length, 5)} ${GamemodeNames[scores[0].RulesetId]} Play${scores.length > 1 ? "s" : ""} for ${scores[0].User.username}`,
+                iconURL: GetFlag(scores[0].User.country_code), url: `https://osu.ppy.sh/users/${scores[0].User.id}`
             })
-            .setThumbnail(scores[0].user.avatar_url)
+            .setThumbnail(scores[0].User.avatar_url)
             
         if (!this.args.Random)
             embed.setFooter({

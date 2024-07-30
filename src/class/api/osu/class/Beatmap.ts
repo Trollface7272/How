@@ -1,5 +1,6 @@
 import { BeatmapSet } from "./BeatmapSet"
 import { Clamp } from "../Utils"
+import { Score } from "./Score"
 
 
 
@@ -53,7 +54,7 @@ export namespace Beatmap {
 
     }
     export class Base extends Compact {
-        public mods: string[]
+        public mods: Score.ModList
 
         public get lastUpdated() {
             return new Date(this.last_updated)
@@ -62,23 +63,17 @@ export namespace Beatmap {
         public get AR() {
             let ar = this.ar
             
-            if (this.mods.includes("HR")) {
+            if (this.mods.Has(Score.ModAcronyms.HardRock)) {
                 ar = Math.min(10, ar * 1.4)
             }
 
-            if (this.mods.includes("EZ")) {
+            if (this.mods.Has(Score.ModAcronyms.Easy)) {
                 ar = Math.max(0, ar * 0.5)
             }
 
             let ms: number = ar > 5 ? (1200 - 150 * (ar - 5)) : (1200 + 120 * (5 - ar))
 
-            if (this.mods.includes("DT")) {
-                ms /= 1.5
-            }
-            
-            if (this.mods.includes("HT")) {
-                ms /= 0.75   
-            }
+            ms /= this.mods.GetSpeedChange()
             
             ar = ms < 1200 ? (13 - ms / 150) : (15 - ms / 120)
 
@@ -88,23 +83,17 @@ export namespace Beatmap {
         public get OD() {
             let od = this.accuracy
 
-            if (this.mods.includes("HR")) {
+            if (this.mods.Has(Score.ModAcronyms.HardRock)) {
                 od = Math.min(10, od * 1.4)
             }
 
-            if (this.mods.includes("EZ")) {
+            if (this.mods.Has(Score.ModAcronyms.Easy)) {
                 od = Math.max(0, od * 0.5)
             }
 
             let ms = 80 - 6 * od
 
-            if (this.mods.includes("DT")) {
-                ms /= 1.5
-            }
-            
-            if (this.mods.includes("HT")) {
-                ms /= 0.75   
-            }
+            ms /= this.mods.GetSpeedChange()
             
             od = Math.min(11, (80 - ms) / 6)
 
@@ -114,11 +103,11 @@ export namespace Beatmap {
         public get CS() {
             let cs = this.cs
 
-            if (this.mods.includes("HR")) {
+            if (this.mods.Has(Score.ModAcronyms.HardRock)) {
                 cs = Math.min(10, cs * 1.3)
             }
 
-            if (this.mods.includes("EZ")) {
+            if (this.mods.Has(Score.ModAcronyms.Easy)) {
                 cs = Math.max(0, cs * 0.5)
             }
 
@@ -128,11 +117,11 @@ export namespace Beatmap {
         public get HP() {
             let hp = this.drain
 
-            if (this.mods.includes("HR")) {
+            if (this.mods.Has(Score.ModAcronyms.HardRock)) {
                 hp = Math.min(10, hp * 1.4)
             }
 
-            if (this.mods.includes("EZ")) {
+            if (this.mods.Has(Score.ModAcronyms.Easy)) {
                 hp = Math.max(0, hp * 0.5)
             }
 
@@ -142,13 +131,7 @@ export namespace Beatmap {
         public get BPM() {
             let bpm = this.bpm
 
-            if (this.mods.includes("DT")) {
-                bpm *= 1.5
-            }
-
-            if (this.mods.includes("HT")) {
-                bpm *= 0.75
-            }
+            bpm *= this.mods.GetSpeedChange()
 
             return bpm
         }
@@ -156,13 +139,7 @@ export namespace Beatmap {
         public get Length() {
             let length = this.total_length
 
-            if (this.mods.includes("DT")) {
-                length /= 1.5
-            }
-
-            if (this.mods.includes("HT")) {
-                length /= 0.75
-            }
+            length /= this.mods.GetSpeedChange()
 
             return Math.round(length)
         }
@@ -170,13 +147,7 @@ export namespace Beatmap {
         public get Drain() {
             let drain = this.hit_length
 
-            if (this.mods.includes("DT")) {
-                drain /= 1.5
-            }
-
-            if (this.mods.includes("HT")) {
-                drain /= 0.75
-            }
+            drain /= this.mods.GetSpeedChange()
 
             return Math.round(drain)
         }
@@ -200,21 +171,21 @@ export namespace Beatmap {
         ranked: string
         url: string
         max_combo?: number
-        constructor(map: Base) {
+        constructor(map: Base, mods: Score.ModList) {
             super(map)
             Object.assign(this, map)
-            this.mods = []
+            this.mods = mods
         }
 
-        public setMods(mods: string[]) {
-            this.mods = mods ?? []
+        public setMods(mods: Score.ModList) {
+            this.mods = mods ?? new Score.ModList([])
         }
     }
     export class FromId extends Base {
         beatmapset: BeatmapSet.Beatmap.FromId
         failtimes: { fail: number[], exit: number[] }
-        constructor(map: FromId) {
-            super(map)
+        constructor(map: FromId, mods: Score.ModList) {
+            super(map, mods)
             Object.assign(this, map)
             this.beatmapset = new BeatmapSet.Beatmap.FromId(this.beatmapset)
         }
@@ -224,8 +195,8 @@ export namespace Beatmap {
     export class FromIds extends Base {
         beatmapset: BeatmapSet.Beatmap.FromIds //With rating
         failtimes: { fail: number[], exit: number[] }
-        constructor(map: FromIds) {
-            super(map)
+        constructor(map: FromIds, mods: Score.ModList) {
+            super(map, mods)
             Object.assign(this, map)
             this.beatmapset = new BeatmapSet.Beatmap.FromIds(this.beatmapset)
         }

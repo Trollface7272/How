@@ -1,4 +1,5 @@
 import { Beatmap as _Beatmap } from "./Beatmap"
+import { Score } from "./Score"
 
 export namespace BeatmapSet {
     //Helper Types
@@ -95,7 +96,7 @@ export namespace BeatmapSet {
             super(set)
             Object.assign(this, set)
             this.beatmaps = this.beatmaps.map(map => {
-                return new _Beatmap.Base(map)
+                return new _Beatmap.Base(map, new Score.ModList([]))
             })
         }
     }

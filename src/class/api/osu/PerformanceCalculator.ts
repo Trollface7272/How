@@ -6,9 +6,9 @@ import { Logger } from "@src/class/Logger";
 import { Difficulty, DifficultyFactory } from "@src/class/database/Difficulty";
 import NodeCache from "node-cache";
 import { Score } from "./class/Score";
-import { Clamp, DownloadFile, toBitMods } from "./Utils";
-import { BitMods } from "./Consts";
+import { Clamp, DownloadFile } from "./Utils";
 import { resolve } from "path";
+import hash from "object-hash";
 
 type performance = { normal: PerformanceContainer, improved?: PerformanceContainer }
 type difficulty = { stars: number, maxCombo: number }
@@ -20,13 +20,14 @@ const cache = new NodeCache({
     deleteOnExpire: true
 })
 
-const cachePath = "cache/beatmaps/osu"
+const cachePath = process.env.BEATMAP_CACHE ?? "cache/beatmaps/osu"
 const difficulty_mods = [
     "EZ", "HT", "TD", "HR",
     "DT", "NC", "FL", "MR",
     "4K", "5K", "6K", "7K",
     "8K", "FI", "RD", "1K",
     "2K", "3K", "9K", "V2",
+    "RX", "CL", "DA"
 ]
 
 if (!existsSync(cachePath))
@@ -35,17 +36,16 @@ if (!existsSync(cachePath))
 export class PerformanceCalculator {
     private attributes: Beatmap.DifficultyAttributes
 
-    private starRatingMods: string[]
+    private starRatingMods: Score.ModList
 
-    public constructor(private beatmap: Beatmap.Base, private mods: string[]) {
-        if (!this.mods) this.mods = []
-        this.starRatingMods = this.mods.filter(mod => difficulty_mods.includes(mod)).map(el => el.replace("NC", "DT"))
-        this.starRatingMods.push("CL")
+    public constructor(private beatmap: Beatmap.Base, private mods: Score.ModList) {
+        if (!this.mods) this.mods = new Score.ModList([])
+        this.starRatingMods = new Score.ModList(this.mods.Mods.filter(mod => difficulty_mods.includes(mod.acronym)))
     }
 
     public async Calculate(score: Score.BaseScore): Promise<performance> {
-        if (cache.get<cached>(`${score.id}-${score.mode}`)) {
-            const cached = cache.get<cached>(`${score.id}-${score.mode}`)
+        if (cache.get<cached>(`${score.Id}-${score.RulesetId}`)) {
+            const cached = cache.get<cached>(`${score.Id}-${score.RulesetId}`)
             this.beatmap.difficulty_rating = cached.difficulty.stars
             this.beatmap.max_combo = cached.difficulty.maxCombo
             return cached.performance
@@ -72,7 +72,7 @@ export class PerformanceCalculator {
                 break
             }
         }
-        cache.set<cached>(`${score.id}-${score.mode}`, {
+        cache.set<cached>(`${score.Id}-${score.RulesetId}`, {
             difficulty: {maxCombo: this.beatmap.max_combo, stars: this.beatmap.difficulty_rating},
             performance: resp
         })
@@ -95,8 +95,9 @@ export class PerformanceCalculator {
                     approachRate: attributes.approach_rate,
                     flDiff: attributes.flashlight_difficulty,
                     maxCombo: attributes.max_combo,
-                    _mods: toBitMods(this.mods),
+                    _mods: this.mods,
                     overallDifficulty: attributes.overall_difficulty,
+                    drainRate: this.beatmap.drain,
                     sliders: this.beatmap.count_sliders,
                     spinners: this.beatmap.count_spinners,
                     circles: this.beatmap.count_circles,
@@ -118,7 +119,7 @@ export class PerformanceCalculator {
                 resp = new CtbPerformance({
                     approach: attributes.approach_rate,
                     maxCombo: attributes.max_combo,
-                    _mods: toBitMods(this.mods),
+                    _mods: this.mods,
                     _num50: 0,
                     _num100: 0,
                     _num300: this.beatmap.count_circles + this.beatmap.count_sliders + this.beatmap.count_spinners,
@@ -134,7 +135,7 @@ export class PerformanceCalculator {
             case "taiko": {
                 const attributes = this.attributes as Beatmap.TaikoAttributes
                 resp = new TaikoPerformance({
-                    _mods: toBitMods(this.mods),
+                    _mods: this.mods,
                     _num50: 0,
                     _num100: 0,
                     _num300: this.beatmap.count_circles + this.beatmap.count_sliders + this.beatmap.count_spinners,
@@ -152,7 +153,7 @@ export class PerformanceCalculator {
             case "mania": {
                 const attributes = this.attributes as Beatmap.ManiaAttributes
                 resp = new ManiaPerformance({
-                    _mods: toBitMods(this.mods),
+                    _mods: this.mods,
                     _num50: 0,
                     _num100: 0,
                     _num300: this.beatmap.count_circles + this.beatmap.count_sliders + this.beatmap.count_spinners,
@@ -178,19 +179,20 @@ export class PerformanceCalculator {
             approachRate: attributes.approach_rate,
             flDiff: attributes.flashlight_difficulty,
             maxCombo: attributes.max_combo,
-            _mods: toBitMods(this.mods),
+            _mods: this.mods,
             overallDifficulty: attributes.overall_difficulty,
+            drainRate: this.beatmap.drain,
             sliders: this.beatmap.count_sliders,
             spinners: this.beatmap.count_spinners,
             circles: this.beatmap.count_circles,
             speedDiff: attributes.speed_difficulty,
             sliderFactor: attributes.slider_factor,
             speedNoteCount: attributes.speed_note_count,
-            _num50: score.statistics.count_50,
-            _num100: score.statistics.count_100,
-            _num300: score.statistics.count_300,
-            _numMiss: score.statistics.count_miss,
-            _maxCombo: score.max_combo,
+            _num50: score.Statistics.meh,
+            _num100: score.Statistics.ok,
+            _num300: score.Statistics.great,
+            _numMiss: score.Statistics.miss,
+            _maxCombo: score.MaxCombo,
             type: "normal",
         })
     }
@@ -200,13 +202,13 @@ export class PerformanceCalculator {
         return new CtbPerformance({
             approach: attributes.approach_rate,
             maxCombo: attributes.max_combo,
-            _mods: toBitMods(this.mods),
-            _num50: score.statistics.count_50,
-            _num100: score.statistics.count_100,
-            _num300: score.statistics.count_300,
-            _numMiss: score.statistics.count_miss,
-            _maxCombo: score.max_combo,
-            _numKatu: score.statistics.count_katu,
+            _mods: this.mods,
+            _num50: score.Statistics.meh,
+            _num100: score.Statistics.ok,
+            _num300: score.Statistics.great,
+            _numMiss: score.Statistics.miss,
+            _maxCombo: score.MaxCombo,
+            _numKatu: score.Statistics.small_bonus,
             aim: attributes.star_rating,
             type: "normal",
         })
@@ -216,11 +218,11 @@ export class PerformanceCalculator {
     private CalculateTaiko(score: Score.BaseScore) {
         const attributes = this.attributes as Beatmap.TaikoAttributes
         return new TaikoPerformance({
-            _mods: toBitMods(this.mods),
-            _num50: score.statistics.count_50,
-            _num100: score.statistics.count_100,
-            _num300: score.statistics.count_300,
-            _numMiss: score.statistics.count_miss,
+            _mods: this.mods,
+            _num50: score.Statistics.meh,
+            _num100: score.Statistics.ok,
+            _num300: score.Statistics.great,
+            _numMiss: score.Statistics.miss,
             circles: this.beatmap.count_circles,
             sliders: this.beatmap.count_sliders,
             spinners: this.beatmap.count_spinners,
@@ -233,27 +235,27 @@ export class PerformanceCalculator {
     private CalculateMania(score: Score.BaseScore) {
         const attributes = this.attributes as Beatmap.ManiaAttributes
         return new ManiaPerformance({
-            _mods: toBitMods(this.mods),
-            _num50: score.statistics.count_50,
-            _num100: score.statistics.count_100,
-            _num300: score.statistics.count_300,
-            _numMiss: score.statistics.count_miss,
-            _numGeki: score.statistics.count_geki,
-            _numKatu: score.statistics.count_katu,
+            _mods: this.mods,
+            _num50: score.Statistics.meh,
+            _num100: score.Statistics.ok,
+            _num300: score.Statistics.great,
+            _numMiss: score.Statistics.miss,
+            _numGeki: score.Statistics.small_bonus,
+            _numKatu: score.Statistics.ignore_hit,
             strain: attributes.star_rating,
             type: "normal",
         })
     }
 
     public async FetchAttributes() {
-        let attributes: Difficulty = cache.get(`${this.beatmap.id}-${toBitMods(this.starRatingMods)}`)
+        let attributes: Difficulty = cache.get(`${this.beatmap.id}-${hash(this.starRatingMods)}`)
         if (!attributes) attributes = await DifficultyFactory.GetDifficulty(this.beatmap.id, this.starRatingMods, this.beatmap.mode_int)
         if (!attributes || attributes.calculated_at < this.beatmap.lastUpdated) attributes = await this.GetAttributes()
         if (!attributes) {
             Logger.Error("Performance Calculator - FetchAttributes - Attributes", "Failed to get attributes", this.beatmap, this.starRatingMods)
         }
         this.attributes = attributes
-        cache.set(`${this.beatmap.id}-${toBitMods(this.starRatingMods)}`, this.attributes)
+        cache.set(`${this.beatmap.id}-${hash(this.starRatingMods)}`, this.attributes)
         this.beatmap.difficulty_rating = this.attributes.star_rating
         this.beatmap.max_combo = this.attributes.max_combo
         return attributes
@@ -271,7 +273,7 @@ export class PerformanceCalculator {
         if (birthtime < this.beatmap.lastUpdated)
             await this.DownloadFile(path)
 
-        const command = `${process.env.PERFORMANCE_CALCULATOR} difficulty "${resolve(path)}" -r:${this.beatmap.mode_int} -j ${this.starRatingMods.map(el => `-m ${el}`).join(" ")}`
+        const command = `${process.env.PERFORMANCE_CALCULATOR} difficulty -nc "${resolve(path)}" -r:${this.beatmap.mode_int} -j ${this.starRatingMods.Mods.map(el => `-m "${JSON.stringify(el).replaceAll(`"`, `'`)}"`).join(" ")}`
         const [response, err] = await HandleAsync(RunProcess(command))
         if (err) {
             Logger.Error("Performance Calculator - GetAttributes - Calculation", err)
@@ -330,11 +332,12 @@ export class StdPerformance {
     private _num300: number
     private _numMiss: number
     private _maxCombo: number
-    private _mods: number
+    private _mods: Score.ModList
 
     //Beatmap
     private approachRate: number
     private overallDifficulty: number
+    private drainRate: number
     private maxCombo: number
     private sliders: number
     private spinners: number
@@ -348,8 +351,8 @@ export class StdPerformance {
     private speedNoteCount: number
 
     public constructor(input: {
-        _num50: number, _num100: number, _num300: number, _numMiss: number, _maxCombo: number, _mods: number,
-        approachRate: number, overallDifficulty: number, maxCombo: number, sliders: number, spinners: number, circles: number,
+        _num50: number, _num100: number, _num300: number, _numMiss: number, _maxCombo: number, _mods: Score.ModList,
+        approachRate: number, overallDifficulty: number, maxCombo: number, sliders: number, spinners: number, circles: number, drainRate: number,
         sliderFactor: number, aimDiff: number, speedDiff: number, flDiff: number, type?: "normal" | "fc" | "ss", acc?: number, speedNoteCount: number
     }) {
         input.type = "normal"
@@ -379,12 +382,12 @@ export class StdPerformance {
     }
 
     private Calculate({
-        _num50, _num100, _num300, _numMiss, _maxCombo, _mods,
-        approachRate, overallDifficulty, maxCombo, sliders, spinners, circles,
+        _num50, _num100, _num300, _numMiss, _maxCombo, _mods, 
+        approachRate, overallDifficulty, maxCombo, sliders, spinners, circles, drainRate,
         sliderFactor, aimDiff, speedDiff, flDiff, type, acc, speedNoteCount
     }: {
-        _num50: number, _num100: number, _num300: number, _numMiss: number, _maxCombo: number, _mods: number,
-        approachRate: number, overallDifficulty: number, maxCombo: number, sliders: number, spinners: number, circles: number,
+        _num50: number, _num100: number, _num300: number, _numMiss: number, _maxCombo: number, _mods: Score.ModList,
+        approachRate: number, overallDifficulty: number, maxCombo: number, sliders: number, spinners: number, circles: number, drainRate: number,
         sliderFactor: number, aimDiff: number, speedDiff: number, flDiff: number, type?: "normal" | "fc" | "ss", acc?: number, speedNoteCount: number
     }) {
         this._num50 = _num50
@@ -395,6 +398,7 @@ export class StdPerformance {
         this._mods = _mods
         this.approachRate = approachRate
         this.overallDifficulty = overallDifficulty
+        this.drainRate = drainRate
         this.maxCombo = maxCombo
         this.sliders = sliders
         this.spinners = spinners
@@ -409,12 +413,14 @@ export class StdPerformance {
             this._num300 += this._numMiss
             this._numMiss = 0
             this._maxCombo = this.maxCombo
+            acc = this.Accuracy() * 100
         } else if (type === "ss") {
             this._num300 += this._numMiss + this._num100 + this._num50
             this._numMiss = 0
             this._num100 = 0
             this._num50 = 0
             this._maxCombo = this.maxCombo
+            acc = 100
         }
         //console.log({type, acc, a: this})
         if (acc) this.FixHitcounts(acc)
@@ -471,10 +477,7 @@ export class StdPerformance {
             (this._num50 * 50 + this._num100 * 100 + this._num300 * 300) / (this.TotalHits() * 300), 0, 1);
     }
     private getComboScalingFactor() {
-        const maxCombo = this.maxCombo
-        if (maxCombo > 0)
-            return Math.min(Math.pow(this._maxCombo, 0.8) / Math.pow(maxCombo, 0.8), 1)
-        return 1
+        return this.maxCombo <= 0 ? 1.0 : Math.min(Math.pow(this._maxCombo, 0.8) / Math.pow(this.maxCombo, 0.8), 1.0)
     }
     private computeEffectiveMissCount() {
         // guess the number of misses + slider breaks from combo
@@ -487,13 +490,13 @@ export class StdPerformance {
         }
 
         // we're clamping miss count because since its derived from combo it can be higher than total hits and that breaks some calculations
-        comboBasedMissCount = Math.min(comboBasedMissCount, this.TotalHits())
+        comboBasedMissCount = Math.min(comboBasedMissCount, this._num100 + this._num50 + this._numMiss)
 
         this._effectiveMissCount = Math.max(this._numMiss, comboBasedMissCount)
     }
     private computeTotalValue() {
         // Don't count scores made with supposedly unranked mods
-        if (this._mods & BitMods.Relax || this._mods & BitMods.Relax2 || this._mods & BitMods.Autoplay) {
+        if (this._mods.Has(Score.ModAcronyms.Relax) || this._mods.Has(Score.ModAcronyms.AutoPilot) || this._mods.Has(Score.ModAcronyms.Auto)) {
             this._totalValue = 0;
             //Uncoment for realistic pp but we want these
             //return
@@ -501,11 +504,11 @@ export class StdPerformance {
 
         let multiplier = 1.14 // This is being adjusted to keep the final pp value scaled around what it used to be when changing things.
 
-        if (this._mods & BitMods.NoFail)
+        if (this._mods.Has(Score.ModAcronyms.NoFail))
             multiplier *= Math.max(0.9, 1 - 0.02 * this._effectiveMissCount)
 
         const numTotalHits = this.TotalHits()
-        if (this._mods & BitMods.SpunOut)
+        if (this._mods.Has(Score.ModAcronyms.SpunOut))
             multiplier *= 1 - Math.pow(this.spinners / numTotalHits, 0.85)
 
         this._totalValue =
@@ -540,21 +543,23 @@ export class StdPerformance {
         else if (approachRate < 8)
             approachRateFactor = 0.05 * (8 - approachRate)
 
+        if (this._mods.Has(Score.ModAcronyms.Relax)) approachRateFactor = 0
+
         this._aimValue *= 1 + approachRateFactor * lengthBonus
 
-        // We want to give more reward for lower AR when it comes to aim and HD. This nerfs high AR and buffs lower AR.
-        if (this._mods & BitMods.Hidden)
+        if (this._mods.Has(Score.ModAcronyms.Blinds)) {
+            this._aimValue *= 1.3 + (this.TotalHits() * (0.0016 / (1 + 2 * this._effectiveMissCount)) * Math.pow(this.Accuracy(), 16)) * (1 - 0.003 * this.drainRate * this.drainRate)
+        } else if (this._mods.Has(Score.ModAcronyms.Hidden) || this._mods.Has(Score.ModAcronyms.Traceble)) {
             this._aimValue *= 1 + 0.04 * (12 - approachRate)
+        }
 
         // We assume 15% of sliders in a map are difficult since there's no way to tell from the performance calculator.
         const estimateDifficultSliders = this.sliders * 0.15
 
         if (this.sliders > 0) {
-            const maxCombo = this.maxCombo
-            const estimateSliderEndsDropped = Math.min(Math.max(Math.min(this._num100 + this._num50 + this._numMiss, maxCombo - this._maxCombo), 0), estimateDifficultSliders)
-            const sliderFactor = this.sliderFactor
-            const sliderNerfFactor = (1 - sliderFactor) * Math.pow(1 - estimateSliderEndsDropped / estimateDifficultSliders, 3) + sliderFactor
-            this._aimValue *= sliderNerfFactor
+            const estimateSliderEndsDropped = Clamp(Math.min(this._num100 + this._num50 + this._numMiss, this.maxCombo - this._maxCombo), 0, estimateDifficultSliders);
+            const sliderNerfFactor = (1 - this.sliderFactor) * Math.pow(1 - estimateSliderEndsDropped / estimateDifficultSliders, 3) + this.sliderFactor;
+            this._aimValue *= sliderNerfFactor;
         }
 
         this._aimValue *= this.Accuracy()
@@ -562,6 +567,10 @@ export class StdPerformance {
         this._aimValue *= 0.98 + (Math.pow(this.overallDifficulty, 2) / 2500)
     }
     private computeSpeedValue() {
+        if (this._mods.Has(Score.ModAcronyms.Relax)) {
+            this._speedValue = 0
+            return
+        }
         this._speedValue = Math.pow(5 * Math.max(1, this.speedDiff / 0.0675) - 4, 3) / 100000
 
         const numTotalHits = this.TotalHits()
@@ -583,9 +592,11 @@ export class StdPerformance {
 
         this._speedValue *= 1 + approachRateFactor * lengthBonus // Buff for longer maps with high AR.
 
-        // We want to give more reward for lower AR when it comes to speed and HD. This nerfs high AR and buffs lower AR.
-        if (this._mods & BitMods.Hidden)
+        if (this._mods.Has(Score.ModAcronyms.Blinds)) {
+            this._speedValue *= 1.12
+        } else if (this._mods.Has(Score.ModAcronyms.Hidden) || this._mods.Has(Score.ModAcronyms.Traceble)) {
             this._speedValue *= 1 + 0.04 * (12 - approachRate)
+        }
 
         // Calculate accuracy assuming the worst case scenario
         const relevantTotalDiff = numTotalHits - this.speedNoteCount
@@ -599,11 +610,15 @@ export class StdPerformance {
         this._speedValue *= Math.pow(0.99, this._num50 < numTotalHits / 500 ? 0 : this._num50 - numTotalHits / 500)
     }
     private computeAccuracyValue() {
+        if (this._mods.Has(Score.ModAcronyms.Relax)) {
+            this._accuracyValue = 0
+            return
+        }
         // This percentage only considers HitCircles of any value - in this part of the calculation we focus on hitting the timing hit window.
         let betterAccuracyPercentage: number
 
         let numHitObjectsWithAccuracy: number
-        if (this._mods & BitMods.ScoreV2) {
+        if (this._mods.Has(Score.ModAcronyms.ScoreV2)) {
             numHitObjectsWithAccuracy = this.TotalHits()
             betterAccuracyPercentage = this.Accuracy()
         }
@@ -629,16 +644,19 @@ export class StdPerformance {
         // Bonus for many hitcircles - it's harder to keep good accuracy up for longer.
         this._accuracyValue *= Math.min(1.15, Math.pow(numHitObjectsWithAccuracy / 1000, 0.3))
 
-        if (this._mods & BitMods.Hidden)
+        if (this._mods.Has(Score.ModAcronyms.Blinds)) {
+            this._accuracyValue *= 1.14
+        }
+        if (this._mods.Has(Score.ModAcronyms.Hidden))
             this._accuracyValue *= 1.08
 
-        if (this._mods & BitMods.Flashlight)
+        if (this._mods.Has(Score.ModAcronyms.Flashlight))
             this._accuracyValue *= 1.02
     }
     private computeFlashlightValue() {
         this._flashlightValue = 0
 
-        if ((this._mods & BitMods.Flashlight) == 0)
+        if (!(this._mods.Has(Score.ModAcronyms.Flashlight)))
             return
 
         let rawFlashlight = this.flDiff
@@ -675,7 +693,7 @@ export class CtbPerformance {
     private total: number
     //score values
     private _value: number
-    private _mods: number
+    private _mods: Score.ModList
     private _maxCombo: number
     private _numMiss: number
     private _num300: number
@@ -689,7 +707,7 @@ export class CtbPerformance {
     private approach: number
 
     constructor(input: {
-        _mods: number, _maxCombo: number, _numMiss: number, _num300: number, _num100: number, _num50: number, _numKatu: number,
+        _mods: Score.ModList, _maxCombo: number, _numMiss: number, _num300: number, _num100: number, _num50: number, _numKatu: number,
         aim: number, maxCombo: number, approach: number, type?: "normal" | "fc" | "ss", acc?: number
     }) {
         this.calculate(input)
@@ -705,7 +723,7 @@ export class CtbPerformance {
     }
 
     private calculate({ _maxCombo, _mods, _num100, _num300, _num50, _numKatu, _numMiss, aim, approach, maxCombo, acc, type }: {
-        _mods: number, _maxCombo: number, _numMiss: number, _num300: number, _num100: number, _num50: number, _numKatu: number,
+        _mods: Score.ModList, _maxCombo: number, _numMiss: number, _num300: number, _num100: number, _num50: number, _numKatu: number,
         aim: number, maxCombo: number, approach: number, type?: "normal" | "fc" | "ss", acc?: number
     }) {
         this._mods = _mods
@@ -793,7 +811,7 @@ export class CtbPerformance {
 
         this._value *= approachRateFactor
 
-        if (this._mods & BitMods.Hidden) {
+        if (this._mods.Has(Score.ModAcronyms.Hidden)) {
             // Hiddens gives almost nothing on max approach rate, and more the lower it is
             if (approachRate <= 10)
                 this._value *= 1.05 + 0.075 * (10 - approachRate) // 7.5% for each AR below 10
@@ -801,15 +819,15 @@ export class CtbPerformance {
                 this._value *= 1.01 + 0.04 * (11 - Math.min(11, approachRate)) // 5% at AR 10, 1% at AR 11
         }
 
-        if (this._mods & BitMods.Flashlight)
+        if (this._mods.Has(Score.ModAcronyms.Flashlight))
             this._value *= 1.35 * lengthBonus
 
         this._value *= Math.pow(this.Accuracy(), 5.5)
 
-        if (this._mods & BitMods.NoFail)
+        if (this._mods.Has(Score.ModAcronyms.NoFail))
             this._value *= 0.9
 
-        if (this._mods & BitMods.SpunOut)
+        if (this._mods.Has(Score.ModAcronyms.SpunOut))
             this._value *= 0.95
     }
 
@@ -852,7 +870,7 @@ export class TaikoPerformance {
     private _accuracyValue: number
 
     //score values
-    private _mods: number
+    private _mods: Score.ModList
     private _num300: number
     private _num100: number
     private _num50: number
@@ -866,7 +884,7 @@ export class TaikoPerformance {
     private spinners: number
 
     constructor(input: {
-        _mods: number, _numMiss: number, _num300: number, _num100: number, _num50: number,
+        _mods: Score.ModList, _numMiss: number, _num300: number, _num100: number, _num50: number,
         strain: number, perfectHitWindow: number, sliders: number, circles: number, spinners: number,
         type?: "normal" | "fc" | "ss", acc?: number
     }) {
@@ -885,7 +903,7 @@ export class TaikoPerformance {
     }
 
     private Calculate({ _num100, _num300, _num50, _numMiss, _mods, circles, perfectHitWindow, sliders, spinners, strain, acc, type }: {
-        _mods: number, _numMiss: number, _num300: number, _num100: number, _num50: number,
+        _mods: Score.ModList, _numMiss: number, _num300: number, _num100: number, _num50: number,
         strain: number, perfectHitWindow: number, sliders: number, circles: number, spinners: number,
         type?: "normal" | "fc" | "ss", acc?: number
     }) {
@@ -952,10 +970,10 @@ export class TaikoPerformance {
     private computeTotalValue() {
         let multiplier = 1.12 // This is being adjusted to keep the final pp value scaled around what it used to be when changing things
 
-        if (this._mods & BitMods.Hidden)
+        if (this._mods.Has(Score.ModAcronyms.Hidden))
             multiplier *= 1.075
 
-        if (this._mods & BitMods.Easy)
+        if (this._mods.Has(Score.ModAcronyms.Easy))
             multiplier *= 0.975
 
         this._totalValue =
@@ -973,13 +991,13 @@ export class TaikoPerformance {
 
         this._difficultyValue *= Math.pow(0.986, this._numMiss)
 
-        if (this._mods & BitMods.Easy)
+        if (this._mods.Has(Score.ModAcronyms.Easy))
             this._difficultyValue *= 0.985
 
-        if (this._mods & BitMods.Hidden)
+        if (this._mods.Has(Score.ModAcronyms.Hidden))
             this._difficultyValue *= 1.025
 
-        if (this._mods & BitMods.Flashlight)
+        if (this._mods.Has(Score.ModAcronyms.Flashlight))
             this._difficultyValue *= 1.05 * lengthBonus
 
         this._difficultyValue *= Math.pow(this.Accuracy(), 2)
@@ -998,7 +1016,7 @@ export class TaikoPerformance {
         this._accuracyValue *= lengthBonus
 
         // Slight HDFL Bonus for accuracy.
-        if ((this._mods & (BitMods.Hidden | BitMods.Flashlight)) == (BitMods.Hidden | BitMods.Flashlight))
+        if (this._mods.Has(Score.ModAcronyms.Flashlight) && this._mods.Has(Score.ModAcronyms.Hidden))
             this._accuracyValue *= Math.max(1.05, 1.075 * lengthBonus)
     }
 
@@ -1032,7 +1050,7 @@ export class ManiaPerformance {
     private strain: number
 
 
-    private _mods: number
+    private _mods: Score.ModList
     private _num300: number
     private _num100: number
     private _num50: number
@@ -1042,7 +1060,7 @@ export class ManiaPerformance {
 
     public constructor(input: {
         _num300: number, _num100: number, _num50: number, _numMiss: number, _numGeki: number, _numKatu: number,
-        _mods: number, strain: number, type?: "normal" | "fc" | "ss", acc?: number
+        _mods: Score.ModList, strain: number, type?: "normal" | "fc" | "ss", acc?: number
     }) {
         input.type = "normal"
         this.Calculate(input)
@@ -1066,7 +1084,7 @@ export class ManiaPerformance {
 
     private Calculate({ _num100, _num300, _num50, _numGeki, _numKatu, _numMiss, _mods, strain, type }: {
         _num300: number, _num100: number, _num50: number, _numMiss: number, _numGeki: number, _numKatu: number,
-        _mods: number, strain: number, type?: "normal" | "fc" | "ss", acc?: number
+        _mods: Score.ModList, strain: number, type?: "normal" | "fc" | "ss", acc?: number
     }) {
         this._mods = _mods
         this._num300 = _num300
@@ -1102,13 +1120,13 @@ export class ManiaPerformance {
         */
         let multiplier = 8
 
-        if (this._mods & BitMods.NoFail)
+        if (this._mods.Has(Score.ModAcronyms.NoFail))
             multiplier *= 0.75
 
-        if (this._mods & BitMods.SpunOut)
+        if (this._mods.Has(Score.ModAcronyms.SpunOut))
             multiplier *= 0.95
 
-        if (this._mods & BitMods.Easy)
+        if (this._mods.Has(Score.ModAcronyms.Easy))
             multiplier *= 0.50
 
         this._totalValue = this._difficultyValue * multiplier;

@@ -1,5 +1,4 @@
 import { randomBytes } from "crypto"
-import { EmbedBuilder } from "discord.js"
 import { CommandData } from "./CommandData"
 import { MessageEventData } from "../partials/MessageEvent"
 import { ErrorRenderer } from "./ErrorRenderer"

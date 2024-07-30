@@ -32,6 +32,9 @@ dependencies:
   node-cache:
     specifier: ^5.1.2
     version: 5.1.2
+  object-hash:
+    specifier: ^3.0.0
+    version: 3.0.0
 
 devDependencies:
   '@jest/globals':
@@ -46,6 +49,9 @@ devDependencies:
   '@types/node':
     specifier: ^18.17.17
     version: 18.17.17
+  '@types/object-hash':
+    specifier: ^3.0.6
+    version: 3.0.6
   jest:
     specifier: ^29.7.0
     version: 29.7.0(@types/node@18.17.17)(ts-node@10.9.1)
@@ -860,6 +866,10 @@ packages:
 
   /@types/node@18.17.17:
     resolution: {integrity: sha512-cOxcXsQ2sxiwkykdJqvyFS+MLQPLvIdwh5l6gNg8qF6s+C7XSkEWOZjK+XhUZd+mYvHV/180g2cnCcIl4l06Pw==}
+
+  /@types/object-hash@3.0.6:
+    resolution: {integrity: sha512-fOBV8C1FIu2ELinoILQ+ApxcUKz4ngq+IWUYrxSGjXzzjUALijilampwkMgEtJ+h2njAW3pi853QpzNVCHB73w==}
+    dev: true
 
   /@types/stack-utils@2.0.1:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
@@ -2405,6 +2415,11 @@ packages:
     dependencies:
       path-key: 3.1.1
     dev: true
+
+  /object-hash@3.0.0:
+    resolution: {integrity: sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==}
+    engines: {node: '>= 6'}
+    dev: false
 
   /once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}

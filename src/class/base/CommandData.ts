@@ -1,7 +1,6 @@
-import { ColorResolvable, Interaction, InteractionReplyOptions, InteractionType, MessageReplyOptions, ReplyOptions } from "discord.js";
+import { ColorResolvable, Interaction, InteractionReplyOptions, InteractionType, MessageReplyOptions } from "discord.js";
 import { Client } from "../Client";
 import { MessageEventData } from "../partials/MessageEvent";
-import { RawUser } from "../RawUser";
 import { User } from "../database/User";
 import { Logger } from "../Logger";
 

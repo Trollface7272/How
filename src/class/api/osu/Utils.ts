@@ -52,15 +52,15 @@ export const DisplayCombo = (combo: number, maxCombo: number, mode: number | str
   return `x${combo}/${maxCombo}`
 }
 
-export const CalculateProgress = ({ count_100, count_300, count_50, count_geki, count_katu, count_miss }: Score.Statistics, { circles, sliders, spinners }: { circles: number, sliders: number, spinners: number }, mode: 0 | 1 | 2 | 3) => {
+export const CalculateProgress = ({ great, ignore_hit, ignore_miss, large_bonus, large_tick_hit, meh, miss, ok, slider_tail_hit, small_bonus }: Score.Statistics, { circles, sliders, spinners }: { circles: number, sliders: number, spinners: number }, mode: 0 | 1 | 2 | 3) => {
   switch (mode) {
       case 1:
       case 0:
-          return ((count_300 + count_100 + count_50 + count_miss) / (circles + sliders + spinners) * 100).roundFixed(2)
+          return ((great + ok + meh + miss) / (circles + sliders + spinners) * 100).roundFixed(2)
       case 2:
-          return ((count_300 + count_100 + count_50 + count_miss + count_katu) / (circles + sliders + spinners) * 100).roundFixed(2)
+          return ((great + ok + meh + miss + ignore_hit) / (circles + sliders + spinners) * 100).roundFixed(2)
       case 3:
-          return ((count_geki + count_300 + count_katu + count_100 + count_50 + count_miss + count_katu) / (circles + sliders + spinners) * 100).roundFixed(2)
+          return ((large_bonus + great + large_tick_hit + ok + meh + miss + ignore_miss) / (circles + sliders + spinners) * 100).roundFixed(2)
       default:
           Logger.Error(`Unknown gamemode: ${mode}`)
           return "Unknown"

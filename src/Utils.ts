@@ -1,7 +1,7 @@
 import { escapeMarkdown } from "discord.js"
 import { Logger } from "./class/Logger"
 import { Beatmap } from "./class/api/osu/class/Beatmap"
-import { Gamemode } from "./class/api/osu/types/MiscTypes"
+import { Gamemode, RulesetIds } from "./class/api/osu/types/MiscTypes"
 import { Score } from "./class/api/osu/class/Score"
 import { exec } from "child_process"
 
@@ -21,30 +21,34 @@ export const FormatCombo = (combo: number, maxCombo: number, mode: number | stri
     return `x${combo}/${maxCombo}`
 }
 
-export const FormatHits = ({ count_300, count_100, count_50, count_geki, count_katu, count_miss }: Score.Statistics, gamemode: Gamemode) => {
+export const FormatHits = ({ great, ignore_hit, ignore_miss, large_bonus, large_tick_hit, meh, miss, ok, slider_tail_hit, small_bonus }: Partial<Score.Statistics>, gamemode: RulesetIds|Gamemode) => {
     switch (gamemode) {
+        case 0:
         case "osu":
+        case 1:
         case "taiko":
-            return `[${count_300}/${count_100}/${count_50}/${count_miss}]`
+            return `[${great}/${ok}/${meh}/${miss}]`
+        case 2:
         case "fruits":
-            return `[${count_300}/${count_100}/${count_50}/${count_katu}/${count_miss}]`
+            return `[${great}/${ok}/${meh}/${large_tick_hit}/${miss}]`
+        case 3:
         case "mania":
-            return `[${count_geki}/${count_300}/${count_katu}/${count_100}/${count_50}/${count_miss}]`
+            return `[${large_bonus}/${great}/${small_bonus}/${ok}/${meh}/${miss}]`
         default:
             Logger.Error(`Unknown gamemode: ${gamemode}`)
             return "[Error]"
     }
 }
 
-export const FormatProgress = (gamemode: Gamemode, { count_300, count_100, count_50, count_geki, count_katu, count_miss }: Score.Statistics, { count_circles, count_sliders, count_spinners }: Beatmap.Base) => {
+export const FormatProgress = (gamemode: RulesetIds, { great, ignore_hit, ignore_miss, large_bonus, large_tick_hit, meh, miss, ok, slider_tail_hit, small_bonus }: Partial<Score.Statistics>, { count_circles, count_sliders, count_spinners }: Beatmap.Base) => {
     switch (gamemode) {
-        case "osu":
-        case "taiko":
-            return ((count_300 + count_100 + count_50 + count_miss) / (count_circles + count_sliders + count_spinners) * 100).roundFixed(2)
-        case "fruits":
-            return ((count_300 + count_100 + count_50 + count_miss + count_katu) / (count_circles + count_sliders + count_spinners) * 100).roundFixed(2)
-        case "mania":
-            return ((count_geki + count_300 + count_katu + count_100 + count_50 + count_miss + count_katu) / (count_circles + count_sliders + count_spinners) * 100).roundFixed(2)
+        case 0:
+        case 1:
+            return ((great + ok + meh + miss) / (count_circles + count_sliders + count_spinners) * 100).roundFixed(2)
+        case 2:
+            return ((great + ok + meh + miss + large_tick_hit) / (count_circles + count_sliders + count_spinners) * 100).roundFixed(2)
+        case 3:
+            return ((large_bonus + great + ignore_hit + ok + meh + miss + ignore_miss) / (count_circles + count_sliders + count_spinners) * 100).roundFixed(2)
         default:
             Logger.Error(`Unknown gamemode: ${gamemode}`)
             return "Unknown"

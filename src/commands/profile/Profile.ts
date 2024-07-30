@@ -4,7 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Profile as OsuProfile } from "@src/class/api/osu/class/Profile";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionReplyOptions, MessageReplyOptions, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
 import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { ButtonEmojis, GetFlag, HandleAsync } from "@src/Utils";

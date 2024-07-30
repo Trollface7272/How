@@ -1,5 +1,5 @@
 import { Event, EventData } from "@src/class/partials/Event";
-import { Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, MessageInteraction, ReplyOptions } from "discord.js";
+import { Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Client } from "@src/class/Client";
@@ -9,8 +9,9 @@ import { Guild } from "@src/class/database/Guild";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Logger } from "@src/class/Logger";
 import { CommandResponseCodes } from "@src/class/partials/Command";
-import { Gamemode, ParsedMods } from "@src/class/api/osu/types/MiscTypes";
+import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
+import { Score } from "@src/class/api/osu/class/Score";
 
 export class InteractionCreateData implements EventData, MessageEventData {
     private _user: User
@@ -46,8 +47,8 @@ export class InteractionCreateData implements EventData, MessageEventData {
         }
     }
 
-    public GetMods(): string[] {
-        return this._GetMods("mods")
+    public GetMods(): Score.ModList {
+        return new Score.ModList(this._GetMods("mods"))
     }
 
     private _GetMods(key: string) {

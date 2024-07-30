@@ -1,4 +1,4 @@
-import { Collection, Document, Filter, ObjectId, Sort } from "mongodb";
+import { Document, Filter, ObjectId, Sort } from "mongodb";
 import { db } from "./Main";
 
 export class ScoreBeatmap {

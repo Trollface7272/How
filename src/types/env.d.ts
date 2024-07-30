@@ -16,6 +16,7 @@ declare global {
             DIFFICULTY_EMOTES_SERVER: string
             ASSETS_PATH: string
             PERFORMANCE_CALCULATOR: string
+            BEATMAP_CACHE: string
         }
     }
 }

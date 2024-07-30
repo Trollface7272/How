@@ -1,3 +1,5 @@
+import { Gamemode } from "./types/MiscTypes"
+
 export const GamemodeNames = {
     osu: "Standard",
     taiko: "Taiko",
@@ -6,10 +8,10 @@ export const GamemodeNames = {
 }
 
 export const GamemodeNumToStr = {
-    0: "osu",
-    1: "taiko",
-    2: "fruits",
-    3: "mania"
+    0: "osu" as Gamemode,
+    1: "taiko" as Gamemode,
+    2: "fruits" as Gamemode,
+    3: "mania" as Gamemode
 }
 
 export const BitModsShort = {
