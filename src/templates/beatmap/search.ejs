@@ -1,0 +1,4 @@
+<%_ for(const map of beatmaps) { _%>
+    **<%- map.index %>.** **[<%- map.artist %> - <%- map.title %>](https://osu.ppy.sh/beatmapsets/<%- map.id %>)** by **[<%- map.creator %>](https://osu.ppy.sh/u/<%- map.creator.replace(/ /g, "%20") %>)**
+<%- map.favourite_count %> ❤︎ <%- map.difficultyEmojis %>
+<%_ } _%>

@@ -86,4 +86,8 @@ export abstract class MessageEventData {
     public GetBeatmap(): number {
         throw Event.ReturnCode.Unimplemented
     }
+
+    public findString(match: RegExp|string): string {
+        throw Event.ReturnCode.Unimplemented
+    }
 }

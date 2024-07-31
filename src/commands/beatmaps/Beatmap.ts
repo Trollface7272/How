@@ -68,6 +68,8 @@ class Beatmap extends CommandBase implements CommandAbstract {
           Mods = new Score.ModList(interaction.values)
         } else if (type === "difficulty") {
           _id = parseInt(interaction.values[0])
+        } else if (type === "search") {
+          _id = parseInt(interaction.values[0])
         }
       }
     }

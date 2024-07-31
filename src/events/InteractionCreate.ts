@@ -27,6 +27,9 @@ export class InteractionCreateData implements EventData, MessageEventData {
     constructor(
         private interaction: Interaction
     ) { }
+    public findString(match: RegExp | string): string {
+        return null
+    }
 
     public GetBeatmap(): number {
         return matchForId(this.GetString("beatmap"))

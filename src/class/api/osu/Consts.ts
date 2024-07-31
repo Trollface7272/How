@@ -14,6 +14,13 @@ export const GamemodeNumToStr = {
     3: "mania" as Gamemode
 }
 
+export const GamemodeStrToNum = {
+    osu: 0,
+    taiko: 1,
+    fruits: 2,
+    mania: 3
+}
+
 export const BitModsShort = {
     NF: 1, EZ: 2, TD: 4, HD: 8,
     HR: 16, SD: 32, DT: 64, RX: 128,

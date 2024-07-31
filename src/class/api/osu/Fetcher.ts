@@ -217,4 +217,15 @@ export class Fetcher {
         })
         return resp.data.users.map(el => new Profile.FromIds(el))
     }
+
+    public async SearchBeatmaps({ query, gamemode, type }: { query: string, gamemode: Gamemode, type: string }) {
+        const resp = await this.axios.get(Endpoints.searchBeatmaps(), {
+            params: {
+                q: query,
+                m: gamemode,
+                s: type
+            }
+        })
+        return new BeatmapSet.Search(resp.data)
+    }
 }

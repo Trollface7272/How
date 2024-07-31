@@ -54,7 +54,7 @@ export class Emoji {
     private init() {
         const emoji = this.server.emojis.cache.find(val => val.name === this.name)
         if (emoji)
-            this.emoji = `<:${this.name}:${emoji.id}>`
+            this.emoji = `<:${this.name.slice(0,1)}:${emoji.id}>`
         else this.create()
     }
 
@@ -65,7 +65,7 @@ export class Emoji {
             name: this.name,
             attachment: attachment
         })
-        this.emoji = `<:${this.name}:${emoji.id}>`
+        this.emoji = `<:${this.name.slice(0,1)}:${emoji.id}>`
     }
 }
 

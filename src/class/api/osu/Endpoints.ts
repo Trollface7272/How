@@ -12,4 +12,5 @@ export namespace Endpoints {
     export const beatmapSetById = (id) => `/beatmapsets/${id}`
     export const leaderboards = (id: number) => `/beatmaps/${id}/scores`
     export const fromUserIds = () => `/users`
+    export const searchBeatmaps = () => `/beatmapsets/search`
 }

@@ -39,6 +39,23 @@ export class MessageCreateData implements EventData, MessageEventData {
         this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
     }
+    public findString(match: RegExp|string): string {
+        for (let i = 0; i < this.args.length; i++) {
+            const el = this.args[i];
+            if (typeof match === "string") {
+                if (el === match) {
+                    this.args.splice(i, 1)
+                    return el
+                }
+            } else {
+                if (match.test(el)) {
+                    this.args.splice(i, 1)
+                    return el
+                }
+            }
+        }
+        return null
+    }
 
     public GetBeatmap(): number {
         for (let i = 0; i < this.args.length; i++) {

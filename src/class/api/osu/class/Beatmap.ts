@@ -1,6 +1,7 @@
 import { BeatmapSet } from "./BeatmapSet"
 import { Clamp } from "../Utils"
 import { Score } from "./Score"
+import { EmojiFactory } from "@src/class/Emojis"
 
 
 
@@ -150,6 +151,10 @@ export namespace Beatmap {
             drain /= this.mods.GetSpeedChange()
 
             return Math.round(drain)
+        }
+
+        public get DifficultyEmoji() {
+            return EmojiFactory.GetDifficultyEmoji(this.difficulty_rating, this.mode)
         }
 
         accuracy: number

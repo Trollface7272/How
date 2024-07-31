@@ -48,4 +48,12 @@ export class ErrorRenderer {
             embeds: [embed]
         }
     }
+
+    protected RenderNoBeatmapsFound() {
+        const embed = this.GetBaseEmbed()
+            .setDescription(`**No beatmaps found**`)
+        return {
+            embeds: [embed]
+        }
+    }
 }

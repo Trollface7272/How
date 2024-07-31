@@ -92,10 +92,14 @@ export namespace BeatmapSet {
     export class SearchSet extends Base {
         beatmaps: _Beatmap.Base[]
 
+        public get DifficultyEmojis() {
+            return this.beatmaps.map(map => map.DifficultyEmoji).join(" ")
+        }
+
         constructor(set: SearchSet) {
             super(set)
             Object.assign(this, set)
-            this.beatmaps = this.beatmaps.map(map => {
+            this.beatmaps = this.beatmaps.sort((a, b) => a.difficulty_rating - b.difficulty_rating).map(map => {
                 return new _Beatmap.Base(map, new Score.ModList([]))
             })
         }

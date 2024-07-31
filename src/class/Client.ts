@@ -1,4 +1,4 @@
-import { DiscordAPIError, Client as DiscordClient, Routes } from "discord.js"
+import { DiscordAPIError, Client as DiscordClient, Partials, Routes } from "discord.js"
 import { EventEmitter } from "./EventEmitter";
 import { Logger } from "./Logger";
 import { CommandLoader } from "./CommandLoader";
@@ -11,8 +11,9 @@ export class Client extends DiscordClient {
     public EventEmitter: EventEmitter
     constructor() {
         super({
-            intents: ["DirectMessages", "Guilds", "GuildMembers", "GuildMessages", "MessageContent"],
-            allowedMentions: { repliedUser: false }
+            intents: ["DirectMessages", "Guilds", "GuildMembers", "GuildMessages", "MessageContent", "DirectMessages"],
+            allowedMentions: { repliedUser: false },
+            partials: [Partials.Message, Partials.Channel]
         })
         this.once("ready", this.OnStart)
         new CommandLoader()
