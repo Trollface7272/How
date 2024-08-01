@@ -268,7 +268,7 @@ class Recent extends CommandBase implements CommandAbstract {
 
         const description = TextRenderer.render(`recent/single`, {
             grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance.improved ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", accuracy: (score.Accuracy * 100).roundFixed(2), rank,
-            score: score.Score.toLocaleString("en-US"), combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+            score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
             timestamp: score.EndedAt.toDiscordToolTip(),
             completion: !score.Passed ? `\n▸ **Map Completion:** ${CalculateProgress(score.Statistics, { circles: score.Beatmap.count_circles, sliders: score.Beatmap.count_sliders, spinners: score.Beatmap.count_spinners }, score.RulesetId)}%` : ""
         })
@@ -316,7 +316,7 @@ class Recent extends CommandBase implements CommandAbstract {
             return TextRenderer.render(`recent/score`, {
                 index: score.index + 1, title: escapeMarkdown(score.Beatmapset.title), difficulty: escapeMarkdown(score.Beatmap.version), beatmapUrl: score.Beatmap.url, mods: score.Mods.Formatted, starRating: score.Beatmap.difficulty_rating.roundFixed(2),
                 grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance.improved.total ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", accuracy: (score.Accuracy * 100).roundFixed(2), rank: rank,
-                score: score.Score.toLocaleString("en-US"), combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+                score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
                 timestamp: score.EndedAt.toDiscordToolTip()
             })
         }).join("\n")

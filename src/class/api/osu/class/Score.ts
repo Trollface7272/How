@@ -20,7 +20,7 @@ interface Weight {
 interface UserAttributes {
     pin: {
         is_pinned: boolean,
-        score_id: 4295983972,
+        score_id: number,
         score_type: "score_best_osu"
     }
 }
@@ -340,6 +340,9 @@ export namespace Score {
         public get Score() {
             return this.legacy_total_score || this.classic_total_score
         }
+        public get ScoreFormatted() {
+            return this.Score.toLocaleString() + this.TotalScore ? `(${this.TotalScore})` : ""
+        }
 
         // position?: number
 
@@ -439,6 +442,9 @@ export namespace Score {
         public get Score() {
             return this.legacy_total_score || this.classic_total_score
         }
+        public get ScoreFormatted() {
+            return this.Score.toLocaleString() + this.TotalScore ? `(${this.TotalScore})` : ""
+        }
         constructor(score: LeaderboardScore) {
             super(score)
             Object.assign(this, score)
@@ -504,6 +510,9 @@ export namespace Score {
         }
         public get Score() {
             return this.legacy_total_score || this.classic_total_score
+        }
+        public get ScoreFormatted() {
+            return this.Score.toLocaleString() + this.TotalScore ? `(${this.TotalScore})` : ""
         }
 
         declare protected type: "score_best_osu"

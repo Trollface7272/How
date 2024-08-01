@@ -167,7 +167,7 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             return {
                 index: score.index, userId: score.UserId, username: score.User.username, userUrl: score.User.url,
                 userRank: score.User.global_rank, pp: score.PP, accuracy: score.Accuracy, mods: score.Mods.Formatted,
-                grade: score.Grade, score: score.Score, combo: score.MaxCombo, max_combo: map.max_combo, misses: score.Statistics.miss, created_at: score.EndedAt
+                grade: score.Grade, score: score.ScoreFormatted, combo: score.MaxCombo, max_combo: map.max_combo, misses: score.Statistics.miss, created_at: score.EndedAt
             }
         })
 

@@ -279,7 +279,7 @@ class Top extends CommandBase implements CommandAbstract {
             return TextRenderer.render("top/scores", {
                 index: score.index + 1, title: escapeMarkdown(score.Beatmapset.title), version: escapeMarkdown(score.Beatmap.version), url: score.Beatmap.url, mods: score.Mods.Formatted, stars: score.Beatmap.difficulty_rating.roundFixed(2),
                 grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: `/${score.performance.improved.total.roundFixed(3)}pp`, acc: (score.Accuracy * 100).roundFixed(2), rank: rank,
-                score: score.Score.toLocaleString(), combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+                score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
                 setTime: new Date(score.EndedAt).toDiscordToolTip()
             })
         }).join("\n")
