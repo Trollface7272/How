@@ -36,7 +36,7 @@ export class Fetcher {
     public static async Create(userId: string) {
         let isUser = true
         let oauth = await OAuthGenerator.GetTokenByUserId({ userId: userId, defaultToClientCredentials: false })
-        if (!oauth) {
+        if (!oauth?.IsValid()) {
             isUser = false
             oauth = await OAuthGenerator.GetClientCredentialsToken()
         }

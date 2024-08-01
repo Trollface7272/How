@@ -27,6 +27,10 @@ export class OAuth {
         return this.expires_in?.getTime() < Date.now()
     }
 
+    public IsValid() {
+        return this.access_token && this.token_type && this.expires_in && this.scope
+    }
+
     public async getToken() {
         if (this.IsExpired())
             if (!await this.Refresh()) return null
