@@ -9,6 +9,7 @@ import NodeCache from "node-cache"
 import { Beatmap } from "./class/Beatmap"
 import { BeatmapSet } from "./class/BeatmapSet"
 import { FetcherMissingIdentifyScopeError, FetcherUserNotLinkedError } from "./class/FetcherError"
+import { Multiplayer } from "./class/Multiplayer"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
@@ -227,5 +228,25 @@ export class Fetcher {
             }
         })
         return new BeatmapSet.Search(resp.data)
+    }
+
+    public async GetPlaylists({ category, mode }: { category: string, mode: string }): Promise<Multiplayer.GetRooms[]> {
+        const resp = await this.axios.get(Endpoints.getPlaylists(), {
+            params: {
+                category: category,
+                mode: mode
+            }
+        })
+        return resp.data.map(el => new Multiplayer.GetRooms(el))
+    }
+
+    public async GetPlaylistScores({ room, playlist, cursor, limit }: { room: number, playlist: number, cursor?: string, limit: number }): Promise<Multiplayer.GetPlaylistScores> {
+        const resp = await this.axios.get(Endpoints.getPlaylistScores(room, playlist), {
+            params: {
+                cursor_string: cursor,
+                limit: limit
+            }
+        })
+        return new Multiplayer.GetPlaylistScores(resp.data)
     }
 }

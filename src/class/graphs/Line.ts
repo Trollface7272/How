@@ -31,7 +31,7 @@ export interface ChartOptions {
     width?: number, height?: number, type?: string, labels?: string[], data: number[], fill?: string, yTitle?: title, xTitle?: title, yLines?: boolean, xLines?: boolean, plugins?: any[], reverse?: boolean
 }
 
-export class Chart {
+export class LineChart {
     private width: number;
     private height: number;
     private type: string
@@ -58,7 +58,7 @@ export class Chart {
         this.yLines = yLines
         this.plugins = plugins
         this.reverse = reverse
-        this.canvas = new ChartJSNodeCanvas({ width: this.width, height: this.height })
+        this.canvas = new ChartJSNodeCanvas({ width: this.width, height: this.height, chartCallback: (ChartJS) => { ChartJS.defaults.color = "#ffffff" } })
     }
 
     public async Render() {

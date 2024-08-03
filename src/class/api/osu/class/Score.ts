@@ -146,6 +146,9 @@ export namespace Score {
             return this.mods.find(mod => mod.isSpeedChange())?.settings?.speed_change as number ?? 1
         }
 
+        public GetData() {
+            return this.mods
+        }
     }
     export interface LegacyStatistics {
         count_50: number
@@ -341,7 +344,7 @@ export namespace Score {
             return this.legacy_total_score || this.classic_total_score
         }
         public get ScoreFormatted() {
-            return this.Score.toLocaleString() + this.TotalScore ? `(${this.TotalScore})` : ""
+            return this.Score.toLocaleString() + (this.TotalScore ? ` (${this.TotalScore.toLocaleString()})` : "")
         }
 
         // position?: number
@@ -388,11 +391,18 @@ export namespace Score {
         match: unknown
         position: number
         scores_around: unknown
+        user: Profile.Compact
 
         constructor(score: MultiplayerScore) {
             super(score)
             Object.assign(this, score)
             this.mods = new ModList(score.mods)
+        }
+
+        public ToObject() {
+            const obj: any = {...this}
+            obj.mods = this.mods.GetData()
+            return obj
         }
     }
 
@@ -443,7 +453,7 @@ export namespace Score {
             return this.legacy_total_score || this.classic_total_score
         }
         public get ScoreFormatted() {
-            return this.Score.toLocaleString() + this.TotalScore ? `(${this.TotalScore})` : ""
+            return this.Score.toLocaleString() + (this.TotalScore ? ` (${this.TotalScore.toLocaleString()})` : "")
         }
         constructor(score: LeaderboardScore) {
             super(score)
@@ -512,7 +522,7 @@ export namespace Score {
             return this.legacy_total_score || this.classic_total_score
         }
         public get ScoreFormatted() {
-            return this.Score.toLocaleString() + this.TotalScore ? `(${this.TotalScore})` : ""
+            return this.Score.toLocaleString() + (this.TotalScore ? ` (${this.TotalScore.toLocaleString()})` : "")
         }
 
         declare protected type: "score_best_osu"

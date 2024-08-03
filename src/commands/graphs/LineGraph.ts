@@ -7,8 +7,7 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { HandleAsync } from "@src/Utils";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Logger } from "@src/class/Logger";
-import { ChartJSNodeCanvas } from "chartjs-node-canvas";
-import { Chart, ChartOptions, ChartPlugins } from "@src/class/ChartRenderer";
+import { LineChart, ChartOptions, ChartPlugins } from "@src/class/graphs/Line";
 import { Profile } from "@src/class/api/osu/class/Profile";
 
 interface args {
@@ -89,7 +88,7 @@ class Playcount extends CommandBase implements CommandAbstract {
             yTitle: {
                 display: true,
                 text: "Playcount",
-                color: "rgb(100, 100, 100)",
+                color: "rgb(200, 200, 200)",
                 font: {
                     size: 20
                 }
@@ -105,7 +104,7 @@ class Playcount extends CommandBase implements CommandAbstract {
             options.yTitle.text = "Replays watched"
         }
 
-        const chart = new Chart(options)
+        const chart = new LineChart(options)
 
         const chartBuffer = await chart.Render()
         await this.data.Reply({ files: [{ attachment: chartBuffer, name: "chart.png" }] })
