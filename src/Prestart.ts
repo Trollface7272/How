@@ -12,6 +12,11 @@ Number.prototype.roundFixed = function (this: number, decimalPlaces: number): st
     return (Math.round(this * multiplier) / multiplier).toFixed(decimalPlaces)
 }
 
+Number.prototype.round = function (this: number, decimalPlaces: number): number {
+    const multiplier = Math.pow(10, decimalPlaces)
+    return (Math.round(this * multiplier) / multiplier)
+}
+
 const lookup = [
     { value: 1, symbol: "" },
     { value: 1e3, symbol: "k" },

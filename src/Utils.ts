@@ -169,3 +169,7 @@ export function merge(target: { [key: string]: any }, source: { [key: string]: a
     }
     return target;
 }
+
+export function formatAsGain(val: number) {
+    return val > 0 ? `+${val.toLocaleString()}` : val.toLocaleString()
+}

@@ -10,6 +10,7 @@ import { Beatmap } from "./class/Beatmap"
 import { BeatmapSet } from "./class/BeatmapSet"
 import { FetcherMissingIdentifyScopeError, FetcherUserNotLinkedError } from "./class/FetcherError"
 import { Multiplayer } from "./class/Multiplayer"
+import { OsuTrack } from "./class/Ameo"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
@@ -45,6 +46,7 @@ export class Fetcher {
     }
 
     private axios: AxiosInstance
+    private ameoAxios: AxiosInstance
     private userCache = new Map<number, Profile.FromId>()
     public constructor(private oauth: OAuth, private isUser: boolean) {
         this.axios = axios.create({
@@ -57,6 +59,14 @@ export class Fetcher {
             },
 
         })
+        this.ameoAxios = axios.create({
+            baseURL: "https://osutrack-api.ameo.dev",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            }
+        })
+
     }
 
     public async LookupId(username: string) {
@@ -81,7 +91,7 @@ export class Fetcher {
 
     public async GetProfile({ Gamemode, Username }: {
         Gamemode: Gamemode,
-        Username: string|number
+        Username: string | number
     }) {
         const cachedId = UsernameToIdCache.get(Username as string)
         if (this.userCache.has(cachedId)) return this.userCache.get(cachedId)
@@ -248,5 +258,16 @@ export class Fetcher {
             }
         })
         return new Multiplayer.GetPlaylistScores(resp.data)
+    }
+
+    public async AmeoTrackUpdate({ id, mode }: { id: number, mode: number }) {
+        console.log(Endpoints.Ameo.update())
+        const resp = await this.ameoAxios.post(Endpoints.Ameo.update(), {}, {
+            params: {
+                user: id,
+                mode: mode
+            }
+        })
+        return new OsuTrack.Update(resp.data)
     }
 }

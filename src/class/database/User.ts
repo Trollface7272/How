@@ -22,6 +22,7 @@ type Osu = {
 export class User extends RawUser {
     public _id: ObjectId
     public id: string
+    public admin: boolean
     public username: string
     public blacklisted: boolean
     public messages: number
@@ -57,6 +58,7 @@ export class User extends RawUser {
     private LoadDefault(user: DiscordUser) {
         this._id = new ObjectId()
         this.id = user.id
+        this.admin = false
         this.username = user.username
         this.blacklisted = false
         this.messages = 0
@@ -121,6 +123,7 @@ export class User extends RawUser {
             $set: {
                 id: this.id,
                 username: this.username,
+                admin: this.admin,
                 blacklisted: this.blacklisted,
                 messages: this.messages,
                 commands: this.commands,

@@ -1,6 +1,9 @@
 import { Gamemode, RulesetIds } from "./types/MiscTypes";
 
 export namespace Endpoints {
+    export namespace Ameo {
+        export const update = () => `/update`
+    }
     export const self = (Gamemode: Gamemode) => `/me/${Gamemode}`
     export const profile = (Gamemode: Gamemode, Username: string | number) => `/users/${Username}/${Gamemode}`
     export const userBeatmapScore = (Beatmap: number, User: number) => `/beatmaps/${Beatmap}/scores/users/${User}`

@@ -95,11 +95,8 @@ class Profile extends CommandBase implements CommandAbstract {
       if (err) return await this.ApiError(err, username)
       replyOptions = this.RenderEvents({ events, page, profile, perPage })
     } else {
-      console.log(1)
       const [profile, err] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: "osu" }))
-      console.log(2)
       if (err) return await this.ApiError(err, username)
-      console.log(3)
       replyOptions = this.RenderProfile({ profile, mode })
     }
 
@@ -118,7 +115,7 @@ class Profile extends CommandBase implements CommandAbstract {
     const countryRank = !country_rank ? "" : ` (${country_code}#${country_rank})`
     const globalRank = !global_rank ? "-" : `${global_rank.toLocaleString("en-US")}`
 
-    const description = TextRenderer.render("profile", {
+    const description = TextRenderer.render("profile/profile", {
       globalRank: globalRank, countryRank: countryRank,
       currentLevel: currentLevel, levelProgress: (levelProgress % 1 !== 0) ? levelProgress.roundFixed(2) : levelProgress,
       pp: pp.roundFixed(2), accuracy: accuracy.roundFixed(2),
