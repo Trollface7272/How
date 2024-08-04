@@ -298,6 +298,7 @@ export namespace Score {
         }
 
         get Grade() {
+            if (!this.passed) return EmojiFactory.GetEmoji("RankingF")
             return EmojiFactory.GetEmoji(`Ranking${this.rank}`)
         }
     }
@@ -378,7 +379,7 @@ export namespace Score {
         }
 
         public async fetchPosition(discordUserId: string) {
-            if (this.rank == "F" || !this.beatmap.is_scoreable) return
+            if (this.rank == "F" || !this.passed || !this.beatmap.is_scoreable) return
             const [resp, err] = await HandleAsync((await Fetcher.Create(discordUserId)).GetScorePosition({ Gamemode: this.ruleset_id, id: this.id }))
             if (err) {
                 Logger.Error("Fetch position error ->", err)
