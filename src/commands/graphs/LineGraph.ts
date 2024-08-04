@@ -124,31 +124,7 @@ class Playcount extends CommandBase implements CommandAbstract {
         return this.NormalizeDatedData(profile.replays_watched_counts)
     }
 
-    private NormalizeDatedData(values: { start_date: string, count: number }[]): [number[], string[]] {
-        const from = new Date(values[0].start_date)
-        const to = new Date(values[values.length - 1].start_date)
-        from.setHours(0)
-        to.setHours(0)
-        const months = (to.getFullYear() - from.getFullYear()) * 12 + to.getMonth() - from.getMonth() + 1
-        const data: {date: Date, count: number}[] = []
-        for(let i = 0; i <= months; i++) {
-            const date = new Date(from)
-            date.setMonth(date.getMonth() + i)
-            const pc = values.find(x => {
-                const d = new Date(x.start_date)
-                d.setHours(0)
-                return d.getTime() === date.getTime()
-            })
-            data.push({
-                date: date,
-                count: pc ? pc.count : 0
-            })
-        }
-
-        const playcountNums = data.map(x => x.count)
-        const labels = data.map(x => x.date.getMonth() + 1 + "/" + x.date.getFullYear())
-        return [playcountNums, labels]
-    }
+    
 }
 
 CommandEmitterInstance.AddCommand(Playcount, Playcount.names)

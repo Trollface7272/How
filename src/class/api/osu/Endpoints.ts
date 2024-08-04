@@ -4,6 +4,10 @@ export namespace Endpoints {
     export namespace Ameo {
         export const update = () => `/update`
     }
+    export namespace Snipe {
+        export const snipeProfile = (name: number|string) => `/player/cz/${name}?mode=osu`
+        export const snipeHistory = (name: number|string) => `/player/cz/${name}/history`
+    }
     export const self = (Gamemode: Gamemode) => `/me/${Gamemode}`
     export const profile = (Gamemode: Gamemode, Username: string | number) => `/users/${Username}/${Gamemode}`
     export const userBeatmapScore = (Beatmap: number, User: number) => `/beatmaps/${Beatmap}/scores/users/${User}`

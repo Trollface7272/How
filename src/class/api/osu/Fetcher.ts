@@ -11,6 +11,7 @@ import { BeatmapSet } from "./class/BeatmapSet"
 import { FetcherMissingIdentifyScopeError, FetcherUserNotLinkedError } from "./class/FetcherError"
 import { Multiplayer } from "./class/Multiplayer"
 import { OsuTrack } from "./class/Ameo"
+import { Snipe } from "./class/Snipe"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
@@ -47,6 +48,7 @@ export class Fetcher {
 
     private axios: AxiosInstance
     private ameoAxios: AxiosInstance
+    private snipeAxios: AxiosInstance
     private userCache = new Map<number, Profile.FromId>()
     public constructor(private oauth: OAuth, private isUser: boolean) {
         this.axios = axios.create({
@@ -66,7 +68,13 @@ export class Fetcher {
                 Accept: "application/json",
             }
         })
-
+        this.snipeAxios = axios.create({
+            baseURL: "https://api.huismetbenen.nl",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            }
+        })
     }
 
     public async LookupId(username: string) {
@@ -151,7 +159,7 @@ export class Fetcher {
         return history
     }
 
-    public async GetBeatmapUserScore({ Username, Id, Beatmap, Gamemode, Mods }: { Username: string, Id: number, Beatmap: number, Gamemode: Gamemode, Mods: string[] }) {
+    public async GetBeatmapUserScore({ Username, Id, Beatmap, Gamemode, Mods }: { Username?: string, Id: number, Beatmap: number, Gamemode: Gamemode, Mods?: string[] }) {
         if (!Id && Username) {
             UsernameToIdCache.has(Username) ? Id = UsernameToIdCache.get(Username) : Id = (await this.GetProfile({ Gamemode, Username })).id
         }
@@ -260,6 +268,10 @@ export class Fetcher {
         return new Multiplayer.GetPlaylistScores(resp.data)
     }
 
+
+
+
+
     public async AmeoTrackUpdate({ id, mode }: { id: number, mode: number }) {
         console.log(Endpoints.Ameo.update())
         const resp = await this.ameoAxios.post(Endpoints.Ameo.update(), {}, {
@@ -269,5 +281,18 @@ export class Fetcher {
             }
         })
         return new OsuTrack.Update(resp.data)
+    }
+
+
+
+
+    public async SnipeProfile({ name }: { name: number | string }) {
+        const resp = await this.snipeAxios.get(Endpoints.Snipe.snipeProfile(name))
+        return new Snipe.Profile(resp.data)
+    }
+
+    public async SnipeHistory({ name }: { name: number | string }) {
+        const resp = await this.snipeAxios.get(Endpoints.Snipe.snipeHistory(name))
+        return resp.data.map(el => new Snipe.History(el))
     }
 }

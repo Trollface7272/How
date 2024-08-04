@@ -346,6 +346,9 @@ export namespace Score {
         public get ScoreFormatted() {
             return this.Score.toLocaleString() + (this.TotalScore ? ` (${this.TotalScore.toLocaleString()})` : "")
         }
+        public get Url() {
+            return `https://osu.ppy.sh/scores/${this.Id}/download`
+        }
 
         // position?: number
 

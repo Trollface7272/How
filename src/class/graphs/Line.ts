@@ -97,6 +97,12 @@ export class LineChart {
                         grid: { display: this.xLines ?? false }
                     }
                 },
+                layout: {
+                    padding: {
+                        right: 10,
+                        top: 20,
+                    }
+                },
                 plugins: {
                     legend: {
                         display: false

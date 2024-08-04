@@ -10,3 +10,7 @@ export type ParsedMods = {
     exactInclude: _ParsedMods,
     exactExclude: _ParsedMods
 }
+
+export type Dictionary<T> = {
+    [key: string]: T
+}
