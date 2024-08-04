@@ -27,6 +27,9 @@ export class InteractionCreateData implements EventData, MessageEventData {
     constructor(
         private interaction: Interaction
     ) { }
+    public React(emoji: string): Promise<null> {
+        return null
+    }
     public findString(match: RegExp | string): string {
         return null
     }

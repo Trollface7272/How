@@ -1,6 +1,6 @@
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Event, EventData } from "@src/class/partials/Event";
-import { Interaction, InteractionType, Message, ReplyOptions } from "discord.js";
+import { Interaction, InteractionType, Message, MessageReaction, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Logger } from "@src/class/Logger";
@@ -12,6 +12,7 @@ import { Gamemode, ParsedMods } from "@src/class/api/osu/types/MiscTypes";
 import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 import { Score } from "@src/class/api/osu/class/Score";
+import { TriggerEmitterInstance } from "@src/class/TriggerEmitter";
 
 const regexes = {
     normal: /^\+?(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi,
@@ -39,7 +40,10 @@ export class MessageCreateData implements EventData, MessageEventData {
         this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
     }
-    public findString(match: RegExp|string): string {
+    public async React(emoji: string): Promise<MessageReaction> {
+        return this.message.react(emoji)
+    }
+    public findString(match: RegExp | string): string {
         for (let i = 0; i < this.args.length; i++) {
             const el = this.args[i];
             if (typeof match === "string") {
@@ -106,7 +110,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
 
     public GetExactMods() {
-        const mods = { }
+        const mods = {}
         for (const key in regexes) {
             const regex = regexes[key]
             for (let arg of this.args) {
@@ -119,7 +123,7 @@ export class MessageCreateData implements EventData, MessageEventData {
                     }
                     const mods = arg.toUpperCase().match(/.{1,2}/g)
                     this.args.splice(this.args.indexOf(arg), 1)
-                    mods[key] = {mods, exact}
+                    mods[key] = { mods, exact }
                 }
             }
         }
@@ -243,6 +247,7 @@ export class MessageCreateData implements EventData, MessageEventData {
 
 export class MessageCreate implements Event {
     public async Handle(data: MessageCreateData): Promise<Event.ReturnCode> {
+        this.RunTriggers(data)
         if (data.GetRawUser().bot) return
         await data.LoadDbData()
         const prefix = data.guild.prefix ?? "!"
@@ -276,4 +281,22 @@ export class MessageCreate implements Event {
         return 0
     }
 
+    private RunTriggers(data: MessageCreateData) {
+        const content = data.GetContent().toLowerCase()
+        const triggers = TriggerEmitterInstance.GetAllTriggers()
+        for (const trigger of triggers) {
+            for (const match of trigger.trigger) {
+                if (typeof match === "string") {
+                    if (content.includes(match)) {
+                        new trigger(data).Handle()
+                    }
+                } else {
+                    if (match.test(content)) {
+                        new trigger(data).Handle()
+                    }
+                }
+            }
+        }
+
+    }
 }

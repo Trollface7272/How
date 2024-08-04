@@ -1,4 +1,4 @@
-import { Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageReplyOptions } from "discord.js";
+import { Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageReaction, MessageReplyOptions } from "discord.js";
 import { Client } from "../Client";
 import { RawUser } from "../RawUser";
 import { Event } from "./Event";
@@ -88,6 +88,10 @@ export abstract class MessageEventData {
     }
 
     public findString(match: RegExp|string): string {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public React(emoji: string): Promise<MessageReaction|null> {
         throw Event.ReturnCode.Unimplemented
     }
 }

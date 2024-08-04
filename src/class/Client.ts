@@ -7,8 +7,10 @@ import { EmojiFactory } from "./Emojis";
 import { CommandEmitterInstance } from "./CommandEmitter";
 import { HandleAsync } from "@src/Utils";
 import { InteractionRegistrerInstance } from "./InteractionRegisterer";
+import { TriggerLoader } from "./TriggerLoader";
 export class Client extends DiscordClient {
     public EventEmitter: EventEmitter
+    public TriggerEmitter: EventEmitter
     constructor() {
         super({
             intents: ["DirectMessages", "Guilds", "GuildMembers", "GuildMessages", "MessageContent", "DirectMessages"],
@@ -17,6 +19,7 @@ export class Client extends DiscordClient {
         })
         this.once("ready", this.OnStart)
         new CommandLoader()
+        new TriggerLoader()
     }
 
     public async Start(token: string) {
@@ -37,16 +40,5 @@ export class Client extends DiscordClient {
 
     private async LoadInteractions() {
         InteractionRegistrerInstance.RegisterAll()
-        return
-        const commandClasses = CommandEmitterInstance.GetAllCommands()
-        const commands = commandClasses.map(cmd => cmd.interactionData).filter(cmd => cmd !== null)
-
-        const route = process.env.NODE_ENV === "production" ? Routes.applicationCommands(this.application.id) : Routes.applicationGuildCommands(this.application.id, process.env.LOG_GUILD)
-        const [, err] = await HandleAsync(this.rest.put(route, { body: commands }))
-        if (err) {
-            Logger.Error(`Failed to load commands: ${err}`, (err as DiscordAPIError))
-        }
-        Logger.Info(`Loaded ${commands.length} commands`)
-        
     }
 }
