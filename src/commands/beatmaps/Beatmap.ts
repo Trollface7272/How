@@ -127,7 +127,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
           .setLabel(`${map.difficulty_rating}★ - ${map.version}`)
           .setValue(map.id.toString())
           .setDefault(map.id === mapid)
-          .setEmoji(EmojiFactory.GetDifficultyEmoji(map.difficulty_rating, Gamemode))
+          .setEmoji(EmojiFactory.GetDifficultyEmoji(map.difficulty_rating, Gamemode, true))
       )
     })
 
