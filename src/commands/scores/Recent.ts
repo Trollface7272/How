@@ -327,7 +327,7 @@ class Recent extends CommandBase implements CommandAbstract {
             iconURL: GetFlag(scores[0].User.country_code)
         })
         embed.setDescription(description)
-        embed.setThumbnail(`https://b.ppy.sh/thumb/${scores[0].Beatmapset.id}l.jpg`)
+        embed.setThumbnail(scores[0].User.avatar_url)
         embed.setFooter({
             text: `Page ${page + 1}/${maxPages}`
         })
