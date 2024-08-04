@@ -354,22 +354,22 @@ class Profile extends CommandBase implements CommandAbstract {
         .setDefault(currentMode === "osu")
         .setLabel(GamemodeNames.osu)
         .setValue("osu")
-        .setEmoji(EmojiFactory.GetEmoji("ModeOsu")),
+        .setEmoji(EmojiFactory.GetEmoji("ModeOsu", true)),
       new StringSelectMenuOptionBuilder()
         .setDefault(currentMode === "fruits")
         .setLabel(GamemodeNames.fruits)
         .setValue("fruits")
-        .setEmoji(EmojiFactory.GetEmoji("ModeFruits")),
+        .setEmoji(EmojiFactory.GetEmoji("ModeFruits", true)),
       new StringSelectMenuOptionBuilder()
         .setDefault(currentMode === "taiko")
         .setLabel(GamemodeNames.taiko)
         .setValue("taiko")
-        .setEmoji(EmojiFactory.GetEmoji("ModeTaiko")),
+        .setEmoji(EmojiFactory.GetEmoji("ModeTaiko", true)),
       new StringSelectMenuOptionBuilder()
         .setDefault(currentMode === "mania")
         .setLabel(GamemodeNames.mania)
         .setValue("mania")
-        .setEmoji(EmojiFactory.GetEmoji("ModeMania"))
+        .setEmoji(EmojiFactory.GetEmoji("ModeMania", true))
     ]
   }
 

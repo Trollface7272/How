@@ -39,6 +39,7 @@ export class Emoji {
     public name: string
 
     private emoji: string
+    private emojiFull: string
 
     constructor(server: Guild, name: string, fileLocation: string) {
         this.server = server
@@ -47,15 +48,17 @@ export class Emoji {
         this.init()
     }
 
-    public Get() {
+    public Get(full: boolean = false) {
+        if (full) return this.emojiFull
         return this.emoji
     }
 
     private init() {
         const emoji = this.server.emojis.cache.find(val => val.name === this.name)
-        if (emoji)
-            this.emoji = `<:${this.name.slice(0,1)}:${emoji.id}>`
-        else this.create()
+        if (emoji) {
+            this.emoji = `<:${this.name.slice(0, 1)}:${emoji.id}>`
+            this.emojiFull = `<:${this.name}:${emoji.id}>`
+        } else this.create()
     }
 
     private async create() {
@@ -65,7 +68,7 @@ export class Emoji {
             name: this.name,
             attachment: attachment
         })
-        this.emoji = `<:${this.name.slice(0,1)}:${emoji.id}>`
+        this.emoji = `<:${this.name.slice(0, 1)}:${emoji.id}>`
     }
 }
 
@@ -90,14 +93,14 @@ export class EmojiFactory {
         ])
     }
 
-    public static GetDifficultyEmoji(diff: number, gamemode: string) {
+    public static GetDifficultyEmoji(diff: number, gamemode: string, full: boolean=false) {
         const emoji = this.difficultyEmojis.find(val => val.range[0] <= diff && val.range[1] > diff && val.gamemode.toLowerCase() === gamemode.toLowerCase())
-        return emoji ? emoji.Get() : ""
+        return emoji ? emoji.Get(full) : ""
     }
 
-    public static GetEmoji(name: string) {
+    public static GetEmoji(name: string, full: boolean=false) {
         const emoji = this.emojis.find(val => val.name === name)
-        return emoji ? emoji.Get() : ""
+        return emoji ? emoji.Get(full) : ""
     }
 
 
