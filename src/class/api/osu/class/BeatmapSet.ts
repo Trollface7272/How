@@ -131,6 +131,9 @@ export namespace BeatmapSet {
             this.beatmaps = this.beatmaps.map(map => {
                 return new _Beatmap.Compact(map)
             })
+            this.beatmaps = this.beatmaps.sort((a, b) => a.difficulty_rating - b.difficulty_rating).map(map => {
+                return new _Beatmap.Compact(map)
+            })
         }
     }
 }

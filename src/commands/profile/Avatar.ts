@@ -49,7 +49,7 @@ class Avatar extends CommandBase implements CommandAbstract {
 
         const avatar = profile.avatar_url
         const embed = this.GetBaseEmbed()
-            .setAuthor({name: `${profile.username}`, iconURL: GetFlag(profile.country_code)})
+            .setAuthor({name: `${profile.username}`, iconURL: GetFlag(profile.country_code), url: profile.url})
             .setImage(avatar)
             .setFooter({text: `Currently ${profile.is_online ? "Online" : "Offline"}`})
 
