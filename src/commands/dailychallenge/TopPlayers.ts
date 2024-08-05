@@ -71,12 +71,12 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
         const PER_PAGE = 20
         const { Page } = this.args
         const user = this.data.GetUser()
-
-        const _profiles = await DailyChallengeProfileFactory.GetDailyChallengeProfiles({ }, [["top10Percent.count", - 1], ["averagePlacementPercent", 1]], Page * PER_PAGE, PER_PAGE * (Page - 1))
+        //const s = [["top10Percent.count", - 1], ["averagePlacementPercent", 1]]
+        const _profiles = await DailyChallengeProfileFactory.GetDailyChallengeProfiles({}, { "top10Percent.count": -1, "averagePlacementPercent": 1 }, PER_PAGE, PER_PAGE * (Page - 1))
 
         const fetcher = await Fetcher.Create(user.id)
 
-        const profiles = _profiles.slice((Page - 1) * PER_PAGE, Page * PER_PAGE)
+        const profiles = _profiles
         const [fetchedProfiles, fetchedProfilesError] = await HandleAsync(fetcher.GetByUserIds({ ids: profiles.map(el => el.id) }))
         if (fetchedProfilesError) {
             Logger.Error(fetchedProfilesError)
@@ -91,7 +91,8 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
                     index: (Page - 1) * PER_PAGE + i + 1,
                     username: fetched.username,
                     rank: fetched.statistics_rulesets.osu.global_rank,
-                    url: fetched.url, placementPercent: profile.averagePlacementPercent.roundFixed(2), placement: profile.averagePlacement.round(0)
+                    url: fetched.url, placementPercent: profile.averagePlacementPercent.roundFixed(2), placement: profile.averagePlacement.round(0),
+                    top10Percent: profile.top10Percent.count
                 }
             })
         })
