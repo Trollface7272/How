@@ -100,7 +100,7 @@ class TopData extends CommandData implements CommandDataAbstract {
 }
 
 class Top extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["top", "osutop", "maniatop", "taikotop", "ctbtop", "fruitstop"]
+    public static readonly names: string[] = ["top", "osutop", "maniatop", "taikotop", "ctbtop", "fruitstop", "pinned", "firsts"]
     private data: TopData
     private componentId: string
     private oldComponentId: string
