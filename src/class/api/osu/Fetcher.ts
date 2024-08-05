@@ -228,7 +228,7 @@ export class Fetcher {
         return new Score.Leaderboards(resp.data)
     }
 
-    public async GetByUserIds({ ids }: { ids: number[] }) {
+    public async GetByUserIds({ ids }: { ids: number[] }): Promise<Profile.FromIds[]> {
         const resp = await this.axios.get(Endpoints.fromUserIds(), {
             params: {
                 ids

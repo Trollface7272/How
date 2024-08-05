@@ -1,4 +1,4 @@
-import { Filter, ObjectId } from "mongodb"
+import { Filter, ObjectId, Sort } from "mongodb"
 import { db } from "./Main"
 import { Score } from "../api/osu/class/Score"
 
@@ -19,6 +19,8 @@ export class DailyChallengeProfile {
     public _id: ObjectId
     public id: number
     public username: string
+    public averagePlacement: number
+    public averagePlacementPercent: number
     public dataIncludesChallenges: number[]
     public top10Percent: {
         rooms: number[]
@@ -54,6 +56,8 @@ export class DailyChallengeProfile {
                 count: 0
             }
             this.scoreData = []
+            this.averagePlacement = 0
+            this.averagePlacementPercent = 0
         }
     }
 
@@ -93,8 +97,8 @@ class cDailyChallangeProfileFactory {
         return players
     }
 
-    public async GetDailyChallengeProfiles(query: Filter<DailyChallengeProfile>) {
-        const dc = await db.collection("dailychallengeprofile").find<DailyChallengeProfile>(query).toArray()
+    public async GetDailyChallengeProfiles(query: Filter<DailyChallengeProfile>, sort: Sort={}, limit: number=50, offset: number=0) {
+        const dc = await db.collection("dailychallengeprofile").find<DailyChallengeProfile>(query).sort(sort).limit(limit).skip(offset).toArray()
         
         return dc.map<DailyChallengeProfile>(x => new DailyChallengeProfile(x))
     }
