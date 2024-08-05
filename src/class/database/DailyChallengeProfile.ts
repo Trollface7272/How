@@ -19,6 +19,7 @@ export class DailyChallengeProfile {
     public _id: ObjectId
     public id: number
     public username: string
+    public country: string
     public averagePlacement: number
     public averagePlacementPercent: number
     public dataIncludesChallenges: number[]
@@ -42,6 +43,7 @@ export class DailyChallengeProfile {
         } else {
             this.id = id
             this.username = ""
+            this.country = ""
             this.dataIncludesChallenges = []
             this.top10Percent = {
                 rooms: [],

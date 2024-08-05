@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { DailyChallengeProfileFactory } from "@src/class/database/DailyChallengeProfile";
+import { DailyChallengeProfile, DailyChallengeProfileFactory } from "@src/class/database/DailyChallengeProfile";
 import { DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { Profile } from "@src/class/api/osu/class/Profile";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
@@ -13,10 +13,12 @@ import { TextRenderer } from "@src/class/renderer/Text";
 import NodeCache from "node-cache";
 import { randomBytes } from "crypto";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { Filter } from "mongodb";
 
 interface args {
     Raw: boolean
     Page: number
+    Country: string
 }
 
 const componentCache = new NodeCache({
@@ -35,7 +37,8 @@ class DailyChallengeTopPlayersData extends CommandData implements CommandDataAbs
     public GetComandArgs(): args {
         return {
             Raw: this.data.GetBoolean("raw", ["-r", "-raw"]),
-            Page: this.data.GetNumber("page", ["-p", "-page"]) || 1
+            Page: this.data.GetNumber("page", ["-p", "-page"]) || 1,
+            Country: this.data.GetString("country", ["-c", "-country", "c"])
         }
     }
 }
@@ -72,7 +75,12 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
         const { Page } = this.args
         const user = this.data.GetUser()
         //const s = [["top10Percent.count", - 1], ["averagePlacementPercent", 1]]
-        const _profiles = await DailyChallengeProfileFactory.GetDailyChallengeProfiles({}, { "top10Percent.count": -1, "averagePlacementPercent": 1 }, PER_PAGE, PER_PAGE * (Page - 1))
+        const filters: Filter<DailyChallengeProfile> = { }
+        if (this.args.Country) {
+            filters.country = this.args.Country.toUpperCase()
+        }
+
+        const _profiles = await DailyChallengeProfileFactory.GetDailyChallengeProfiles(filters, { "top10Percent.count": -1, "averagePlacementPercent": 1 }, PER_PAGE, PER_PAGE * (Page - 1))
 
         const fetcher = await Fetcher.Create(user.id)
 
