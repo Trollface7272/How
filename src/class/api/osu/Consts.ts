@@ -2,9 +2,13 @@ import { Gamemode } from "./types/MiscTypes"
 
 export const GamemodeNames = {
     osu: "Standard",
+    0: "Standard",
     taiko: "Taiko",
+    1: "Taiko",
     fruits: "Catch the Beat",
-    mania: "Mania"
+    2: "Catch the Beat",
+    mania: "Mania",
+    3: "Mania"
 }
 
 export const GamemodeNumToStr = {

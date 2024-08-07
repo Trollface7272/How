@@ -189,7 +189,7 @@ class Top extends CommandBase implements CommandAbstract {
         if (Specific?.length > 0) {
             pickedScores = []
             for (let i = 0; i < Math.min(Specific.length, listPageSize); i++) {
-                const score = scores[Specific[i] - 1]
+                const score = scores[Specific[i]]
                 if (score) pickedScores.push(score)
             }
         }
@@ -282,6 +282,7 @@ class Top extends CommandBase implements CommandAbstract {
                 setTime: new Date(score.EndedAt).toDiscordToolTip()
             })
         }).join("\n")
+        console.log(description)
         embed
             .setDescription(description)
             .setAuthor({
