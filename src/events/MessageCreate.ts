@@ -111,8 +111,9 @@ export class MessageCreateData implements EventData, MessageEventData {
 
     public GetExactMods() {
         const mods = {}
+        const removeIdx: number[] = []
         for (const key in regexes) {
-            const regex = regexes[key]
+            const regex = new RegExp(regexes[key])
             for (let arg of this.args) {
                 if (regex.test(arg)) {
                     let exact = false
@@ -121,11 +122,15 @@ export class MessageCreateData implements EventData, MessageEventData {
                         exact = true
                         arg = arg.substring(0, arg.length - 1)
                     }
-                    const mods = arg.toUpperCase().match(/.{1,2}/g)
-                    this.args.splice(this.args.indexOf(arg), 1)
-                    mods[key] = { mods, exact }
+                    const modsArr = arg.toUpperCase().match(/.{1,2}/g)
+                    removeIdx.push(this.args.indexOf(arg))
+                    mods[key] = { mods: modsArr, exact }
                 }
             }
+        }
+        removeIdx.sort((a, b) => b - a)
+        for (const idx of removeIdx) {
+            this.args.splice(idx, 1)
         }
         return mods as ParsedMods
     }

@@ -132,7 +132,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         for (const filter of Filter) {
             merge(filterQuery, this.parseFilter(filter))
         }
-
+        
         if (Mods.exactExclude?.mods.length > 0) {
             merge(filterQuery, { mods: { $not: { $all: Mods.exactExclude.mods } } })
         }
