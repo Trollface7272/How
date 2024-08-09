@@ -282,7 +282,6 @@ class Top extends CommandBase implements CommandAbstract {
                 setTime: new Date(score.EndedAt).toDiscordToolTip()
             })
         }).join("\n")
-        console.log(description)
         embed
             .setDescription(description)
             .setAuthor({

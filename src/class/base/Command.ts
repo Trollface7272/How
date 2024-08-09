@@ -14,7 +14,7 @@ export class CommandBase extends ErrorRenderer {
         }).reverse().join(" ")
     }
 
-    protected NormalizeDatedData(values: { start_date: string, count: number }[], options?: {start?: Date, end?: Date, yearly?: boolean}): [number[], string[]] {
+    protected NormalizeDatedData(values: { start_date: string, count: number }[], options: {start?: Date, end?: Date, yearly?: boolean}={}): [number[], string[]] {
         const {start, end, yearly} = options
         if (yearly) return this.NormalizeYearlyDatedData(values, options)
         const from = start ?? new Date(values[0].start_date)
