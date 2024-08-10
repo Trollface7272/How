@@ -174,13 +174,14 @@ class Playcount extends CommandBase implements CommandAbstract {
             tension: 0,
             label: "Top 50%"
         })
-        datasets.push({
-            data: data.first,
-            borderColor: "rgb(0, 0, 255)",
-            showLine: true,
-            tension: 0,
-            label: "1st"
-        })
+        if (!this.data.args.Ranks) 
+            datasets.push({
+                data: data.first,
+                borderColor: "rgb(0, 0, 255)",
+                showLine: true,
+                tension: 0,
+                label: "1st"
+            })
         return [datasets, labels]
     }
 
