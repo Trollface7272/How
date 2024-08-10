@@ -2,13 +2,25 @@ import { Filter, ObjectId } from "mongodb"
 import { db } from "./Main"
 import { Multiplayer } from "../api/osu/class/Multiplayer"
 
-
+interface Threshold {
+    position: number
+    score: number
+}
+interface TopThresholds {
+    date: Date
+    rank1: Threshold
+    top10: Threshold
+    top50: Threshold
+    total: number
+}
 
 export class DailyChallenge extends Multiplayer.GetRooms {
     public _id: ObjectId
     public index: number
     public fetchedScores: boolean
     public total: number
+    public lastUpdated: Date
+    public thresholds: TopThresholds[]
 
     constructor(data: DailyChallenge | Multiplayer.GetRooms) {
         super(data)
@@ -18,14 +30,19 @@ export class DailyChallenge extends Multiplayer.GetRooms {
             this._id = (data as DailyChallenge)._id
             this.fetchedScores = (data as DailyChallenge).fetchedScores || false
             this.total = (data as DailyChallenge).total || 0
+            this.lastUpdated = (data as DailyChallenge).lastUpdated || null
+            this.thresholds = (data as DailyChallenge).thresholds || []
         } else {
             this.index = 0
             this.fetchedScores = false
             this.total = 0
+            this.lastUpdated = null
+            this.thresholds = []
         }
     }
 
     public async Save() {
+        this.lastUpdated = new Date()
         const obj = {...this}
         delete obj._id
         return db.collection("dailychallenge").updateOne({
@@ -52,6 +69,14 @@ class cDailyChallangeFactory {
         const dc = await db.collection("dailychallenge").find<DailyChallenge>(query).toArray()
         if (!dc) return false
         return dc.map<DailyChallenge>(x => new DailyChallenge(x))
+    }
+
+    public async GetCurrentChallenge() {
+        const dc = await db.collection("dailychallenge").findOne<DailyChallenge>({
+            fetchedScores: false
+        })
+        if (!dc) return false
+        return new DailyChallenge(dc)
     }
 
     public async GetCount(filter: Filter<DailyChallenge>) {

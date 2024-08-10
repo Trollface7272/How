@@ -40,6 +40,13 @@ export class MessageCreateData implements EventData, MessageEventData {
         this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
     }
+    public async SendTyping(): Promise<void> {
+        try {
+            return await this.message.channel.sendTyping();
+        } catch (err) {
+            console.error("Error sending typing", err);
+        }
+    }
     public async React(emoji: string): Promise<MessageReaction> {
         return this.message.react(emoji)
     }
@@ -269,6 +276,7 @@ export class MessageCreate implements Event {
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
         try {
+            data.SendTyping()
             const command = new commandData(data)
             const code = await command.Handle()
             switch (code) {

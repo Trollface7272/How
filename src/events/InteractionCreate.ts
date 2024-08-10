@@ -27,6 +27,9 @@ export class InteractionCreateData implements EventData, MessageEventData {
     constructor(
         private interaction: Interaction
     ) { }
+    public SendTyping(): Promise<void> {
+        return
+    }
     public React(emoji: string): Promise<null> {
         return null
     }

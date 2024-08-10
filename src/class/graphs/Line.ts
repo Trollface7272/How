@@ -1,3 +1,4 @@
+import { ChartData, ChartDataset } from "chart.js";
 import { ChartJSNodeCanvas } from "chartjs-node-canvas";
 
 interface title {
@@ -28,7 +29,7 @@ export namespace ChartPlugins {
 }
 
 export interface ChartOptions {
-    width?: number, height?: number, type?: string, labels?: string[], data: number[], fill?: string, yTitle?: title, xTitle?: title, yLines?: boolean, xLines?: boolean, plugins?: any[], reverse?: boolean
+    width?: number, height?: number, type?: string, labels?: string[], data: number[], fill?: string, yTitle?: title, xTitle?: title, yLines?: boolean, xLines?: boolean, plugins?: any[], reverse?: boolean, datasets?: ChartDataset<"line">[], legend?: boolean
 }
 
 export class LineChart {
@@ -43,9 +44,11 @@ export class LineChart {
     private xLines: boolean
     private yLines: boolean
     private reverse: boolean
+    private legend: boolean
+    private datasets: ChartDataset<"line">[]
     private plugins: any[]
     private canvas: ChartJSNodeCanvas
-    constructor({ width = 800, height = 300, type = "line", labels, data, fill = null, yTitle = { text: "" }, xTitle = { text: "" }, yLines = false, xLines = false, plugins = [], reverse = false }: ChartOptions) {
+    constructor({ width = 800, height = 300, type = "line", labels, data, fill = null, yTitle = { text: "" }, xTitle = { text: "" }, yLines = false, xLines = false, plugins = [], reverse = false, datasets, legend=false }: ChartOptions) {
         this.width = width
         this.height = height
         this.type = type
@@ -58,6 +61,8 @@ export class LineChart {
         this.yLines = yLines
         this.plugins = plugins
         this.reverse = reverse
+        this.datasets = datasets
+        this.legend = legend
         this.canvas = new ChartJSNodeCanvas({ width: this.width, height: this.height, chartCallback: (ChartJS) => { ChartJS.defaults.color = "#ffffff" } })
     }
 
@@ -66,7 +71,7 @@ export class LineChart {
             type: "line",
             data: {
                 labels: this.labels || Array(this.data.length).fill(""),
-                datasets: [{
+                datasets: this.datasets ? this.datasets : [{
                     data: this.data,
                     fill: this.fill,
                     borderColor: "rgb(255, 208, 49)",
@@ -105,7 +110,7 @@ export class LineChart {
                 },
                 plugins: {
                     legend: {
-                        display: false
+                        display: this.legend
                     }
                 }
             },

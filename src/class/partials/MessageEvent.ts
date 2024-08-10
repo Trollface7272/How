@@ -94,4 +94,8 @@ export abstract class MessageEventData {
     public React(emoji: string): Promise<MessageReaction|null> {
         throw Event.ReturnCode.Unimplemented
     }
+
+    public SendTyping(): Promise<void> {
+        throw Event.ReturnCode.Unimplemented
+    }
 }

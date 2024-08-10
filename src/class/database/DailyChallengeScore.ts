@@ -6,11 +6,14 @@ import { Score } from "../api/osu/class/Score"
 
 export class DailyChallengeScore extends Score.MultiplayerScore {
     public _id: ObjectId
+    public temporary: boolean
 
     constructor(data: DailyChallengeScore | Score.MultiplayerScore) {
         super(data)
+        this.temporary = false
         if ((data as DailyChallengeScore)._id) {
             this._id = (data as DailyChallengeScore)._id
+            this.temporary = (data as DailyChallengeScore).temporary || false
         }
     }
 
@@ -23,7 +26,7 @@ export class DailyChallengeScore extends Score.MultiplayerScore {
             ]
         }, {
             $set: obj
-        }, { upsert: true,  })
+        }, { upsert: true, })
     }
 }
 
@@ -38,18 +41,26 @@ class cDailyChallangeScoreFactory {
         return new DailyChallengeScore(dc)
     }
 
-    public async GetDailyChallengeScores(query: Filter<DailyChallengeScore>) {
-        const dc = await db.collection("dailychallengescore").find<DailyChallengeScore>(query).toArray()
+    public async GetDailyChallengeScores(filter: Filter<DailyChallengeScore>, includeTemporary: boolean = false) {
+        if (!includeTemporary) filter.temporary = false
+        const dc = await db.collection("dailychallengescore").find<DailyChallengeScore>(filter).sort({ position: 1 }).toArray()
         if (!dc) return false
         return dc.map<DailyChallengeScore>(x => new DailyChallengeScore(x))
     }
 
-    public async GetCount(filter: Filter<DailyChallengeScore>) {
+    public async GetCount(filter: Filter<DailyChallengeScore>, includeTemporary: boolean = false) {
+        if (!includeTemporary) filter.temporary = false
         return db.collection("dailychallengescore").countDocuments(filter)
     }
 
-    public async GetPlayers() {
-        return db.collection("dailychallengescore").distinct("user_id")
+    public async GetPlayers(includeTemporary: boolean = false) {
+        const filter = {} as Filter<DailyChallengeScore>
+        if (!includeTemporary) filter.temporary = false
+        return db.collection("dailychallengescore").distinct("user_id", filter)
+    }
+
+    public async DeleteTemporary(id: number) {
+        return db.collection("dailychallengescore").deleteMany({ temporary: true, room_id: id })
     }
 }
 
