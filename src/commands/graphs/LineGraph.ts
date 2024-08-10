@@ -22,6 +22,7 @@ interface args {
     Username: string
     Gamemode: Gamemode
     Type: Types
+    Ranks: boolean
 }
 
 class LineGraphData extends CommandData implements CommandDataAbstract {
@@ -53,6 +54,7 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
         return {
             Gamemode: this.data.GetGamemode(),
             Type: type as Types || this.data.GetNumber("type", ["-type", "-t", "t"]) as Types,
+            Ranks: this.data.GetBoolean("ranks", ["-ranks", "-rank", "ranks", "rank"]),
             Username: this.data.GetUsername()
         }
     }
@@ -144,9 +146,15 @@ class Playcount extends CommandBase implements CommandAbstract {
         }
         for (const threshold of challenge.thresholds) {
             labels.push(threshold.date.toDateString())
-            data.top10.push(threshold.top10.score)
-            data.top50.push(threshold.top50.score)
-            data.first.push(threshold.rank1.score)
+            if (this.data.args.Ranks) {
+                data.top10.push(threshold.top10.position)
+                data.top50.push(threshold.top50.position)
+                data.first.push(threshold.rank1.position)
+            } else {
+                data.top10.push(threshold.top10.score)
+                data.top50.push(threshold.top50.score)
+                data.first.push(threshold.rank1.score)
+            }
         }
         datasets.push({
             data: data.top10,
