@@ -71,7 +71,7 @@ class Playcount extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        const { Username: _username, Gamemode, Type } = this.data.args
+        const { Username: _username, Gamemode, Type, Ranks } = this.data.args
 
         const Username = _username || user.osu?.username
 
@@ -125,6 +125,10 @@ class Playcount extends CommandBase implements CommandAbstract {
             options.yTitle.text = "Top X% score"
             options.fill = null
             options.legend = true
+            if (Ranks) {
+                options.reverse = true
+            options.yTitle.text = "Top X% rank"
+        }
         }
 
         const chart = new LineChart(options)
