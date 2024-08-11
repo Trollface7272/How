@@ -1,18 +1,8 @@
 import { createWriteStream } from "fs"
-import { BitModsShort } from "./Consts"
 import axios from "axios"
 import { Logger } from "@src/class/Logger"
 import { Score } from "./class/Score"
 import { Message } from "discord.js"
-
-export const toBitMods = (mods: string[]) => {
-  if (typeof mods !== "object") return mods
-  let bit = 0
-  for (const mod of mods) {
-    bit |= BitModsShort[mod]
-  }
-  return bit
-}
 
 export const Clamp = (num: number, min: number, max: number) => {
   return Math.min(Math.max(num, min), max)

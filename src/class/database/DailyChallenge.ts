@@ -22,6 +22,10 @@ export class DailyChallenge extends Multiplayer.GetRooms {
     public lastUpdated: Date
     public thresholds: TopThresholds[]
 
+    public get URL() {
+        return `https://osu.ppy.sh/multiplayer/rooms/${this.id}`
+    }
+
     constructor(data: DailyChallenge | Multiplayer.GetRooms) {
         super(data)
 

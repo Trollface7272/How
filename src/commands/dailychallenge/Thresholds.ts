@@ -6,11 +6,13 @@ import { CommandBase } from "@src/class/base/Command";
 import { DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { DailyChallengeScoreFactory } from "@src/class/database/DailyChallengeScore";
-import { HandleAsync } from "@src/Utils";
+import { GetFlag, HandleAsync } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
+import { Fetcher } from "@src/class/api/osu/Fetcher";
+import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 
 interface args {
-    
+
 }
 
 class DailyChallengeThresholdData extends CommandData implements CommandDataAbstract {
@@ -40,7 +42,7 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
         const challenge = await DailyChallengeFactory.GetCurrentChallenge()
 
         if (!challenge) {
-            this.data.Reply({content: "No active challenge"})
+            this.data.Reply({ content: "No active challenge" })
             return CommandResponseCodes.UnknownError
         }
 
@@ -50,8 +52,15 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
             Logger.Error(userScoreError)
             return CommandResponseCodes.UnknownError
         }
-    
-        const user_score = userScore ? {score: userScore.TotalScore.toLocaleString(), rank: userScore.position.toLocaleString() } : null
+        const fetcher = await Fetcher.Create(user.id)
+        const [beatmap, beatmapErr] = await HandleAsync(fetcher.GetBeatmap({ id: challenge.current_playlist_item.beatmap_id, Gamemode: GamemodeNumToStr[challenge.current_playlist_item.ruleset_id] }))
+        if (beatmapErr) {
+            this.data.Reply(this.RenderApiError())
+            Logger.Error(beatmapErr)
+            return CommandResponseCodes.UnknownError
+        }
+
+        const user_score = userScore ? { score: userScore.TotalScore.toLocaleString(), rank: userScore.position.toLocaleString() } : null
 
         const threshold = challenge.thresholds.at(-1)
 
@@ -65,12 +74,22 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
 
         const embed = this.GetBaseEmbed()
             .setDescription(text)
-            .setAuthor({
-                name: "Daily Challenge Thresholds"
+            .setAuthor(userScore ? {
+                name: "Daily Challenge Thresholds",
+                iconURL: GetFlag(user.osu.country),
+                url: challenge.URL,
+            } : {
+                name: "Daily Challenge Thresholds",
+                url: challenge.URL,
+            })
+            .setThumbnail(`https://assets.ppy.sh/beatmaps/${beatmap.beatmapset_id}/covers/raw.jpg`)
+            .setFooter({
+                text: `${beatmap.beatmapset.artist} - ${beatmap.beatmapset.title} [${beatmap.version}] by ${beatmap.beatmapset.creator}`
             })
 
-        this.data.Reply({embeds: [embed]})
-        
+
+        this.data.Reply({ embeds: [embed] })
+
 
         return CommandResponseCodes.OK
     }
