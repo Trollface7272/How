@@ -46,7 +46,7 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
         let top: TopTypes = TopTypes.All
         let type: Types
         switch (cmd) {
-            case "dcth":
+            case "dctg":
                 type = Types.DailyChallengeThresholds
                 break
             case "pc":
@@ -80,7 +80,7 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
 }
 
 class Playcount extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["playcount", "pc", "wr", "watchedreplays", "rank", "graph", "dcth"]
+    public static readonly names: string[] = ["playcount", "pc", "wr", "watchedreplays", "rank", "graph", "dctg"]
     private data: LineGraphData
 
 
