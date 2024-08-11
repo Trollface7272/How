@@ -137,7 +137,6 @@ class Compare extends CommandBase implements CommandAbstract {
     }
 
     private RenderScores({ scores, totalScores }: { scores: Score.FromId[], totalScores: number }) {
-        console.log(scores[0].Mods)
         const embed = this.GetBaseEmbed()
         const { Beatmap: beatmap, Beatmapset: beatmapset, User: user } = scores[0]
         const description = scores.map(score => {
@@ -151,7 +150,7 @@ class Compare extends CommandBase implements CommandAbstract {
             }
             return TextRenderer.render("compare", {
                 index: score.index, mods: score.Mods.Formatted, stars: score.Beatmap.difficulty_rating.roundFixed(2),
-                grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance.improved.total ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", acc: (score.Accuracy * 100).roundFixed(2), rank: rank,
+                grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance?.improved?.total ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", acc: (score.Accuracy * 100).roundFixed(2), rank: rank,
                 score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
                 setTime: score.EndedAt.toDiscordToolTip(),
             })

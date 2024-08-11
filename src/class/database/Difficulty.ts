@@ -5,6 +5,7 @@ import { Score } from "../api/osu/class/Score";
 export class Difficulty {
     public _id: ObjectId
     public id: number
+    public mods: Score.ModList
     public gamemode: number
     public calculated_at: Date
 
@@ -36,10 +37,12 @@ export class Difficulty {
     public score_multiplier?: number
 
 
-    constructor(difficulty?: Document) {
+    constructor(difficulty?: Document, mods?: Score.ModList) {
         Object.assign(this, difficulty)
         this.calculated_at = new Date()
         if (!this._id) this._id = new ObjectId()
+        this.mods = new Score.ModList(this.mods)
+        if (mods) this.mods = mods
     }
 
     public async Save() {
@@ -48,6 +51,7 @@ export class Difficulty {
         }, {
             $set: {
                 id: this.id,
+                mods: this.mods.GetData(),
                 gamemode: this.gamemode,
                 max_combo: this.max_combo,
                 star_rating: this.star_rating,

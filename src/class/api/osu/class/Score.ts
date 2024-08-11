@@ -10,7 +10,15 @@ import { RulesetIds } from "../types/MiscTypes"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
 
-
+const difficulty_mods = [
+    "EZ", "HT", "DC", "TD", 
+    "HR", "DT", "NC", "FL", 
+    "RX", "TP", "CL", 
+    "RD", "WU", "WD",
+    "4K", "5K", "6K", "7K",
+    "8K", "FI", "RD", "1K",
+    "2K", "3K", "9K", "V2",
+]
 
 interface Weight {
     percentage: number
@@ -115,6 +123,29 @@ export namespace Score {
         }
     }
 
+    export namespace Mods {
+        export class DifficultyAdjust extends BaseMod {
+            declare settings: {
+                circle_size?: number
+                drain_rate?: number
+                approach_rate?: number
+                overall_difficulty?: number
+            }
+            constructor(mod: ModAcronyms.DifficultyAdjust | BaseMod, settings?: { [key: string]: string | number }) {
+                super(mod, settings)
+                if (!this.settings) this.settings = {}
+            }
+
+            public IsDifficulty() {
+                return ((this.settings.circle_size != null) || (this.settings.overall_difficulty != null))
+            }
+
+            public GetDifficultyVariant() {
+                return new DifficultyAdjust(ModAcronyms.DifficultyAdjust, { circle_size: this.settings.circle_size, overall_difficulty: this.settings.overall_difficulty })
+            }
+        }
+    }
+
     export class ModList {
         private mods: BaseMod[]
         constructor(mods: string[] | BaseMod[] | ModList) {
@@ -122,7 +153,7 @@ export namespace Score {
                 Object.assign(this, mods)
                 return
             }
-            this.mods = mods.map(mod => new BaseMod(mod))
+            this.mods = mods?.map(mod => new BaseMod(mod)) || []
         }
 
         public get Mods() {
@@ -148,6 +179,19 @@ export namespace Score {
 
         public GetData() {
             return this.mods
+        }
+
+        public GetDifficultyMods() {
+            const mods = this.mods.filter(mod => difficulty_mods.includes(mod.acronym))
+            if (this.Has(ModAcronyms.Flashlight) && this.Has(ModAcronyms.Hidden)) {
+                mods.push(this.mods.find(mod => mod.acronym == ModAcronyms.Hidden))
+            }
+            if (this.Has(ModAcronyms.DifficultyAdjust)) {
+                const mod = this.mods.find(mod => mod.acronym == ModAcronyms.DifficultyAdjust)
+                const difficultyMod = new Mods.DifficultyAdjust(ModAcronyms.DifficultyAdjust, { circle_size: mod.settings.circle_size })
+                if (difficultyMod.IsDifficulty()) mods.push(difficultyMod.GetDifficultyVariant())
+            }
+            return mods
         }
     }
     export interface LegacyStatistics {

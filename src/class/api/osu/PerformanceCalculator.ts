@@ -21,14 +21,7 @@ const cache = new NodeCache({
 })
 
 const cachePath = process.env.BEATMAP_CACHE ?? "cache/beatmaps/osu"
-const difficulty_mods = [
-    "EZ", "HT", "TD", "HR",
-    "DT", "NC", "FL", "MR",
-    "4K", "5K", "6K", "7K",
-    "8K", "FI", "RD", "1K",
-    "2K", "3K", "9K", "V2",
-    "RX", "CL", "DA"
-]
+
 
 if (!existsSync(cachePath))
     mkdirSync(cachePath, { recursive: true })
@@ -40,7 +33,7 @@ export class PerformanceCalculator {
 
     public constructor(private beatmap: Beatmap.Base, private mods: Score.ModList) {
         if (!this.mods) this.mods = new Score.ModList([])
-        this.starRatingMods = new Score.ModList(this.mods.Mods.filter(mod => difficulty_mods.includes(mod.acronym)))
+        this.starRatingMods = new Score.ModList(this.mods.GetDifficultyMods())
     }
 
     public async Calculate(score: Score.BaseScore): Promise<performance> {
@@ -287,7 +280,7 @@ export class PerformanceCalculator {
         const attributes = parsed.results[0].attributes
         attributes.id = this.beatmap.id
         attributes.gamemode = this.beatmap.mode_int
-        const data = new Difficulty(attributes)
+        const data = new Difficulty(attributes, this.starRatingMods)
         await data.Save()
         return data
     }
