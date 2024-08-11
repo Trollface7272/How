@@ -18,11 +18,20 @@ enum Types {
     WatchedReplays,
     DailyChallengeThresholds
 }
+
+enum TopTypes {
+    First="first",
+    Top10="top10",
+    Top50="top50",
+    All="all"
+}
+
 interface args {
     Username: string
     Gamemode: Gamemode
     Type: Types
     Ranks: boolean
+    Top: TopTypes
 }
 
 class LineGraphData extends CommandData implements CommandDataAbstract {
@@ -34,6 +43,7 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         const cmd = this.data.GetCommand()
+        let top: TopTypes = TopTypes.All
         let type: Types
         switch (cmd) {
             case "dcth":
@@ -51,10 +61,19 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
                 type = Types.WatchedReplays
                 break
         }
+
+        if (this.data.GetBoolean("top10", ["-top10", "-t10", "top10", "t10"])) 
+            top = TopTypes.Top10
+        else if (this.data.GetBoolean("top50", ["-top50", "-t50", "top50", "t50"]))
+            top = TopTypes.Top50
+        else if (this.data.GetBoolean("first", ["-first", "-f", "first", "f"]))
+            top = TopTypes.First
+
         return {
             Gamemode: this.data.GetGamemode(),
             Type: type as Types || this.data.GetNumber("type", ["-type", "-t", "t"]) as Types,
             Ranks: this.data.GetBoolean("ranks", ["-ranks", "-rank", "ranks", "rank"]),
+            Top: top,
             Username: this.data.GetUsername()
         }
     }
@@ -160,21 +179,24 @@ class Playcount extends CommandBase implements CommandAbstract {
                 data.first.push(threshold.rank1.score)
             }
         }
-        datasets.push({
-            data: data.top10,
-            borderColor: "rgb(0, 255, 0)",
-            showLine: true,
-            tension: 0,
-            label: "Top 10%"
-        })
-        datasets.push({
-            data: data.top50,
-            borderColor: "rgb(255, 0, 0)",
-            showLine: true,
-            tension: 0,
-            label: "Top 50%"
-        })
-        if (!this.data.args.Ranks) 
+        const Top = this.data.args.Top
+        if (Top === TopTypes.All || Top === TopTypes.Top10) 
+            datasets.push({
+                data: data.top10,
+                borderColor: "rgb(0, 255, 0)",
+                showLine: true,
+                tension: 0,
+                label: "Top 10%"
+            })
+        if (Top === TopTypes.All || Top === TopTypes.Top50) 
+            datasets.push({
+                data: data.top50,
+                borderColor: "rgb(255, 0, 0)",
+                showLine: true,
+                tension: 0,
+                label: "Top 50%"
+            })
+        if (!this.data.args.Ranks && (Top === TopTypes.All || Top === TopTypes.First)) 
             datasets.push({
                 data: data.first,
                 borderColor: "rgb(0, 0, 255)",
