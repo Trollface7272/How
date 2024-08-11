@@ -162,7 +162,7 @@ class Leaderboards extends CommandBase implements CommandAbstract {
         const userRanks: { [key: number]: Profile.FromIds } = {}
         users.forEach(user => userRanks[user.id] = user)
         scores.forEach(score => score.User.global_rank = userRanks[score.UserId].statistics_rulesets[Gamemode].global_rank)
-        console.log(typeof scores[0].Mods, scores[0].Mods)
+
         const ejsScoresData = scores.map(score => {
             return {
                 index: score.index, userId: score.UserId, username: score.User.username, userUrl: score.User.url,

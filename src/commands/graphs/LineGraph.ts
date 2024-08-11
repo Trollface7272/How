@@ -168,7 +168,8 @@ class Playcount extends CommandBase implements CommandAbstract {
             first: []
         }
         for (const threshold of challenge.thresholds) {
-            labels.push(threshold.date.toDateString())
+            if (threshold.date.getMinutes() < 10) labels.push(`${threshold.date.getHours()}:00`)
+            else labels.push("")
             if (this.data.args.Ranks) {
                 data.top10.push(threshold.top10.position)
                 data.top50.push(threshold.top50.position)

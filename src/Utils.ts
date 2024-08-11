@@ -173,3 +173,11 @@ export function merge(target: { [key: string]: any }, source: { [key: string]: a
 export function formatAsGain(val: number) {
     return val > 0 ? `+${val.toLocaleString()}` : val.toLocaleString()
 }
+
+export function GetCountryFlag(countryCode: string) {
+    const codePoints = countryCode
+      .toUpperCase()
+      .split('')
+      .map(char =>  127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+  }

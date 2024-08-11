@@ -445,6 +445,7 @@ export namespace Score {
             super(score)
             Object.assign(this, score)
             this.mods = new ModList(score.mods)
+            this.user = new Profile.Compact(this.user)
         }
 
         public ToObject() {

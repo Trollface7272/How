@@ -1,4 +1,4 @@
 <%_ for(const score of scores) { _%>
 **<%- score.index + 1 %>.** <% if (score.userId == author) { %>__<% } %>**[<%- score.username %>](<%- score.userUrl %>)**<% if (score.userId == author) { %>__<% } %> <%- score.userRank ? `**#${score.userRank.toLocaleString()}**` : "" %> **<%- score.pp?.roundFixed(2) || 0 %>pp** **<%- (score.accuracy * 100).roundFixed(2) %>%** **+<%- score.mods %>**
-▸ <%- score.grade %> <%- score.score.toLocaleString() %> **<%- score.combo %>x**/<%- score.max_combo %>x <%- score.misses > 0 ? `**${score.misses}** ❌ ` : "" %><%- score.created_at.toDiscordToolTip() %>
+▸ <%- score.grade %> <%- score.score.toLocaleString() %> **<%- score.combo %>x**/<%- score.max_combo %>x <%- score.misses > 0 ? `**${score.misses}** ❌ ` : "" %><%- score.created_at.toDiscordToolTip() %><%- score.flag ? `  ${score.flag}` : ""  %>
 <%_ } _%>

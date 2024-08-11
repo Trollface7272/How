@@ -276,8 +276,8 @@ export class MessageCreate implements Event {
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
         try {
-            data.SendTyping()
             const command = new commandData(data)
+            await data.SendTyping()
             const code = await command.Handle()
             switch (code) {
                 case CommandResponseCodes.OK:
