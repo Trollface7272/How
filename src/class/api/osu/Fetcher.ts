@@ -220,7 +220,7 @@ export class Fetcher {
         const resp = await this.axios.get(Endpoints.leaderboards(id), {
             params: {
                 mode: gamemode,
-                mods: mods.Mods,
+                mods: mods.Mods.map(mod => mod.acronym),
                 type
             }
         })
