@@ -65,11 +65,11 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
         const threshold = challenge.thresholds.at(-1)
 
         const text = TextRenderer.render("dailychallenge/threshold", {
-            total: threshold.total.toLocaleString(), score1Threshold: threshold.rank1.score.toLocaleString(),
+            total: threshold.total, score1Threshold: threshold.rank1.score.toLocaleString(),
             score10Threshold: threshold.top10.score.toLocaleString(), rank10Threshold: threshold.top10.position.toLocaleString(),
             score50Threshold: threshold.top50.score.toLocaleString(), rank50Threshold: threshold.top50.position.toLocaleString(),
             updated: threshold.date.toDiscordToolTip(),
-            user_score
+            user_score, user_percent: userScore ? (userScore.position / threshold.total * 100).roundFixed(2) : null
         })
 
         const embed = this.GetBaseEmbed()
