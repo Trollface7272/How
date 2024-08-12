@@ -273,7 +273,6 @@ export class Fetcher {
 
 
     public async AmeoTrackUpdate({ id, mode }: { id: number, mode: number }) {
-        console.log(Endpoints.Ameo.update())
         const resp = await this.ameoAxios.post(Endpoints.Ameo.update(), {}, {
             params: {
                 user: id,

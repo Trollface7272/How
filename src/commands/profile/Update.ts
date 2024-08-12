@@ -78,7 +78,7 @@ class Update extends CommandBase implements CommandAbstract {
             .setAuthor({
                 name: `Gains since last update for ${profile.username}`,
                 iconURL: GetFlag(profile.country_code),
-                url: `https://ameobea.me/osutrack/user/${profile.username}/`
+                url: `https://ameobea.me/osutrack/user/${profile.username.replace(/ /, "%20")}/`
             })
             .setDescription(text)
             .setThumbnail(profile.avatar_url)
