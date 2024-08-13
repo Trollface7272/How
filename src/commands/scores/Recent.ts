@@ -118,8 +118,8 @@ class Recent extends CommandBase implements CommandAbstract {
         const fetcher = await Fetcher.Create(user.id)
 
         if (Count) {
-            const profile = await fetcher.GetProfile({ Username: Username, Gamemode: Gamemode })
-            const scores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: true, Id: Id })
+            const profile = await fetcher.GetProfile({ Username: Username ?? Id, Gamemode: Gamemode })
+            const scores = await fetcher.GetUserScores({ Username: Username ?? Id.toString(), Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: true, Id: Id })
 
             const passes = profile.scores_recent_count
             const fails = scores.filter(score => !score.Passed).length
@@ -130,7 +130,7 @@ class Recent extends CommandBase implements CommandAbstract {
         }
 
         if (Best) {
-            const [allScores, err] = Scores?.length > 0 ? [Scores as Score.Best[], null] : await HandleAsync(fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "best", Limit: 100 }))
+            const [allScores, err] = Scores?.length > 0 ? [Scores as Score.Best[], null] : await HandleAsync(fetcher.GetUserScores({ Username: Username ?? Id.toString(), Gamemode: Gamemode, Type: "best", Limit: 100 }))
             this.args.Scores = allScores
             allScores.sort((a, b) => b.EndedAt.getTime() - a.EndedAt.getTime())
             if (List) {
@@ -139,7 +139,7 @@ class Recent extends CommandBase implements CommandAbstract {
                         Specific.slice(Page * listPageSize, Page * listPageSize + listPageSize).map(i => allScores[i]) :
                         allScores.slice(Page * listPageSize, Page * listPageSize + listPageSize)) as Score.Best[]
 
-                if (scores.length == 0) return this.noScoresFound(Username, response)
+                if (scores.length == 0) return this.noScoresFound(Username ?? Id.toString(), response)
 
                 const performanceLoading = scores.map(score => Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)]))
                 await Promise.all(performanceLoading)
@@ -149,16 +149,16 @@ class Recent extends CommandBase implements CommandAbstract {
             }
 
             const score = allScores[Page]
-            if (!score) return this.noScoresFound(Username, response)
+            if (!score) return this.noScoresFound(Username ?? Id.toString(), response)
             const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)])
             await loading
             this.data.Reply(await this.renderSingleBestScore({ score, page: Page, maxPages: allScores.length }))
             return CommandResponseCodes.OK
         }
-        const allScores = await fetcher.GetUserScores({ Username: Username, Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails, Id: Id })
+        const allScores = await fetcher.GetUserScores({ Username: Username ?? Id.toString(), Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails, Id: Id })
         this.args.Scores = allScores
 
-        if (allScores.length == 0) return this.noScoresFound(Username, response)
+        if (allScores.length == 0) return this.noScoresFound(Username ?? Id.toString(), response)
 
         if (List) {
             const scores = (Specific?.length > 0 ?
