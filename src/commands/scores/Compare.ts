@@ -84,8 +84,13 @@ class Compare extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        const { Gamemode, Beatmap: _Beatmap, Username, Id: _id, Page: _Page } = this.args
-        const Id = !Username && !_id ? user.osu.userId : _id
+        const { Gamemode, Beatmap: _Beatmap, Username: _username, Id: _id, Page: _Page } = this.args
+        let Id = _id
+        let Username = _username
+        if (!Username && !_id) {
+            Id = user.osu.userId
+            Username = user.osu.username
+        }
 
         const Beatmap = _Beatmap || await this.data.GetBeatmapFromConversation()
         let Page = _Page
@@ -106,7 +111,7 @@ class Compare extends CommandBase implements CommandAbstract {
         const fetcher = await Fetcher.Create(user.id)
         const scores = await fetcher.GetBeatmapUserScores({ Beatmap: Beatmap, Username: Username, Id: Id, Gamemode: Gamemode })
         if (!scores.length) {
-            const embed = this.NoScoresFound(Username)
+            const embed = this.NoScoresFound(Username ?? Id.toString())
             this.data.Reply({ embeds: [embed] })
             return CommandResponseCodes.OK
         }
