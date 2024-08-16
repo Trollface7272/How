@@ -128,7 +128,8 @@ export class Fetcher {
             params: {
                 limit: Limit,
                 include_fails: Fails,
-                offset: Offset
+                offset: Offset,
+                mode: Gamemode
             }
         })
         resp.data.forEach((score, i) => score.index = i)
