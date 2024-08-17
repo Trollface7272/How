@@ -61,7 +61,7 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
                 type = Types.WatchedReplays
                 break
         }
-
+        
         if (this.data.GetBoolean("top10", ["-top10", "-t10", "top10", "t10"])) 
             top = TopTypes.Top10
         else if (this.data.GetBoolean("top50", ["-top50", "-t50", "top50", "t50"]))
@@ -71,7 +71,7 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
 
         return {
             Gamemode: this.data.GetGamemode(),
-            Type: type as Types || this.data.GetNumber("type", ["-type", "-t", "t"]) as Types,
+            Type: type as Types ?? this.data.GetNumber("type", ["-type", "-t", "t"]) as Types,
             Ranks: this.data.GetBoolean("ranks", ["-ranks", "-rank", "ranks", "rank"]),
             Top: top,
             Username: this.data.GetUsername()
