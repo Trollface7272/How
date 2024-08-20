@@ -96,7 +96,14 @@ class Profile extends CommandBase implements CommandAbstract {
       replyOptions = this.RenderEvents({ events, page, profile, perPage })
     } else {
       const [profile, err] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: "osu" }))
-      if (err) return await this.ApiError(err, username)
+      if (err) {
+        const errorReply = this.HandleProfileError(err, username)
+        if (errorReply) {
+          this.data.Reply(errorReply)
+          return CommandResponseCodes.OK
+        }
+        return CommandResponseCodes.UnknownError
+      }
       replyOptions = this.RenderProfile({ profile, mode })
     }
 

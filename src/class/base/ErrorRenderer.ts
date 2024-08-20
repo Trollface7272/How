@@ -20,6 +20,14 @@ export class ErrorRenderer {
         }
     }
 
+    protected RenderNoUserFound(username: string) {
+        const embed = this.GetBaseEmbed()
+            .setDescription(`**User ${username} not found**`)
+        return {
+            embeds: [embed]
+        }
+    }
+
     protected GetBaseEmbed(): EmbedBuilder {
         return new EmbedBuilder()
             .setColor("Random")

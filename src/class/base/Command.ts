@@ -1,9 +1,9 @@
 import { randomBytes } from "crypto"
 import { CommandData } from "./CommandData"
 import { MessageEventData } from "../partials/MessageEvent"
-import { ErrorRenderer } from "./ErrorRenderer"
+import { ErrorHandler } from "./ErrorHandler"
 
-export class CommandBase extends ErrorRenderer {
+export class CommandBase extends ErrorHandler {
     public constructor() { super() }
 
     protected RenderBeatmapPP(pps: { normal: { total: number } }[], accs: number[]) {
