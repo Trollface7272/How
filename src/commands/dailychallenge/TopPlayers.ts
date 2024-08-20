@@ -85,7 +85,7 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
 
         const _profiles =  await DailyChallengeProfileFactory.GetDailyChallengeProfiles(filters, { "top10Percent.count": -1, "averagePlacementPercent": 1 }, PER_PAGE, PER_PAGE * (Page - 1))
         const _scores =  Today ? DailyChallengeScoreFactory.GetDailyChallengeScores({
-            "user.id": { $in: _profiles.map(el => el.id) }
+            "user.id": { $in: _profiles.map(el => el.id) }, temporary: true
         }, true) : new Promise(resolve => resolve([]))
         const _challenge = DailyChallengeFactory.GetCurrentChallenge()
 
@@ -106,7 +106,8 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
             profiles: profiles.map((profile, i) => {
                 const fetched = fetchedProfiles.find(el => el.id == profile.id)
                 const score = scores.find(el => el.user.id == profile.id)
-                const position = score ? score.position / challenge.total * 100 : null
+                if (score?.user?.username == "Karo") console.log(score)
+                const position = score ? score.position / challenge.thresholds.at(-1).total * 100 : null
                 return {
                     index: (Page - 1) * PER_PAGE + i + 1,
                     username: fetched.username,
