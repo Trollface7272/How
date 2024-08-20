@@ -4,7 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { DailyChallengeProfile, DailyChallengeProfileFactory } from "@src/class/database/DailyChallengeProfile";
-import { DailyChallengeFactory } from "@src/class/database/DailyChallenge";
+import { DailyChallenge, DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { Profile } from "@src/class/api/osu/class/Profile";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Logger } from "@src/class/Logger";
@@ -14,11 +14,13 @@ import NodeCache from "node-cache";
 import { randomBytes } from "crypto";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Filter } from "mongodb";
+import { DailyChallengeScore, DailyChallengeScoreFactory } from "@src/class/database/DailyChallengeScore";
 
 interface args {
     Raw: boolean
     Page: number
     Country: string
+    Today: boolean
 }
 
 const componentCache = new NodeCache({
@@ -38,7 +40,8 @@ class DailyChallengeTopPlayersData extends CommandData implements CommandDataAbs
         return {
             Raw: this.data.GetBoolean("raw", ["-r", "-raw"]),
             Page: this.data.GetNumber("page", ["-p", "-page"]) || 1,
-            Country: this.data.GetString("country", ["-c", "-country", "c"])
+            Country: this.data.GetString("country", ["-c", "-country", "c"]),
+            Today: this.data.GetBoolean("today", ["-today", "t", "-t"])
         }
     }
 }
@@ -72,7 +75,7 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
             }
         }
         const PER_PAGE = 20
-        const { Page } = this.args
+        const { Page, Today } = this.args
         const user = this.data.GetUser()
         //const s = [["top10Percent.count", - 1], ["averagePlacementPercent", 1]]
         const filters: Filter<DailyChallengeProfile> = { }
@@ -80,7 +83,13 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
             filters.country = this.args.Country.toUpperCase()
         }
 
-        const _profiles = await DailyChallengeProfileFactory.GetDailyChallengeProfiles(filters, { "top10Percent.count": -1, "averagePlacementPercent": 1 }, PER_PAGE, PER_PAGE * (Page - 1))
+        const _profiles =  await DailyChallengeProfileFactory.GetDailyChallengeProfiles(filters, { "top10Percent.count": -1, "averagePlacementPercent": 1 }, PER_PAGE, PER_PAGE * (Page - 1))
+        const _scores =  Today ? DailyChallengeScoreFactory.GetDailyChallengeScores({
+            "user.id": { $in: _profiles.map(el => el.id) }
+        }, true) : new Promise(resolve => resolve([]))
+        const _challenge = DailyChallengeFactory.GetCurrentChallenge()
+
+        const [scores, challenge] = await Promise.all([_scores, _challenge]) as [DailyChallengeScore[], DailyChallenge]
 
         const fetcher = await Fetcher.Create(user.id)
 
@@ -92,15 +101,19 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
             return CommandResponseCodes.UnknownError
         }
 
+
         const text = TextRenderer.render("dailychallenge/topplayers", {
             profiles: profiles.map((profile, i) => {
                 const fetched = fetchedProfiles.find(el => el.id == profile.id)
+                const score = scores.find(el => el.user.id == profile.id)
+                const position = score ? score.position / challenge.total * 100 : null
                 return {
                     index: (Page - 1) * PER_PAGE + i + 1,
                     username: fetched.username,
                     rank: fetched.statistics_rulesets.osu.global_rank,
                     url: fetched.url, placementPercent: profile.averagePlacementPercent.roundFixed(2), placement: profile.averagePlacement.round(0),
-                    top10Percent: profile.top10Percent.count
+                    top10Percent: profile.top10Percent.count,
+                    currPerc: position?.roundFixed(2),
                 }
             })
         })
