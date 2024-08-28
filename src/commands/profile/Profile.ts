@@ -89,13 +89,13 @@ class Profile extends CommandBase implements CommandAbstract {
     let replyOptions: InteractionReplyOptions | MessageReplyOptions
 
     if (events) {
-      const [profile, errProfile] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: "osu" }))
+      const [profile, errProfile] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: mode}))
       if (errProfile) return await this.ApiError(errProfile, username)
       const [events, err] = await HandleAsync(fetcher.GetRecentEvents({ id: profile.id, Limit: perPage, Offset: (page - 1) * perPage }))
       if (err) return await this.ApiError(err, username)
       replyOptions = this.RenderEvents({ events, page, profile, perPage })
     } else {
-      const [profile, err] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: "osu" }))
+      const [profile, err] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: mode }))
       if (err) {
         const errorReply = this.HandleProfileError(err, username)
         if (errorReply) {
