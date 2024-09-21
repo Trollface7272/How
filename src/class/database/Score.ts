@@ -166,7 +166,9 @@ export class ScoreQueryResult {
 class cScoreFactory {
     constructor() { }
     public async GetScoresByUser(userId: number, filters: Filter<Document>, sort: Sort, limit: number, offset: number, Random: boolean): Promise<ScoreQueryResult> {
-        return this.GetAllScores({ userId: userId, ...filters }, sort, limit, offset, Random)
+        const query: Filter<Document> = { ...filters }
+        if (userId !== -1) query.userId = userId
+        return this.GetAllScores(query, sort, limit, offset, Random)
     }
     public async GetAllScores(filters: Filter<Document>, sort: Sort, limit: number, offset: number, Random: boolean): Promise<ScoreQueryResult> {
         if (Random) {

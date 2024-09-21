@@ -147,14 +147,14 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         }
 
 
-        const profileQuery = HandleAsync(fetcher.GetProfile({ Username: Username ?? Id, Gamemode: Gamemode }))
-        const [score, err] = await HandleAsync(ScoreFactory.GetScoresByUser(Id, filterQuery, sortQuery, Limit, (Page - 1) * Limit, Random))
+        const [score, err] = await HandleAsync(ScoreFactory.GetScoresByUser(Anyone ? -1 : Id, filterQuery, sortQuery, Limit, (Page - 1) * Limit, Random))
         if (err) {
             Logger.Error(err)
             await this.data.Reply(this.RenderApiError())
             return CommandResponseCodes.UnknownError
         }
         const { scores, total, randomOffset } = score
+        const profileQuery = HandleAsync(fetcher.GetProfile({ Username: Anyone ? scores[0].userId : Username ?? Id, Gamemode: Gamemode }))
 
         if (total == 0) {
             await this.data.Reply(this.RenderNoImportedScoresError())
