@@ -185,7 +185,7 @@ export class InteractionCreate implements Event {
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
         try {
-            data.deferButton()
+            await data.deferButton()
             const command = new commandData(data)
             const code = await command.Handle()
             switch (code) {

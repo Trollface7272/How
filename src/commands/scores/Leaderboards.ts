@@ -182,15 +182,19 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             })
             .setThumbnail(map.beatmapset.covers["list@2x"])
 
-        componentCache.set(this.componentId, this.args)
-        cache.set(this.componentId, { lb, map, users })
+        
 
-        if (this.oldComponentId) {
-            cache.del(this.oldComponentId)
-            componentCache.del(this.oldComponentId)
+        const [_, err] = await HandleAsync(this.data.Reply({ embeds: [embed], components: this.RenderComponents(Page, Math.ceil(lb.scores.length / 10)) }))
+
+        if (!err) {
+            componentCache.set(this.componentId, this.args)
+            cache.set(this.componentId, { lb, map, users })
+
+            if (this.oldComponentId) {
+                cache.del(this.oldComponentId)
+                componentCache.del(this.oldComponentId)
+            }
         }
-
-        await this.data.Reply({ embeds: [embed], components: this.RenderComponents(Page, Math.ceil(lb.scores.length / 10)) })
 
         return CommandResponseCodes.OK
     }

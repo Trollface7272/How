@@ -1,4 +1,4 @@
-import { Filter, ObjectId } from "mongodb"
+import { Filter, ObjectId, Sort } from "mongodb"
 import { db } from "./Main"
 import { Multiplayer } from "../api/osu/class/Multiplayer"
 
@@ -69,8 +69,12 @@ class cDailyChallangeFactory {
         return new DailyChallenge(dc)
     }
 
-    public async GetDailyChallenges(query: Filter<DailyChallenge>) {
-        const dc = await db.collection("dailychallenge").find<DailyChallenge>(query).toArray()
+    public async GetDailyChallenges(query: Filter<DailyChallenge>, limit?: number, offset?: number, sort?: Sort) {
+        const q = db.collection("dailychallenge").find<DailyChallenge>(query)
+        if (limit) q.limit(limit)
+        if (offset) q.skip(offset)
+        if (sort) q.sort(sort)
+        const dc = await q.toArray()
         if (!dc) return false
         return dc.map<DailyChallenge>(x => new DailyChallenge(x))
     }
