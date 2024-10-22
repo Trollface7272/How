@@ -16,8 +16,8 @@ import { randomBytes } from "crypto";
 import NodeCache from "node-cache";
 
 
-type SortType = "ar" | "od" | "cs" | "hp" | "pp" | "bpm" | "score"
-    | "rar" | "rod" | "rcs" | "rhp" | "rpp" | "rbpm" | "rscore"
+type SortType = "ar" | "od" | "cs" | "hp" | "pp" | "bpm" | "score" | "difference" | "diff"
+    | "rar" | "rod" | "rcs" | "rhp" | "rpp" | "rbpm" | "rscore" | "rdifference" | "rdiff"
 
 interface args {
     Id?: number
@@ -28,8 +28,9 @@ interface args {
     Page: number
     Sort: SortType[]
     Filter: string[]
-    Mods: ParsedMods,
+    Mods: ParsedMods
     Anyone: boolean
+    PpVer: string|undefined
 }
 
 const signs = {
@@ -76,7 +77,19 @@ class ScoreData extends CommandData implements CommandDataAbstract {
             Mods: this.data.GetExactMods(),
             Anyone: this.data.GetBoolean("anyone", ["any", "-any", "-anyone"]),
             Id: this.data.GetNumber("id", ["i", "-i", "-id"]),
-            Username: this.data.GetUsername(),
+            PpVer: this.translatePpVer(this.data.GetString("ppver", ["-ppver", "pp", "-pp"])),
+            Username: this.data.GetUsername()
+        }
+    }
+
+    private translatePpVer(ppVer: string) {
+        switch(ppVer) {
+            case "lazer":
+            case "next":
+            case "next-deploy":
+                return "next-deploy-csr"
+            default:
+                return undefined
         }
     }
 }
@@ -111,14 +124,15 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
 
         const fetcher = await Fetcher.Create(user.id)
 
-        const { Id: _id, Username, Gamemode, Reversed, Random, Page, Sort, Filter, Mods, Anyone } = this.args
+        const { Id: _id, Username, Gamemode, Reversed, Random, Page, Sort, Filter, Mods, Anyone, PpVer } = this.args
         const Id = _id ?? await fetcher.LookupId(Username)
         const Limit = Random ? 1 : 5
 
         const sortQuery: Sort = {}
         for (const sort of Sort) {
             const sign = sort.startsWith("r") ? 1 : -1
-            const column = lookupScoresColumn(sort.startsWith("r") ? sort.replace("r", "") : sort)
+            let column = lookupScoresColumn(sort.startsWith("r") ? sort.replace("r", "") : sort)
+            if (column.includes("{ppver}")) column = column.replace("{ppver}", PpVer)
             if (!column) {
                 Logger.Info(`Unknown sort column: ${sort}`, Sort)
                 continue
@@ -164,9 +178,21 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         const description = scores.map((score, i) => {
             const index = Random ? randomOffset + 1 : (Page - 1) * 5 + i + 1
             if (score.mods.length === 0) score.mods.push("NoMod")
+            const pp = {
+                normal: score.pp.roundFixed(3),
+                improved: score.improvedPp.roundFixed(3),
+                stars: score.beatmap.difficulty.stars.total.roundFixed(2)
+            }
+            if (score.altPp[PpVer]) {
+                const fpp = score.altPp[PpVer]
+                const isFc = (score.combo > (score.beatmap.difficulty.combo * 0.95)) && score.counts.misses === 0
+                pp.improved = (isFc ? fpp.ss.pp.roundFixed(3) : fpp.fc.pp.roundFixed(3)) + `(${fpp.difference >= 0 ? "+" : ""}${fpp.difference.roundFixed(2)})`
+                pp.normal = fpp.normal.pp.roundFixed(3),
+                pp.stars = fpp.difficulty.star_rating.roundFixed(2)
+            }
             return TextRenderer.render("score/score", {
-                index: index, title: escapeMarkdown(score.beatmap.title, { escape: false }), version: escapeMarkdown(score.beatmap.version, { escape: false }), url: score.beatmap.url, mods: score.mods.join(""), difficulty: score.beatmap.difficulty.stars.total.roundFixed(2),
-                grade: EmojiFactory.GetEmoji(`Ranking${score.rank}`), pp: score.pp.roundFixed(3), improvedPp: score.improvedPp.roundFixed(3), accuracy: score.accuracy.roundFixed(2),
+                index: index, title: escapeMarkdown(score.beatmap.title, { escape: false }), version: escapeMarkdown(score.beatmap.version, { escape: false }), url: score.beatmap.url, mods: score.mods.join(""), difficulty: pp.stars,
+                grade: EmojiFactory.GetEmoji(`Ranking${score.rank}`), pp: pp.normal, improvedPp: pp.improved, accuracy: score.accuracy.roundFixed(2),
                 score: score.score.toLocaleString(), combo: FormatCombo(score.combo, score.beatmap.difficulty.combo, score.beatmap.mode), counts: FormatHits({ ok: score.counts[100], great: score.counts[300], meh: score.counts[50], miss: score.counts.misses }, score.beatmap.mode),
                 setAt: score.setAt.toDiscordToolTip()
             })

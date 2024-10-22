@@ -152,6 +152,14 @@ export const lookupScoresColumn = (col: string) => {
         case "n300":
             return "counts.300"
 
+        case "difference":
+        case "diff":
+            return "altPp.{ppver}.difference"
+
+        case "newpp":
+            return "altPp.{ppver}.normal.pp"
+
+
         default: return col
     }
 }

@@ -1,6 +1,46 @@
 import { Document, Filter, ObjectId, Sort } from "mongodb";
 import { db } from "./Main";
 
+interface altPpValues {
+    aim: number
+    speed: number
+    accuracy: number
+    flashlight: number
+    effective_miss_count: number
+    pp: number
+    [key: string]: number
+}
+
+interface altDifficulty {
+    star_rating: number
+    max_combo: number
+    aim_difficulty: number
+    speed_difficulty: number
+    speed_note_count: number
+    flashlight_difficulty: number
+    slider_factor: number
+    approach_rate: number
+    overall_difficulty: number
+    [key: string]: number
+}
+
+class AltPp {
+    difficulty: altDifficulty
+    normal: altPpValues
+    fc: altPpValues
+    ss: altPpValues
+
+    difference: number
+
+    name: string
+    version: string
+
+    constructor(altPp: AltPp) {
+        Object.assign(this, altPp)
+    }
+
+}
+
 export class ScoreBeatmap {
     id: number
     setId: number
@@ -98,6 +138,9 @@ export class Score {
     fcPp: number
     ssPp: number
 
+    ppVer: string
+    altPp: {[key: string]: AltPp}
+
     get improvedPp() {
         if (!this.fcPp && !this.ssPp) return this.pp
         return this.isFullCombo ? this.fcPp : this.ssPp
@@ -124,6 +167,9 @@ export class Score {
     constructor(score?: Document) {
         Object.assign(this, score)
         this.beatmap = new ScoreBeatmap(score.beatmap)
+        Object.keys(this.altPp).forEach(key => {
+            this.altPp[key] = new AltPp(this.altPp[key])
+        })
     }
 
     public async Save() {
@@ -165,12 +211,12 @@ export class ScoreQueryResult {
 
 class cScoreFactory {
     constructor() { }
-    public async GetScoresByUser(userId: number, filters: Filter<Document>, sort: Sort, limit: number, offset: number, Random: boolean): Promise<ScoreQueryResult> {
+    public async GetScoresByUser(userId: number, filters: Filter<Score>, sort: Sort, limit: number, offset: number, Random: boolean): Promise<ScoreQueryResult> {
         const query: Filter<Document> = { ...filters }
         if (userId !== -1) query.userId = userId
         return this.GetAllScores(query, sort, limit, offset, Random)
     }
-    public async GetAllScores(filters: Filter<Document>, sort: Sort, limit: number, offset: number, Random: boolean): Promise<ScoreQueryResult> {
+    public async GetAllScores(filters: Filter<Score>, sort: Sort, limit: number, offset: number, Random: boolean): Promise<ScoreQueryResult> {
         if (Random) {
             const cursor = db.collection("scores").find(filters).sort(sort).limit(limit)
             const count = await db.collection("scores").countDocuments(filters)

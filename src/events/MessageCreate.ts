@@ -37,7 +37,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     constructor(
         private message: Message
     ) {
-        this.args = message.content.split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
+        this.args = message.content.replace(/🤓/, "pristine").split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
     }
     public async SendTyping(): Promise<void> {
