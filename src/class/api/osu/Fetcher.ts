@@ -12,6 +12,7 @@ import { FetcherMissingIdentifyScopeError, FetcherUserNotLinkedError } from "./c
 import { Multiplayer } from "./class/Multiplayer"
 import { OsuTrack } from "./class/Ameo"
 import { Snipe } from "./class/Snipe"
+import { Mods } from "./class/Mods"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
@@ -204,7 +205,7 @@ export class Fetcher {
                 mode: Gamemode
             }
         })
-        const map = new Beatmap.FromId(resp.data, new Score.ModList([]))
+        const map = new Beatmap.FromId(resp.data, new Mods.ModList([]))
         beatmapCache.set(`map-${id}`, map)
         return map
     }
@@ -217,7 +218,7 @@ export class Fetcher {
         return set
     }
 
-    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: Score.ModList, gamemode: Gamemode, type: string }) {
+    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: Mods.ModList, gamemode: Gamemode, type: string }) {
         const resp = await this.axios.get(Endpoints.leaderboards(id), {
             params: {
                 mode: gamemode,

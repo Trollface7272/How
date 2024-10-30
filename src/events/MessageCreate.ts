@@ -13,6 +13,7 @@ import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 import { Score } from "@src/class/api/osu/class/Score";
 import { TriggerEmitterInstance } from "@src/class/TriggerEmitter";
+import { Mods } from "@src/class/api/osu/class/Mods";
 
 const regexes = {
     normal: /^\+?(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi,
@@ -103,17 +104,17 @@ export class MessageCreateData implements EventData, MessageEventData {
         }
     }
 
-    public GetMods(): Score.ModList {
+    public GetMods(): Mods.ModList {
         const regex = regexes.normal
         for (let arg of this.args) {
             if (regex.test(arg)) {
                 if (arg.startsWith("+")) arg = arg.substring(1)
                 const mods = arg.toUpperCase().match(/.{1,2}/g)
                 this.args.splice(this.args.indexOf(arg), 1)
-                return new Score.ModList(mods)
+                return new Mods.ModList(mods)
             }
         }
-        return new Score.ModList([])
+        return new Mods.ModList([])
     }
 
     public GetExactMods() {

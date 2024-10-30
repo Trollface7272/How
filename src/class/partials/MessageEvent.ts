@@ -6,6 +6,7 @@ import { User } from "../database/User";
 import { Guild } from "../database/Guild";
 import { Gamemode, ParsedMods } from "../api/osu/types/MiscTypes";
 import { Score } from "../api/osu/class/Score";
+import { Mods } from "../api/osu/class/Mods";
 
 export abstract class MessageEventData {
     public get user(): User {
@@ -47,7 +48,7 @@ export abstract class MessageEventData {
         throw Event.ReturnCode.Unimplemented
     }
 
-    public GetMods(): Score.ModList {
+    public GetMods(): Mods.ModList {
         throw Event.ReturnCode.Unimplemented
     }
 

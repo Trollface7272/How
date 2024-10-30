@@ -1,11 +1,14 @@
 import { Document, ObjectId } from "mongodb";
 import { db } from "./Main";
 import { Score } from "../api/osu/class/Score";
+import objectHash from "object-hash";
+import { Mods } from "../api/osu/class/Mods";
 
 export class Difficulty {
     public _id: ObjectId
     public id: number
-    public mods: Score.ModList
+    public mods: Mods.ModList
+    public modsHash: string
     public gamemode: number
     public calculated_at: Date
 
@@ -37,11 +40,11 @@ export class Difficulty {
     public score_multiplier?: number
 
 
-    constructor(difficulty?: Document, mods?: Score.ModList) {
+    constructor(difficulty?: Document, mods?: Mods.ModList) {
         Object.assign(this, difficulty)
         this.calculated_at = new Date()
         if (!this._id) this._id = new ObjectId()
-        this.mods = new Score.ModList(this.mods)
+        this.mods = new Mods.ModList(this.mods)
         if (mods) this.mods = mods
     }
 
@@ -52,6 +55,7 @@ export class Difficulty {
             $set: {
                 id: this.id,
                 mods: this.mods.GetData(),
+                modsHash: objectHash(this.mods.GetData()),
                 gamemode: this.gamemode,
                 max_combo: this.max_combo,
                 star_rating: this.star_rating,
@@ -74,14 +78,11 @@ export class Difficulty {
 }
 
 class cDifficultyFactory {
-    public async GetDifficulty(id: number, mods: Score.ModList, gamemode: number) {
+    public async GetDifficulty(id: number, mods: Mods.ModList, gamemode: number) {
         const difficulty = await db.collection("difficulty").findOne({
             id: id,
             gamemode: gamemode,
-            mods: {
-                $size: mods.Mods.length,
-                $all: mods.Mods
-            }
+            modsHash: objectHash(mods.GetData())
         })
         if(!difficulty) return null
         return new Difficulty(difficulty)

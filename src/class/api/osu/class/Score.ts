@@ -7,18 +7,9 @@ import { Profile } from "./Profile"
 import { Logger } from "@src/class/Logger"
 import { EmojiFactory } from "@src/class/Emojis"
 import { RulesetIds } from "../types/MiscTypes"
+import { Mods } from "./Mods"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
-
-const difficulty_mods = [
-    "EZ", "HT", "DC", "TD", 
-    "HR", "DT", "NC", "FL", 
-    "RX", "TP", "CL", 
-    "RD", "WU", "WD",
-    "4K", "5K", "6K", "7K",
-    "8K", "FI", "RD", "1K",
-    "2K", "3K", "9K", "V2",
-]
 
 interface Weight {
     percentage: number
@@ -34,166 +25,6 @@ interface UserAttributes {
 }
 
 export namespace Score {
-    export enum ModAcronyms {
-        DoubleTime = "DT",
-        Hidden = "HD",
-        HardRock = "HR",
-        Easy = "EZ",
-        HalfTime = "HT",
-        Nightcore = "NC",
-        Flashlight = "FL",
-        Perfect = "PF",
-        Relax = "RX",
-        AutoPilot = "AP",
-        SuddenDeath = "SD",
-        SpunOut = "SO",
-        Auto = "AU",
-        Cinema = "CN",
-        Target = "TP",
-        KeyCoop = "KC",
-        Mirror = "MR",
-        Random = "RD",
-        FourKey = "4K",
-        FiveKey = "5K",
-        SixKey = "6K",
-        SevenKey = "7K",
-        EightKey = "8K",
-        NineKey = "9K",
-        OneKey = "1K",
-        TwoKey = "2K",
-        ThreeKey = "3K",
-        Classic = "CL",
-        ScoreV2 = "V2",
-        Blinds = "BL",
-        DayCore = "DC",
-        StrictTracking = "ST",
-        AccuracyChange = "AC",
-        DifficultyAdjust = "DA",
-        Alternate = "AL",
-        Singletap = "ST",
-        Transform = "TF",
-        NoFail = "NF",
-        Wiggle = "WG",
-        SpinIt = "SI",
-        Grow = "GR",
-        Deflate = "DF",
-        WindUp = "WU",
-        WindDown = "WD",
-        Traceble = "TC",
-        BarrelRoll = "BR",
-        ApproachDifferent = "AD",
-        Muted = "MU",
-        NoScope = "NS",
-        Magnetised = "MG",
-        Repel = "RP",
-        AdaptiveSpeed = "AS",
-        FreezeFrame = "FF",
-        Bubbles = "BB",
-        Synesthesia = "SY",
-        Depth = "DP",
-    }
-
-    export enum DefaultSpeedChange {
-        DT = 1.5,
-        HT = 0.75,
-        NC = 1.5,
-        DC = 0.75
-
-    }
-    export class BaseMod {
-        acronym: string
-        settings?: { [key: string]: string | number }
-
-        constructor(mod: string | BaseMod, settings?: { [key: string]: string | number }) {
-            if (typeof mod == "string") {
-                this.acronym = mod
-                this.settings = settings
-            } else {
-                Object.assign(this, mod)
-            }
-            if (this.isSpeedChange() && !this.settings) this.settings = { speed_change: DefaultSpeedChange[this.acronym] ?? 1 }
-        }
-
-        public isSpeedChange() {
-            return this.acronym == ModAcronyms.DoubleTime || this.acronym == ModAcronyms.HalfTime || this.acronym == ModAcronyms.Nightcore || this.acronym == ModAcronyms.DayCore
-        }
-
-        public isDefaultSpeedChange() {
-            return this.settings?.speed_change == DefaultSpeedChange[this.acronym]
-        }
-    }
-
-    export namespace Mods {
-        export class DifficultyAdjust extends BaseMod {
-            declare settings: {
-                circle_size?: number
-                drain_rate?: number
-                approach_rate?: number
-                overall_difficulty?: number
-            }
-            constructor(mod: ModAcronyms.DifficultyAdjust | BaseMod, settings?: { [key: string]: string | number }) {
-                super(mod, settings)
-                if (!this.settings) this.settings = {}
-            }
-
-            public IsDifficulty() {
-                return ((this.settings.circle_size != null) || (this.settings.overall_difficulty != null))
-            }
-
-            public GetDifficultyVariant() {
-                return new DifficultyAdjust(ModAcronyms.DifficultyAdjust, { circle_size: this.settings.circle_size, overall_difficulty: this.settings.overall_difficulty })
-            }
-        }
-    }
-
-    export class ModList {
-        private mods: BaseMod[]
-        constructor(mods: string[] | BaseMod[] | ModList) {
-            if (mods instanceof ModList) {
-                Object.assign(this, mods)
-                return
-            }
-            this.mods = mods?.map(mod => new BaseMod(mod)) || []
-        }
-
-        public get Mods() {
-            return this.mods
-        }
-
-        public get Formatted() {
-            if (this.mods.length == 0) return "No Mod"
-            const mods = this.mods.map(mod => {
-                if (mod.isSpeedChange() && !mod.isDefaultSpeedChange()) return `${mod.acronym}(${mod.settings.speed_change}x)`
-                return mod.acronym
-            }).join("")
-            return mods
-        }
-
-        public Has(mod: string) {
-            return this.mods.find(m => m.acronym == mod) !== undefined
-        }
-
-        public GetSpeedChange(): number {
-            return this.mods.find(mod => mod.isSpeedChange())?.settings?.speed_change as number ?? 1
-        }
-
-        public GetData() {
-            return this.mods
-        }
-
-        public GetDifficultyMods() {
-            const mods = this.mods.filter(mod => difficulty_mods.includes(mod.acronym))
-            if (this.Has(ModAcronyms.Flashlight) && this.Has(ModAcronyms.Hidden)) {
-                mods.push(this.mods.find(mod => mod.acronym == ModAcronyms.Hidden))
-            }
-            if (this.Has(ModAcronyms.DifficultyAdjust)) {
-                const mod = this.mods.find(mod => mod.acronym == ModAcronyms.DifficultyAdjust)
-                const difficultyMod = new Mods.DifficultyAdjust(ModAcronyms.DifficultyAdjust, { circle_size: mod.settings.circle_size })
-                if (difficultyMod.IsDifficulty()) mods.push(difficultyMod.GetDifficultyVariant())
-            }
-            return mods
-        }
-    }
     export interface LegacyStatistics {
         count_50: number
         count_100: number
@@ -326,7 +157,7 @@ export namespace Score {
         protected legacy_total_score: number
         protected max_combo: number
         protected maximum_statistics: MaximumStatistics
-        protected mods: ModList
+        protected mods: Mods.ModList
         protected passed: boolean
         protected pp?: number
         protected rank: Grade
@@ -338,7 +169,7 @@ export namespace Score {
         protected user_id: number
         constructor(score: BaseScore) {
             Object.assign(this, score)
-            this.mods = new ModList(score.mods)
+            this.mods = new Mods.ModList(score.mods)
         }
 
         get Grade() {
@@ -414,7 +245,7 @@ export namespace Score {
             this.beatmap = new Beatmap.Base(this.beatmap, this.Mods)
             this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
             this.user = new Profile.Compact(this.user)
-            this.mods = new ModList(score.mods)
+            this.mods = new Mods.ModList(score.mods)
         }
 
         public async fetchPerformance() {
@@ -444,7 +275,7 @@ export namespace Score {
         constructor(score: MultiplayerScore) {
             super(score)
             Object.assign(this, score)
-            this.mods = new ModList(score.mods)
+            this.mods = new Mods.ModList(score.mods)
             this.user = new Profile.Compact(this.user)
         }
 
@@ -462,7 +293,7 @@ export namespace Score {
             this.beatmap = new Beatmap.Base(this.beatmap, this.Mods)
             this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
             this.user = new Profile.Compact(this.user)
-            this.mods = new ModList(score.mods)
+            this.mods = new Mods.ModList(score.mods)
         }
     }
 
@@ -473,7 +304,7 @@ export namespace Score {
             this.beatmap = new Beatmap.Base(this.beatmap, this.Mods)
             this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
             this.user = new Profile.Compact(this.user)
-            this.mods = new ModList(score.mods)
+            this.mods = new Mods.ModList(score.mods)
         }
     }
 
@@ -486,7 +317,7 @@ export namespace Score {
             this.beatmap = new Beatmap.Base(this.beatmap, this.Mods)
             this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
             this.user = new Profile.Compact(this.user)
-            this.mods = new ModList(score.mods)
+            this.mods = new Mods.ModList(score.mods)
         }
     }
 
@@ -508,7 +339,7 @@ export namespace Score {
             super(score)
             Object.assign(this, score)
             this.user = new Profile.Compact(this.user)
-            this.mods = new ModList(score.mods)
+            this.mods = new Mods.ModList(score.mods)
         }
     }
 
@@ -592,7 +423,7 @@ export namespace Score {
             this.beatmap = new Beatmap.Base(this.beatmap, this.Mods)
             this.beatmapset = new BeatmapSet.Compact(this.beatmapset)
             this.user = new Profile.Compact(this.user)
-            this.mods = new ModList(score.mods)
+            this.mods = new Mods.ModList(score.mods)
         }
 
         public async fetchPerformance() {
