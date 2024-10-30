@@ -198,8 +198,12 @@ export namespace Mods {
         public Has(mod: string, flag?: string): boolean {
             const hasMod = this.mods.find(m => m.acronym == mod)
 
-            if (!flag) return hasMod !== undefined
+            if (!flag || !hasMod) return hasMod !== undefined
             return !!hasMod.settings[flag]
+        }
+
+        public HasAny(mods: ModAcronyms[]): boolean {
+            return mods.some(mod => this.Has(mod))
         }
 
         public GetSpeedChange(): number {

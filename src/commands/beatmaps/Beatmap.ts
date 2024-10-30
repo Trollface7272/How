@@ -13,10 +13,11 @@ import { ActionRowBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringS
 import { EmojiFactory } from "@src/class/Emojis";
 import { CommandBase } from "@src/class/base/Command";
 import { Score } from "@src/class/api/osu/class/Score";
+import { Mods as ModsClass } from "@src/class/api/osu/class/Mods";
 
 interface args {
   Gamemode: Gamemode
-  Mods: Score.ModList
+  Mods: ModsClass.ModList
   id: number
   Acc: number
   Background: boolean
@@ -65,7 +66,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
         Gamemode = gamemode as Gamemode
         if (type === "mods") {
           _id = parseInt(id)
-          Mods = new Score.ModList(interaction.values)
+          Mods = new ModsClass.ModList(interaction.values)
         } else if (type === "difficulty") {
           _id = parseInt(interaction.values[0])
         } else if (type === "search") {
@@ -143,14 +144,14 @@ class Beatmap extends CommandBase implements CommandAbstract {
       .addComponents(
         new StringSelectMenuBuilder()
           .addOptions(
-            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.NoFail), "NoFail", "NF", "<:NoFail:586217719632887808>"),
-            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.Easy), "Easy", "EZ", "<:Easy:586217683188580377>"),
-            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.Hidden), "Hidden", "HD", "<:Hidden:586217719129440256>"),
-            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.HardRock), "Hard Rock", "HR", "<:HardRock:586217719125245952>"),
-            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.DoubleTime), "Double Time", "DT", "<:DoubleTime:586217676276367361>"),
-            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.HalfTime), "Half Time", "HT", "<:HalfTime:586217719104405504>"),
-            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.Flashlight), "Flashlight", "FL", "<:Flashlight:586217710371733536>"),
-            this.modSelectMenuOption(Mods.Has(Score.ModAcronyms.SpunOut), "Spun Out", "SO", "<:SpunOut:586217719318315030>")
+            this.modSelectMenuOption(Mods.Has(ModsClass.ModAcronyms.NoFail), "NoFail", "NF", "<:NoFail:586217719632887808>"),
+            this.modSelectMenuOption(Mods.Has(ModsClass.ModAcronyms.Easy), "Easy", "EZ", "<:Easy:586217683188580377>"),
+            this.modSelectMenuOption(Mods.Has(ModsClass.ModAcronyms.Hidden), "Hidden", "HD", "<:Hidden:586217719129440256>"),
+            this.modSelectMenuOption(Mods.Has(ModsClass.ModAcronyms.HardRock), "Hard Rock", "HR", "<:HardRock:586217719125245952>"),
+            this.modSelectMenuOption(Mods.Has(ModsClass.ModAcronyms.DoubleTime), "Double Time", "DT", "<:DoubleTime:586217676276367361>"),
+            this.modSelectMenuOption(Mods.Has(ModsClass.ModAcronyms.HalfTime), "Half Time", "HT", "<:HalfTime:586217719104405504>"),
+            this.modSelectMenuOption(Mods.Has(ModsClass.ModAcronyms.Flashlight), "Flashlight", "FL", "<:Flashlight:586217710371733536>"),
+            this.modSelectMenuOption(Mods.Has(ModsClass.ModAcronyms.SpunOut), "Spun Out", "SO", "<:SpunOut:586217719318315030>")
           )
           .setMinValues(0)
           .setMaxValues(8)

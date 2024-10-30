@@ -2,6 +2,7 @@ import { BeatmapSet } from "./BeatmapSet"
 import { Clamp } from "../Utils"
 import { Score } from "./Score"
 import { EmojiFactory } from "@src/class/Emojis"
+import { Mods } from "./Mods"
 
 
 
@@ -13,13 +14,17 @@ export namespace Beatmap {
     }
 
     export interface StdAttributes extends DifficultyAttributes {
-        aim_difficulty: number
-        approach_rate: number
+        star_rating: number,
+        max_combo: number,
+        aim_difficulty: number,
+        speed_difficulty: number,
+        speed_note_count: number,
+        slider_factor: number,
+        aim_difficult_strain_count: number,
+        speed_difficult_strain_count: number,
+        approach_rate: number,
+        overall_difficulty: number,
         flashlight_difficulty: number
-        overall_difficulty: number
-        slider_factor: number
-        speed_difficulty: number
-        speed_note_count: number
     }
 
     export interface TaikoAttributes extends DifficultyAttributes {
@@ -55,7 +60,7 @@ export namespace Beatmap {
 
     }
     export class Base extends Compact {
-        public mods: Score.ModList
+        public mods: Mods.ModList
 
         public get lastUpdated() {
             return new Date(this.last_updated)
@@ -63,19 +68,19 @@ export namespace Beatmap {
 
         public get AR() {
             let ar = this.ar
-            
-            if (this.mods.Has(Score.ModAcronyms.HardRock)) {
+
+            if (this.mods.Has(Mods.ModAcronyms.HardRock)) {
                 ar = Math.min(10, ar * 1.4)
             }
 
-            if (this.mods.Has(Score.ModAcronyms.Easy)) {
+            if (this.mods.Has(Mods.ModAcronyms.Easy)) {
                 ar = Math.max(0, ar * 0.5)
             }
 
             let ms: number = ar > 5 ? (1200 - 150 * (ar - 5)) : (1200 + 120 * (5 - ar))
 
             ms /= this.mods.GetSpeedChange()
-            
+
             ar = ms < 1200 ? (13 - ms / 150) : (15 - ms / 120)
 
             return Clamp(ar, -5, 11)
@@ -84,18 +89,18 @@ export namespace Beatmap {
         public get OD() {
             let od = this.accuracy
 
-            if (this.mods.Has(Score.ModAcronyms.HardRock)) {
+            if (this.mods.Has(Mods.ModAcronyms.HardRock)) {
                 od = Math.min(10, od * 1.4)
             }
 
-            if (this.mods.Has(Score.ModAcronyms.Easy)) {
+            if (this.mods.Has(Mods.ModAcronyms.Easy)) {
                 od = Math.max(0, od * 0.5)
             }
 
             let ms = 80 - 6 * od
 
             ms /= this.mods.GetSpeedChange()
-            
+
             od = Math.min(11, (80 - ms) / 6)
 
             return Clamp(od, -5, 11)
@@ -104,11 +109,11 @@ export namespace Beatmap {
         public get CS() {
             let cs = this.cs
 
-            if (this.mods.Has(Score.ModAcronyms.HardRock)) {
+            if (this.mods.Has(Mods.ModAcronyms.HardRock)) {
                 cs = Math.min(10, cs * 1.3)
             }
 
-            if (this.mods.Has(Score.ModAcronyms.Easy)) {
+            if (this.mods.Has(Mods.ModAcronyms.Easy)) {
                 cs = Math.max(0, cs * 0.5)
             }
 
@@ -118,11 +123,11 @@ export namespace Beatmap {
         public get HP() {
             let hp = this.drain
 
-            if (this.mods.Has(Score.ModAcronyms.HardRock)) {
+            if (this.mods.Has(Mods.ModAcronyms.HardRock)) {
                 hp = Math.min(10, hp * 1.4)
             }
 
-            if (this.mods.Has(Score.ModAcronyms.Easy)) {
+            if (this.mods.Has(Mods.ModAcronyms.Easy)) {
                 hp = Math.max(0, hp * 0.5)
             }
 
@@ -176,35 +181,31 @@ export namespace Beatmap {
         ranked: string
         url: string
         max_combo?: number
-        constructor(map: Base, mods: Score.ModList) {
+        constructor(map: Base, mods: Mods.ModList) {
             super(map)
             Object.assign(this, map)
             this.mods = mods
         }
 
-        public setMods(mods: Score.ModList) {
-            this.mods = mods ?? new Score.ModList([])
+        public setMods(mods: Mods.ModList) {
+            this.mods = mods ?? new Mods.ModList([])
         }
     }
     export class FromId extends Base {
         beatmapset: BeatmapSet.Beatmap.FromId
         failtimes: { fail: number[], exit: number[] }
-
-        public get FullBackground() {
-            return `https://assets.ppy.sh/beatmaps/${this.beatmapset_id}/covers/raw.jpg`
-        }
-        constructor(map: FromId, mods: Score.ModList) {
+        constructor(map: FromId, mods: Mods.ModList) {
             super(map, mods)
             Object.assign(this, map)
             this.beatmapset = new BeatmapSet.Beatmap.FromId(this.beatmapset)
         }
 
-        
+
     }
     export class FromIds extends Base {
         beatmapset: BeatmapSet.Beatmap.FromIds //With rating
         failtimes: { fail: number[], exit: number[] }
-        constructor(map: FromIds, mods: Score.ModList) {
+        constructor(map: FromIds, mods: Mods.ModList) {
             super(map, mods)
             Object.assign(this, map)
             this.beatmapset = new BeatmapSet.Beatmap.FromIds(this.beatmapset)

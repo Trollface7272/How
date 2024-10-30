@@ -12,6 +12,7 @@ import { CommandResponseCodes } from "@src/class/partials/Command";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 import { Score } from "@src/class/api/osu/class/Score";
+import { Mods } from "@src/class/api/osu/class/Mods";
 
 export class InteractionCreateData implements EventData, MessageEventData {
     private _user: User
@@ -56,8 +57,8 @@ export class InteractionCreateData implements EventData, MessageEventData {
         }
     }
 
-    public GetMods(): Score.ModList {
-        return new Score.ModList(this._GetMods("mods"))
+    public GetMods(): Mods.ModList {
+        return new Mods.ModList(this._GetMods("mods"))
     }
 
     private _GetMods(key: string) {

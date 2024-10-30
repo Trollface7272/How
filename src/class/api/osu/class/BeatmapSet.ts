@@ -100,7 +100,7 @@ export namespace BeatmapSet {
             super(set)
             Object.assign(this, set)
             this.beatmaps = this.beatmaps.sort((a, b) => a.difficulty_rating - b.difficulty_rating).map(map => {
-                return new _Beatmap.Base(map, new Score.ModList([]))
+                return new _Beatmap.Base(map, new Mods.ModList([]))
             })
         }
     }

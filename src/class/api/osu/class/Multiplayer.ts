@@ -21,7 +21,7 @@ export namespace Multiplayer {
             this.played_at = new Date(data.played_at)
             this.allowed_mods = this.allowed_mods.map(el => new Score.BaseMod(el))
             this.required_mods = this.required_mods.map(el => new Score.BaseMod(el))
-            this.beatmap = new Beatmap.Base(data.beatmap, new Score.ModList(this.required_mods))
+            this.beatmap = new Beatmap.Base(data.beatmap, new Mods.ModList(this.required_mods))
         }
     }
     export class GetRooms {

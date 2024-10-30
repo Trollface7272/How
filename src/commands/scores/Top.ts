@@ -13,6 +13,7 @@ import { Score } from "@src/class/api/osu/class/Score";
 import { randomBytes, randomInt } from "crypto";
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag } from "@src/Utils";
 import { GamemodeNames } from "@src/class/api/osu/Consts";
+import { Mods } from "@src/class/api/osu/class/Mods";
 
 interface args {
     Gamemode: Gamemode
@@ -26,7 +27,7 @@ interface args {
     Page: number
     Type: "best" | "firsts" | "pinned"
     Sort: string
-    Mods: Score.ModList
+    Mods: Mods.ModList
 }
 
 const componentCache = new NodeCache({

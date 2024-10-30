@@ -14,6 +14,7 @@ import { randomBytes } from "crypto";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Beatmap } from "@src/class/api/osu/class/Beatmap";
 import { Score } from "@src/class/api/osu/class/Score";
+import { Mods } from "@src/class/api/osu/class/Mods";
 
 enum lbType {
     global = "global",
@@ -26,7 +27,7 @@ interface args {
     Gamemode: Gamemode
     Map: number
     Page: number
-    Mods: Score.ModList
+    Mods: Mods.ModList
 }
 
 interface cache {
