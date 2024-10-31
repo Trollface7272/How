@@ -154,7 +154,6 @@ export namespace Mods {
                 always_play_tail_sample: Boolean(settings.always_play_tail_sample) ?? Classic.defaultSettings.always_play_tail_sample,
                 no_slider_head_accuracy: Boolean(settings.no_slider_head_accuracy) ?? Classic.defaultSettings.no_slider_head_accuracy
             }
-            console.log(mod, settings)
         }
     }
 
