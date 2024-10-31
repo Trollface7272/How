@@ -75,6 +75,73 @@ export class PerformanceCalculator {
         return resp
     }
 
+    private FixHitcounts(acc: number, statistics: Score.Statistics) {
+        const nobjects = statistics.great + statistics.ok + statistics.meh + statistics.miss
+
+        const max300 = statistics.great
+
+        const maxacc = max300 / (nobjects) * 100
+
+        const acc_percent = Clamp(acc, 0.0, maxacc)
+
+        let num100 = Math.round(
+            -3 * ((acc_percent * 0.01 - 1) * nobjects + statistics.miss) * 0.5
+        )
+        let num50 = 0
+        if (num100 > max300) {
+            num100 = 0
+            num50 = Math.round(
+                -6 * ((acc_percent * 0.01 - 1) * nobjects + statistics.miss) * 0.5
+            )
+            num50 = Math.min(max300, num50)
+        }
+        statistics.ok = num100
+        statistics.meh = num50
+        statistics.great = nobjects - statistics.ok - statistics.meh - statistics.miss
+
+    }
+
+    private fabricateScore(beatmap: Beatmap.Base, accuracy: number) {
+        const score = {
+            accuracy: accuracy/100,
+            beatmap_id: 0,
+            best_id: 0,
+            build_id: 0,
+            ended_at: new Date(),
+            has_replay: 0,
+            id: 0,
+            is_perfect_combo: 0,
+            legacy_perfect: 0,
+            legacy_score_id: 0,
+            legacy_total_score: 0,
+            max_combo: beatmap.max_combo,
+            maximum_statistics: {
+                great: beatmap.count_circles + beatmap.count_sliders + beatmap.count_spinners,
+                large_tick_hit: 0,
+                slider_tail_hit: beatmap.count_sliders
+            },
+            mods: beatmap.mods,
+            passed: 0,
+            pp: 0,
+            rank: 0,
+            ruleset_id: 0,
+            started_at: new Date(),
+            statistics: {
+                ok: 0,
+                meh: 0,
+                miss: 0,
+                great: beatmap.count_circles + beatmap.count_sliders + beatmap.count_spinners,
+                large_tick_hit: 0,
+                slider_tail_hit: beatmap.count_sliders
+            },
+            total_score: 0,
+            type: 0,
+            user_id: 0,
+        }
+        this.FixHitcounts(accuracy, score.statistics as any)
+        return new Score.BaseScore(score as any)
+    }
+
     public async CalculateByAcc(acc: number) {
         if (!this.attributes) await this.FetchAttributes()
         if (!this.attributes) return null
@@ -84,7 +151,7 @@ export class PerformanceCalculator {
         switch (mode) {
             case "osu": {
                 const attributes = this.attributes as Beatmap.StdAttributes
-                //resp = new StdPerformance(new Score.BaseScore(), this.beatmap, attributes)
+                resp = new StdPerformance(this.fabricateScore(this.beatmap, acc), this.beatmap, attributes)
                 break
             }
             case "fruits": {
@@ -242,6 +309,7 @@ export class StdPerformance {
         } else {
             this.improved = this.fc
         }
+        console.log(this, attributes)
     }
 
     private IsSS(score: Score.BaseScore, beatmap: Beatmap.Base, attributes: Beatmap.StdAttributes) {
@@ -257,8 +325,6 @@ export class StdPerformance {
     }
 
     private PerformanceAttributes(score: Score.BaseScore, beatmap: Beatmap.Base, attributes: Beatmap.StdAttributes, type: "normal" | "ss" | "fc") {
-        attributes.aim_difficult_strain_count ??= 0
-
         this.accuracy = score.Accuracy
         this.scoreMaxCombo = score.MaxCombo
         this.countGreat = score.Statistics.great

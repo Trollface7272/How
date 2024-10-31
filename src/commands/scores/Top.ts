@@ -222,6 +222,8 @@ class Top extends CommandBase implements CommandAbstract {
     private GetSortKey(inp: string) {
         if (inp.startsWith("r") && inp != "replay") this.args.Reversed = true
         switch (inp) {
+            case "stars":
+                return "beatmap.difficulty_rating"
             case "pp":
                 return "pp"
             case "acc":

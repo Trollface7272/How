@@ -24,6 +24,8 @@ export class Difficulty {
     public slider_factor?: number
     public speed_difficulty?: number
     public speed_note_count?: number
+    public speed_difficult_strain_count: number
+    public aim_difficult_strain_count: number
 
     //taiko
     public stamina_difficulty?: number
@@ -71,7 +73,10 @@ export class Difficulty {
                 colour_difficulty: this.colour_difficulty,
                 great_hit_window: this.great_hit_window,
                 score_multiplier: this.score_multiplier,
-                calculated_at: this.calculated_at
+                calculated_at: this.calculated_at,
+                speed_difficult_strain_count: this.speed_difficult_strain_count,
+                aim_difficult_strain_count: this.aim_difficult_strain_count
+
             }
         }, { upsert: true })
     }
