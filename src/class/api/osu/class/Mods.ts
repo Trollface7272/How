@@ -148,11 +148,11 @@ export namespace Mods {
         constructor(mod: string | BaseMod, settings: { [key: string]: string | number | boolean } = {}) {
             super(mod, settings)
             this.settings = {
-                classic_health: Boolean(settings.classic_health) ?? Classic.defaultSettings.classic_health,
-                classic_note_lock: Boolean(settings.classic_note_lock) ?? Classic.defaultSettings.classic_note_lock,
-                fade_hit_circle_early: Boolean(settings.fade_hit_circle_early) ?? Classic.defaultSettings.fade_hit_circle_early,
-                always_play_tail_sample: Boolean(settings.always_play_tail_sample) ?? Classic.defaultSettings.always_play_tail_sample,
-                no_slider_head_accuracy: Boolean(settings.no_slider_head_accuracy) ?? Classic.defaultSettings.no_slider_head_accuracy
+                classic_health: Boolean(settings.classic_health ?? Classic.defaultSettings.classic_health),
+                classic_note_lock: Boolean(settings.classic_note_lock ?? Classic.defaultSettings.classic_note_lock),
+                fade_hit_circle_early: Boolean(settings.fade_hit_circle_early ?? Classic.defaultSettings.fade_hit_circle_early),
+                always_play_tail_sample: Boolean(settings.always_play_tail_sample ?? Classic.defaultSettings.always_play_tail_sample),
+                no_slider_head_accuracy: Boolean(settings.no_slider_head_accuracy ?? Classic.defaultSettings.no_slider_head_accuracy)
             }
         }
     }

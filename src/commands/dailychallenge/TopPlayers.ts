@@ -106,7 +106,6 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
             profiles: profiles.map((profile, i) => {
                 const fetched = fetchedProfiles.find(el => el.id == profile.id)
                 const score = scores.find(el => el.user.id == profile.id)
-                if (score?.user?.username == "Karo") console.log(score)
                 const position = score ? score.position / challenge.thresholds.at(-1).total * 100 : null
                 return {
                     index: (Page - 1) * PER_PAGE + i + 1,

@@ -242,7 +242,6 @@ export class StdPerformance {
         } else {
             this.improved = this.fc
         }
-        console.log(attributes)
     }
 
     private IsSS(score: Score.BaseScore, beatmap: Beatmap.Base, attributes: Beatmap.StdAttributes) {
