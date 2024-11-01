@@ -1,4 +1,5 @@
 import { Beatmap } from "./Beatmap"
+import { Mods } from "./Mods"
 import { Profile } from "./Profile"
 import { Score } from "./Score"
 
@@ -8,8 +9,8 @@ export namespace Multiplayer {
         room_id: number
         beatmap_id: number
         ruleset_id: 0 | 1 | 2 | 3
-        allowed_mods: Score.BaseMod[]
-        required_mods: Score.BaseMod[]
+        allowed_mods: Mods.BaseMod[]
+        required_mods: Mods.BaseMod[]
         expired: boolean
         owner_id: number
         playlist_order: unknown
@@ -19,8 +20,8 @@ export namespace Multiplayer {
         constructor(data: PlaylistItem) {
             Object.assign(this, data)
             this.played_at = new Date(data.played_at)
-            this.allowed_mods = this.allowed_mods.map(el => new Score.BaseMod(el))
-            this.required_mods = this.required_mods.map(el => new Score.BaseMod(el))
+            this.allowed_mods = this.allowed_mods.map(el => new Mods.BaseMod(el))
+            this.required_mods = this.required_mods.map(el => new Mods.BaseMod(el))
             this.beatmap = new Beatmap.Base(data.beatmap, new Mods.ModList(this.required_mods))
         }
     }

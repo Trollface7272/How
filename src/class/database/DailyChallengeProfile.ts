@@ -1,6 +1,6 @@
 import { Filter, ObjectId, Sort } from "mongodb"
 import { db } from "./Main"
-import { Score } from "../api/osu/class/Score"
+import { Mods } from "../api/osu/class/Mods"
 
 interface ScoreData {
     room_id: number
@@ -10,7 +10,7 @@ interface ScoreData {
     rank: string
     max_combo: number
     pp: number
-    mods: Score.BaseMod[]
+    mods: Mods.BaseMod[]
     position: number
     positionPercent: number
 }
