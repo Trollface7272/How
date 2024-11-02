@@ -13,7 +13,7 @@ import NodeCache from "node-cache"
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
 
 const cache = new NodeCache({
-    stdTTL: 60 * 60 * 24
+    stdTTL: 60 * 60 * 24 * 7
 })
 
 interface Weight {
@@ -256,6 +256,7 @@ export namespace Score {
         public async fetchPerformance() {
             if (cache.has(this.id)) {
                 this.performance = cache.get(this.id)
+                cache.set(this.Id, cache.get(this.id))
                 return
             }
             const calc = new PerformanceCalculator(this.beatmap, this.mods)
