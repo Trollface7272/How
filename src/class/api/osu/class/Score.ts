@@ -255,13 +255,20 @@ export namespace Score {
 
         public async fetchPerformance() {
             if (cache.has(this.id)) {
-                this.performance = cache.get(this.id)
-                cache.set(this.Id, cache.get(this.id))
+                const cached = cache.get<any>(this.id)
+                this.performance = cached.performance
+                this.beatmap.difficulty_rating = cached.difficulty
+                this.beatmap.max_combo = cached.max_combo
+                cache.set(this.Id, cached)
                 return
             }
             const calc = new PerformanceCalculator(this.beatmap, this.mods)
             this.performance = await calc.Calculate(this)
-            cache.set(this.id, this.performance)
+            cache.set(this.id, {
+                performance: this.performance,
+                difficulty_rating: this.beatmap.difficulty_rating,
+                max_combo: this.beatmap.max_combo
+            })
         }
 
         public async fetchPosition(discordUserId: string) {
