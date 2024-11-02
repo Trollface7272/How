@@ -332,6 +332,7 @@ export class StdPerformance {
         this.countMiss = score.Statistics.miss
         this.countSliderEndsDropped = beatmap.count_sliders - score.Statistics.slider_tail_hit
         this.countSliderTickMiss = score.MaximumStatistics.large_tick_hit - score.Statistics.large_tick_hit
+        this.effectiveMissCount = 0
 
         switch (type) {
             case "normal":
