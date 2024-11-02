@@ -151,7 +151,7 @@ class Top extends CommandBase implements CommandAbstract {
             Logger.Error(scores)
             return CommandResponseCodes.OK
         }
-
+        await Promise.all(scores.map(el => el.fetchPerformance()))
         if (GreaterThan) {
             let username = scores[0].User.username
             scores = scores.filter(el => el.PP > GreaterThan)
@@ -225,7 +225,7 @@ class Top extends CommandBase implements CommandAbstract {
             case "stars":
                 return "beatmap.difficulty_rating"
             case "pp":
-                return "pp"
+                return "performance.normal.total"
             case "acc":
                 return "accuracy"
             case "combo":

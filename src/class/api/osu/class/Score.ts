@@ -8,8 +8,13 @@ import { Logger } from "@src/class/Logger"
 import { EmojiFactory } from "@src/class/Emojis"
 import { RulesetIds } from "../types/MiscTypes"
 import { Mods } from "./Mods"
+import NodeCache from "node-cache"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
+
+const cache = new NodeCache({
+    stdTTL: 60 * 60 * 24
+})
 
 interface Weight {
     percentage: number
@@ -249,8 +254,13 @@ export namespace Score {
         }
 
         public async fetchPerformance() {
+            if (cache.has(this.id)) {
+                this.performance = cache.get(this.id)
+                return
+            }
             const calc = new PerformanceCalculator(this.beatmap, this.mods)
             this.performance = await calc.Calculate(this)
+            cache.set(this.id, this.performance)
         }
 
         public async fetchPosition(discordUserId: string) {
@@ -280,7 +290,7 @@ export namespace Score {
         }
 
         public ToObject() {
-            const obj: any = {...this}
+            const obj: any = { ...this }
             obj.mods = this.mods.GetData()
             return obj
         }
