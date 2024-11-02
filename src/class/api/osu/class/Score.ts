@@ -257,7 +257,7 @@ export namespace Score {
             if (cache.has(this.id)) {
                 const cached = cache.get<any>(this.id)
                 this.performance = cached.performance
-                this.beatmap.difficulty_rating = cached.difficulty
+                this.beatmap.difficulty_rating = cached.difficulty_rating
                 this.beatmap.max_combo = cached.max_combo
                 cache.set(this.Id, cached)
                 return
