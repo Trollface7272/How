@@ -167,7 +167,7 @@ export class Score {
     constructor(score?: Document) {
         Object.assign(this, score)
         this.beatmap = new ScoreBeatmap(score.beatmap)
-        Object.keys(this.altPp).forEach(key => {
+        Object.keys(this.altPp ?? []).forEach(key => {
             this.altPp[key] = new AltPp(this.altPp[key])
         })
     }

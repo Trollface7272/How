@@ -183,7 +183,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
                 improved: score.improvedPp.roundFixed(3),
                 stars: score.beatmap.difficulty.stars.total.roundFixed(2)
             }
-            if (score.altPp[PpVer]) {
+            if (score?.altPp?.[PpVer]) {
                 const fpp = score.altPp[PpVer]
                 const isFc = (score.combo > (score.beatmap.difficulty.combo * 0.95)) && score.counts.misses === 0
                 pp.improved = (isFc ? fpp.ss.pp.roundFixed(3) : fpp.fc.pp.roundFixed(3)) + `(${fpp.difference >= 0 ? "+" : ""}${fpp.difference.roundFixed(2)})`
