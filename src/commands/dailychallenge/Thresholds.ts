@@ -82,7 +82,7 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
                 name: "Daily Challenge Thresholds",
                 url: challenge.URL,
             })
-            .setThumbnail(`https://assets.ppy.sh/beatmaps/${beatmap.beatmapset_id}/covers/raw.jpg`)
+            .setThumbnail(beatmap.FullBackground)
             .setFooter({
                 text: `${beatmap.beatmapset.artist} - ${beatmap.beatmapset.title} [${beatmap.version}] by ${beatmap.beatmapset.creator}`
             })

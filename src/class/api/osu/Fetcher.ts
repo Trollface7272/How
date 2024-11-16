@@ -270,6 +270,12 @@ export class Fetcher {
         return new Multiplayer.GetPlaylistScores(resp.data)
     }
 
+    public async GetUserFriends(): Promise<Profile.FromFriends[]> {
+        const resp = await this.axios.get(Endpoints.getFriends(), { })
+        
+        return resp.data.map(el => new Profile.FromFriends(el))
+    }
+
 
 
 

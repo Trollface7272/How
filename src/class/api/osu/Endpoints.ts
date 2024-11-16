@@ -22,4 +22,5 @@ export namespace Endpoints {
     export const searchBeatmaps = () => `/beatmapsets/search`
     export const getPlaylists = () => `/rooms`
     export const getPlaylistScores = (room: number, playlist: number) => `/rooms/${room}/playlist/${playlist}/scores`
+    export const getFriends = () => `/friends`
 }

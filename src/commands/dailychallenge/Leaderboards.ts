@@ -16,6 +16,7 @@ import NodeCache from "node-cache";
 
 interface args {
     Country: string
+    Friends: boolean
     Page: number
 }
 
@@ -35,13 +36,14 @@ class DailyChallengeLeaderboardsData extends CommandData implements CommandDataA
     public GetComandArgs(): args {
         return {
             Country: this.data.GetString("country", ["-c", "-country", "c"]) || null,
+            Friends: this.data.GetCommand() === "dcflb",
             Page: 1
         }
     }
 }
 
 class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["dclb"]
+    public static readonly names: string[] = ["dclb", "dcflb"]
     private data: DailyChallengeLeaderboardsData
     private args: args
     private componentId: string
@@ -65,14 +67,14 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
             }
         }
         const user = this.data.GetUser()
-        const { Country, Page } = this.args
+        const { Country, Page, Friends } = this.args
         const PER_PAGE = 10
 
         const challenge = await DailyChallengeFactory.GetCurrentChallenge()
         const fetcher = await Fetcher.Create(user.id)
 
         if (!challenge) {
-            this.data.Reply({ content: "No daily challenge is currently active." })
+            await this.data.Reply({ content: "No daily challenge is currently active." })
             return CommandResponseCodes.OK
         }
 
@@ -82,15 +84,26 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
         if (Country) {
             query["user.country_code"] = Country.toUpperCase()
         }
+
+        if (Friends) {
+            if (!user.osu.scopes.includes("friends.read")) {
+                await this.data.Reply({ content: "Relink with friends flag." })
+                return CommandResponseCodes.OK
+            }
+            const friends = await fetcher.GetUserFriends()
+            const friendIds = friends.map(el => el.id)
+            query["user.id"] = { $in: friendIds }
+        }
+
         const allScores = await DailyChallengeScoreFactory.GetDailyChallengeScores(query, true)
         if (!allScores || !allScores.length) {
-            this.data.Reply(this.RenderNoScores())
+            await this.data.Reply(this.RenderNoScores())
             return CommandResponseCodes.OK
         }
 
         const [map, mapError] = await HandleAsync(fetcher.GetBeatmap({ id: challenge.current_playlist_item.beatmap_id, Gamemode: GamemodeNumToStr[challenge.current_playlist_item.ruleset_id] }))
         if (mapError) {
-            this.data.Reply(this.RenderApiError())
+            await this.data.Reply(this.RenderApiError())
             Logger.Error(mapError)
             return CommandResponseCodes.UnknownError
         }
@@ -111,7 +124,7 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
         })
 
         const row = this.CreateButtons(Page, Math.ceil(allScores.length / PER_PAGE))
-        
+
         const embed = this.GetBaseEmbed()
             .setDescription(text)
             .setAuthor({

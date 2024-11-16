@@ -103,7 +103,7 @@ export namespace Profile {
         rank: number
         update: string
     }
-    
+
     export interface EventUser {
         username: string
         url: string
@@ -143,7 +143,7 @@ export namespace Profile {
         get url() {
             return `https://osu.ppy.sh/u/${this.id}`
         }
-        
+
         constructor(profile: Compact) {
             Object.assign(this, profile)
         }
@@ -189,6 +189,20 @@ export namespace Profile {
             Object.assign(this, profile)
         }
     }
+
+    export class FromFriends extends Compact {
+        country: Country
+        cover: Cover
+        groups: Group[]
+        statistics: Statistics
+        support_level: 0 | 1 | 2 | 3
+
+        constructor(profile: FromFriends) {
+            super(profile)
+            Object.assign(this, profile)
+        }
+    }
+
     export class FromId extends Base {
         account_history: AccountHistory[]
         active_tournament_banner?: ProfileBanner

@@ -194,6 +194,9 @@ export namespace Beatmap {
     export class FromId extends Base {
         beatmapset: BeatmapSet.Beatmap.FromId
         failtimes: { fail: number[], exit: number[] }
+        public get FullBackground() {
+            return `https://assets.ppy.sh/beatmaps/${this.beatmapset_id}/covers/raw.jpg`
+        }
         constructor(map: FromId, mods: Mods.ModList) {
             super(map, mods)
             Object.assign(this, map)
