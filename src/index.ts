@@ -1,9 +1,10 @@
 import "./Prestart"
-import { Client } from "@src/class/Client";
+import { Client } from "@src/class/Client"
 
+export const client: Client = new Client();
 
 (async () => {
-    new Client().Start(process.env.DISCORD_TOKEN)
+    client.Start(process.env.DISCORD_TOKEN)
 })()
 
 import "./Server"

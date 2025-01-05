@@ -1,4 +1,5 @@
 import { Beatmap as _Beatmap } from "./Beatmap"
+import { Mods } from "./Mods"
 import { Score } from "./Score"
 
 export namespace BeatmapSet {
@@ -66,6 +67,10 @@ export namespace BeatmapSet {
         submitted_date: string
         tags: string
 
+        public get RankedDate() {
+            return new Date(this.ranked_date)
+        }
+
         constructor(set: Base) {
             super(set)
             Object.assign(this, set)
@@ -91,9 +96,29 @@ export namespace BeatmapSet {
     }
     export class SearchSet extends Base {
         beatmaps: _Beatmap.Base[]
+        
+        public get Url() {
+            return `https://osu.ppy.sh/s/${this.id}`
+        }
+
+        public get CreatorUrl() {
+            return `https://osu.ppy.sh/u/${this.user_id}`
+        }
+
+        public get Download() {
+            return this.availability.download_disabled ? null : `https://osu.ppy.sh/d/${this.id}`
+        }
+
+        public get DownloadNovid() {
+            return this.availability.download_disabled ? null : `https://osu.ppy.sh/d/${this.id}n`
+        }
 
         public get DifficultyEmojis() {
             return this.beatmaps.map(map => map.DifficultyEmoji).join(" ")
+        }
+
+        public get BgPreview() {
+            return `https://b.ppy.sh/thumb/${this.id}l.jpg`
         }
 
         constructor(set: SearchSet) {

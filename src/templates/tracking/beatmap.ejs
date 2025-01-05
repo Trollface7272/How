@@ -1,0 +1,6 @@
+**[<%- map.artist -%> - <%- map.title -%>](<%- map.url -%>)** by **[<%- map.creator -%>](<%- map.creator_url -%>)** 
+**Length:** <%- map.length -%> (<%- map.drain -%> drain) **BPM:** <%- map.bpm -%> 
+**Download:** [map](<%- map.download -%>)([no vid](<%- map.download_novid -%>)) Direct 
+<%_ for(let diff of diffs) { _%>
+<%- diff.emoji -%>`<%- diff.version -%>` [<%- diff.stars -%>\*] 
+<%_ } _%>

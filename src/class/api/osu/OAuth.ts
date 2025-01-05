@@ -100,6 +100,7 @@ class cOAuthGenerator {
     }
 
     public async GetTokenByUserId({ userId, defaultToClientCredentials }: { userId: string, defaultToClientCredentials: boolean }) {
+        if (!userId) return null
         const user = await UserFactory.GetUser(userId)
         if (!user || !user?.osu) {
             if (defaultToClientCredentials) return this.GetClientCredentialsToken()

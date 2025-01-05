@@ -1,16 +1,17 @@
-import { DiscordAPIError, Client as DiscordClient, Partials, Routes } from "discord.js"
+import { Client as DiscordClient, Partials } from "discord.js"
 import { EventEmitter } from "./EventEmitter";
 import { Logger } from "./Logger";
 import { CommandLoader } from "./CommandLoader";
 import { Connect } from "./database/Main";
 import { EmojiFactory } from "./Emojis";
-import { CommandEmitterInstance } from "./CommandEmitter";
-import { HandleAsync } from "@src/Utils";
 import { InteractionRegistrerInstance } from "./InteractionRegisterer";
 import { TriggerLoader } from "./TriggerLoader";
+import { BeatmapTrackingLoop } from "@src/tracking/Beatmaps";
+
 export class Client extends DiscordClient {
     public EventEmitter: EventEmitter
     public TriggerEmitter: EventEmitter
+    public BeatmapTrackingLoop: NodeJS.Timeout
     constructor() {
         super({
             intents: ["DirectMessages", "Guilds", "GuildMembers", "GuildMessages", "MessageContent", "DirectMessages"],
@@ -36,6 +37,9 @@ export class Client extends DiscordClient {
         await this.LoadInteractions()
         Logger.Info(`Creating Event Emitter`)
         this.EventEmitter = new EventEmitter(this)
+        Logger.Info(`Creating Beatmap Tracking Loop`)
+        this.BeatmapTrackingLoop = setInterval(BeatmapTrackingLoop.bind(this), 1000 * 60 * 5)
+        BeatmapTrackingLoop(this)
     }
 
     private async LoadInteractions() {
