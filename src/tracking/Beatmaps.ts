@@ -49,7 +49,7 @@ async function RunBeatmapType(event: Event, type: string, client: Client) {
     const newMaps = maps.beatmapsets.filter(el => el.RankedDate > lastCheck)
     if (!newMaps.length) return
 
-    event.lastCheck = new Date()
+    event.lastCheck = new Date(Math.max(...maps.beatmapsets.map(el => el.RankedDate.getTime())))
     await event.Save()
 
     Logger.Info(`Found ${newMaps.length} new ${type} beatmaps`)
