@@ -1,5 +1,5 @@
 import { Event, EventData } from "@src/class/partials/Event";
-import { Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, ReplyOptions } from "discord.js";
+import { ChatInputCommandInteraction, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Client } from "@src/class/Client";
@@ -95,14 +95,19 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public GetCommand(): string {
-        if (this.interaction.isChatInputCommand())
+        if (this.interaction.isChatInputCommand()) {
+            if (this.interaction.options.getSubcommand(false)) {
+                return this.interaction.commandName + "-" + this.interaction.options.getSubcommand()
+            }
             return this.interaction.commandName
+        }
+            
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton())
             return this.interaction.customId.split(";")[0]
     }
 
-    public GetUsername(): string {
-        const name = this.GetString("username")
+    public GetRemaining(str: string): string {
+        const name = this.GetString(str)
         if (name == "") return null
         return name
     }

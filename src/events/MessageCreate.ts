@@ -181,7 +181,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     public GetCommand(): string {
         return this.command
     }
-    public GetUsername(): string {
+    public GetRemaining(str: string): string {
         if (this.args.length == 0) return null
         const username = this.args.join(" ")
         if (username == "") return null

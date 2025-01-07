@@ -78,7 +78,7 @@ class ScoreData extends CommandData implements CommandDataAbstract {
             Anyone: this.data.GetBoolean("anyone", ["any", "-any", "-anyone"]),
             Id: this.data.GetNumber("id", ["i", "-i", "-id"]),
             PpVer: this.translatePpVer(this.data.GetString("ppver", ["-ppver", "pp", "-pp"])),
-            Username: this.data.GetUsername()
+            Username: this.data.GetRemaining()
         }
     }
 

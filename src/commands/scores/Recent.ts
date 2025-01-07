@@ -57,7 +57,7 @@ class RecentData extends CommandData implements CommandDataAbstract {
         const Count = this.data.GetBoolean("count", ["c", "count", "-c", "-count"]) ?? false
         const Map = this.data.GetBoolean("map", ["m", "map", "-m", "-map"]) ?? false
         const OD = this.data.GetNumber("od", ["od", "-od"]) ?? undefined
-        const Username = this.data.GetUsername()
+        const Username = this.data.GetRemaining()
         return {
             Gamemode, Specific, Page, Id, Best, Fails, List, Count, Map, OD, Username
         }

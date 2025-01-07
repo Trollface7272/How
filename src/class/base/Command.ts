@@ -2,9 +2,11 @@ import { randomBytes } from "crypto"
 import { CommandData } from "./CommandData"
 import { MessageEventData } from "../partials/MessageEvent"
 import { ErrorHandler } from "./ErrorHandler"
+import { SlashCommandBuilder } from "discord.js"
 
 export class CommandBase extends ErrorHandler {
     public constructor() { super() }
+    
 
     protected RenderBeatmapPP(pps: { normal: { total: number } }[], accs: number[]) {
         return pps.map((el, idx) => {

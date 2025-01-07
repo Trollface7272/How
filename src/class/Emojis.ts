@@ -94,7 +94,7 @@ export class EmojiFactory {
     }
 
     public static GetDifficultyEmoji(diff: number, gamemode: string, full: boolean=false) {
-        const emoji = this.difficultyEmojis.find(val => val.range[0] <= diff && val.range[1] > diff && val.gamemode.toLowerCase() === gamemode.toLowerCase())
+        const emoji = this.difficultyEmojis.find(val => val.range[0] <= diff && val.range[1] > diff && val.gamemode?.toLowerCase() === gamemode.toLowerCase())
         return emoji ? emoji.Get(full) : ""
     }
 

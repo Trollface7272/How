@@ -28,7 +28,7 @@ class DailyChallengeThresholdData extends CommandData implements CommandDataAbst
 }
 
 class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["dcth"]
+    public static readonly names: string[] = ["dcth", "daily-challenge-thresholds"]
     private data: DailyChallengeThresholdData
 
 

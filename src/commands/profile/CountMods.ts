@@ -8,6 +8,8 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
 import { GamemodeNames } from "@src/class/api/osu/Consts";
+import { SlashCommandBuilder } from "discord.js";
+import { CONTEXT_FULL, getGamemodeStringOption } from "@src/utils/discord/interaction";
 
 interface args {
     Gamemode: Gamemode
@@ -26,13 +28,14 @@ class CountModsData extends CommandData implements CommandDataAbstract {
         return {
             Gamemode: this.data.GetGamemode(),
             Id: this.data.GetNumber("id", ["-id"]),
-            Username: this.data.GetUsername(),
+            Username: this.data.GetRemaining(),
         }
     }
 }
 
 class CountMods extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["countmods", "cm"]
+    public static readonly names: string[] = ["countmods", "cm", "count-mods"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: CountModsData
 
 
@@ -51,7 +54,7 @@ class CountMods extends CommandBase implements CommandAbstract {
             Logger.Error(err)
             return CommandResponseCodes.OK
         }
-        
+
         const mods = new Map<string, { count: number, mods: string, pp: number }>()
         for (const score of scores) {
             let mod = score.Mods.Formatted
@@ -67,15 +70,15 @@ class CountMods extends CommandBase implements CommandAbstract {
                 })
             }
         }
-        
+
         const data: { count: number, mods: string, pp: number }[] = []
         for (const [mod, vals] of mods) {
             data.push({ mods: mod, count: vals.count, pp: vals.pp })
         }
         data.sort((a, b) => b.count - a.count)
-        
+
         const description = data.map(el => `**${el.mods}**: ${el.count} (${Math.round(el.pp * 100) / 100}pp)`).join("\n")
-        
+
         const embed = this.GetBaseEmbed()
             .setAuthor({ name: `Mods in ${GamemodeNames[Gamemode]} Top Plays for ${scores[0].User.username}`, iconURL: GetFlag(scores[0].User.country_code), url: `https://osu.ppy.sh/users/${scores[0].User.id}` })
             .setDescription(description)
@@ -86,5 +89,17 @@ class CountMods extends CommandBase implements CommandAbstract {
     }
 
 }
+
+CountMods.interactionData
+    .setContexts(CONTEXT_FULL)
+    .setName("count-mods")
+    .setDescription("Show user mod distribution in top 100")
+    .addStringOption(opt =>
+        opt
+            .setName("username")
+            .setDescription("Username")
+            .setRequired(false)
+    )
+    .addStringOption(getGamemodeStringOption)
 
 CommandEmitterInstance.AddCommand(CountMods, CountMods.names)

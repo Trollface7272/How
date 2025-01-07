@@ -9,11 +9,13 @@ import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
 import { Logger } from "@src/class/Logger";
 import { AxiosError } from "axios";
 import { TextRenderer } from "@src/class/renderer/Text";
-import { ActionRowBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, InteractionContextType, SlashCommandBooleanOption, SlashCommandBuilder, SlashCommandStringOption, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
 import { CommandBase } from "@src/class/base/Command";
 import { Score } from "@src/class/api/osu/class/Score";
 import { Mods as ModsClass } from "@src/class/api/osu/class/Mods";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { CONTEXT_FULL, getGamemodeStringOption } from "@src/utils/discord/interaction";
 
 interface args {
   Gamemode: Gamemode
@@ -35,11 +37,11 @@ class BeatmapData extends CommandData implements CommandDataAbstract {
   }
 
   public GetComandArgs(): args {
-    const Gamemode = this.data.GetGamemode()
+    const Gamemode = this.data.GetGamemode() || "osu"
     const Mods = this.data.GetMods()
     const Acc = this.data.GetNumber("accuracy", ["acc", "a", "-accuracy", "-acc", "-a"])
     const Background = this.data.GetBoolean("background", ["bg", "-background", "-bg"])
-    const id = parseInt(this.data.GetUsername())
+    const id = parseInt(this.data.GetRemaining())
     return {
       Gamemode, Mods, id: !isNaN(id) ? id : null, Acc: Acc, Background
     }
@@ -48,8 +50,8 @@ class BeatmapData extends CommandData implements CommandDataAbstract {
 
 class Beatmap extends CommandBase implements CommandAbstract {
   public static readonly names: string[] = ["map", "beatmap", "m"]
-    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
-    private data: BeatmapData
+  public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+  private data: BeatmapData
 
   constructor(data: MessageEventData) {
     super()
@@ -58,7 +60,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
   public async Handle(): Promise<CommandResponseCodes> {
     const user = this.data.GetUser()
     let { Gamemode, Mods, id: _id, Acc, Background } = this.data.args
-    
+
     if (this.data.IsInteraction()) {
       const interaction = this.data.GetInteraction()
       if (interaction.isStringSelectMenu()) {
@@ -213,4 +215,27 @@ class Beatmap extends CommandBase implements CommandAbstract {
 
 }
 
+Beatmap.interactionData
+  .setContexts(CONTEXT_FULL)
+  .setName("beatmap")
+  .setDescription("Get info about a beatmap")
+  .addStringOption(opt =>
+    opt
+      .setName("beatmap")
+      .setDescription("Beatmap url or id")
+      .setRequired(false)
+  ).addStringOption(getGamemodeStringOption)
+  .addStringOption(opt =>
+    opt
+      .setName("mods")
+      .setDescription("Beatmap mods")
+      .setRequired(false)
+  ).addBooleanOption(opt =>
+    opt
+      .setName("background")
+      .setDescription("Returns beatmap background")
+      .setRequired(false)
+  )
+
 CommandEmitterInstance.AddCommand(Beatmap, Beatmap.names)
+InteractionRegistrerInstance.AddInteraction(Beatmap.interactionData)

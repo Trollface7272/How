@@ -59,7 +59,7 @@ class TopData extends CommandData implements CommandDataAbstract {
             Specific: this.data.GetSpecific(),
             Type: this.GetTypeFromCommand(),
             Mods: this.data.GetMods(),
-            Username: this.data.GetUsername()
+            Username: this.data.GetRemaining()
         }
     }
 

@@ -1,4 +1,4 @@
-import { escapeMarkdown } from "discord.js"
+import { escapeMarkdown, SlashCommandStringOption } from "discord.js"
 import { Logger } from "./class/Logger"
 import { Beatmap } from "./class/api/osu/class/Beatmap"
 import { Gamemode, RulesetIds } from "./class/api/osu/types/MiscTypes"
@@ -14,6 +14,8 @@ export const HandleAsync = async <T, E>(promise: Promise<T>): Promise<[T, E]> =>
     }
 }
 
+
+
 export const GetFlag = (code: string) => `https://flagcdn.com/w80/${code.toLowerCase()}.png`
 
 export const FormatCombo = (combo: number, maxCombo: number, mode: number | string): string => {
@@ -21,7 +23,7 @@ export const FormatCombo = (combo: number, maxCombo: number, mode: number | stri
     return `x${combo}/${maxCombo}`
 }
 
-export const FormatHits = ({ great, ignore_hit, ignore_miss, large_bonus, large_tick_hit, meh, miss, ok, slider_tail_hit, small_bonus }: Partial<Score.Statistics>, gamemode: RulesetIds|Gamemode) => {
+export const FormatHits = ({ great, ignore_hit, ignore_miss, large_bonus, large_tick_hit, meh, miss, ok, slider_tail_hit, small_bonus }: Partial<Score.Statistics>, gamemode: RulesetIds | Gamemode) => {
     switch (gamemode) {
         case 0:
         case "osu":
@@ -184,8 +186,8 @@ export function formatAsGain(val: number) {
 
 export function GetCountryFlag(countryCode: string) {
     const codePoints = countryCode
-      .toUpperCase()
-      .split('')
-      .map(char =>  127397 + char.charCodeAt(0));
+        .toUpperCase()
+        .split('')
+        .map(char => 127397 + char.charCodeAt(0));
     return String.fromCodePoint(...codePoints);
-  }
+}

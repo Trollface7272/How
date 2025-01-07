@@ -9,8 +9,10 @@ import { HandleAsync } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
 import { BeatmapSet } from "@src/class/api/osu/class/BeatmapSet";
 import { TextRenderer } from "@src/class/renderer/Text";
-import { ActionRowBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, SlashCommandBuilder, SlashCommandStringOption, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { randomBytes } from "crypto";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { CONTEXT_FULL, getGamemodeStringOption } from "@src/utils/discord/interaction";
 
 
 const typeRegex = /-(any|ranked|qualified|loved|favourites|pending|wip|graveyard|mine)/
@@ -32,14 +34,15 @@ class SearchData extends CommandData implements CommandDataAbstract {
     public GetComandArgs(): args {
         return {
             Gamemode: this.data.GetGamemode(),
-            Type: this.data.findString(typeRegex)?.slice(1) as type || this.data.GetString("type", ["-t", "-type"]) as type || "ranked",
-            Text: this.data.GetUsername() 
+            Type: this.data.findString(typeRegex)?.slice(1) as type || this.data.GetString("status", ["-status", "type", "-t", "-type"]).replace("-", "") as type || "ranked",
+            Text: this.data.GetRemaining("search")
         }
     }
 }
 
 class Search extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["search", "s"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: SearchData
 
 
@@ -52,7 +55,7 @@ class Search extends CommandBase implements CommandAbstract {
         const user = this.data.GetUser()
 
         const fetcher = await Fetcher.Create(user.id)
-        const [beatmaps, beatmapsErr] = await HandleAsync(fetcher.SearchBeatmaps({query: Text, gamemode: Gamemode, type: Type}))
+        const [beatmaps, beatmapsErr] = await HandleAsync(fetcher.SearchBeatmaps({ query: Text, gamemode: Gamemode, type: Type }))
         if (beatmapsErr) {
             Logger.Error(beatmapsErr)
             this.data.Reply(this.RenderApiError())
@@ -71,7 +74,7 @@ class Search extends CommandBase implements CommandAbstract {
             artist: set.artist, favourite_count: set.favourite_count
         }))
 
-        let text = TextRenderer.render("beatmap/search", {beatmaps: data})
+        let text = TextRenderer.render("beatmap/search", { beatmaps: data })
         if (text.length > 4096) {
             text = text.slice(0, 4093) + "..."
         }
@@ -103,4 +106,55 @@ class Search extends CommandBase implements CommandAbstract {
 
 }
 
+Search.interactionData
+    .setName("search")
+    .setDescription("Search for beatmap")
+    .setContexts(CONTEXT_FULL)
+    .addStringOption(opt =>
+        opt
+            .setName("search")
+            .setDescription("Text to search")
+            .setRequired(true)
+    )
+    .addStringOption(getGamemodeStringOption)
+    .addStringOption(opt =>
+        opt
+            .setName("status")
+            .setDescription("Beatmap ranked status")
+            .setRequired(false)
+            .setChoices({
+                name: "Has Leaderboards",
+                value: "-"
+            }, {
+                name: "all",
+                value: "any"
+            }, {
+                name: "Ranked",
+                value: "ranked"
+            }, {
+                name: "Qualified",
+                value: "qualified"
+            }, {
+                name: "Loved",
+                value: "loved"
+            }, {
+                name: "Favourites",
+                value: "favourites"
+            }, {
+                name: "Pending",
+                value: "pending"
+            }, {
+                name: "WIP",
+                value: "wip"
+            }, {
+                name: "Graveyarded",
+                value: "graveyard"
+            }, {
+                name: "Mine",
+                value: "mine"
+            })
+    )
+
+
 CommandEmitterInstance.AddCommand(Search, Search.names)
+InteractionRegistrerInstance.AddInteraction(Search.interactionData)

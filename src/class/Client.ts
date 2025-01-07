@@ -37,8 +37,11 @@ export class Client extends DiscordClient {
         await this.LoadInteractions()
         Logger.Info(`Creating Event Emitter`)
         this.EventEmitter = new EventEmitter(this)
-        Logger.Info(`Creating Beatmap Tracking Loop`)
-        this.BeatmapTrackingLoop = setInterval(() => BeatmapTrackingLoop(this), 1000 * 60 * 5)
+        
+        if (!process.env.DISABLE_TRACKING) {
+            Logger.Info(`Creating Beatmap Tracking Loop`)
+            this.BeatmapTrackingLoop = setInterval(() => BeatmapTrackingLoop(this), 1000 * 60 * 5)
+        }
     }
 
     private async LoadInteractions() {

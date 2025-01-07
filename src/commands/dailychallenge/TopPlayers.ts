@@ -47,7 +47,7 @@ class DailyChallengeTopPlayersData extends CommandData implements CommandDataAbs
 }
 
 class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["dctp", "dctopplayers", "dailychallengetopplayers"]
+    public static readonly names: string[] = ["dctp", "dctopplayers", "dailychallengetopplayers", "daily-challenge-top-players"]
     private data: DailyChallengeTopPlayersData
     private args: args
     private componentId: string

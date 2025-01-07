@@ -74,7 +74,7 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
             Type: type as Types ?? this.data.GetNumber("type", ["-type", "-t", "t"]) as Types,
             Ranks: this.data.GetBoolean("ranks", ["-ranks", "-rank", "ranks", "rank"]),
             Top: top,
-            Username: this.data.GetUsername()
+            Username: this.data.GetRemaining()
         }
     }
 }

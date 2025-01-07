@@ -28,6 +28,8 @@ const beatmapCache = new NodeCache({
 const UsernameToIdCache = new Map<string, number>()
 const IdToUsernameCache = new Map<number, string>()
 
+let ClientCredentials: OAuth
+
 const setCache = (id: number, username: string) => {
     UsernameToIdCache.set(username, id)
     IdToUsernameCache.set(id, username)
@@ -41,8 +43,9 @@ export class Fetcher {
         let isUser = true
         let oauth = await OAuthGenerator.GetTokenByUserId({ userId: userId, defaultToClientCredentials: false })
         if (!oauth?.IsValid()) {
+            if (!ClientCredentials) ClientCredentials = await OAuthGenerator.GetClientCredentialsToken()
+            oauth = ClientCredentials
             isUser = false
-            oauth = await OAuthGenerator.GetClientCredentialsToken()
         }
         return new Fetcher(oauth, isUser)
     }
@@ -271,8 +274,8 @@ export class Fetcher {
     }
 
     public async GetUserFriends(): Promise<Profile.FromFriends[]> {
-        const resp = await this.axios.get(Endpoints.getFriends(), { })
-        
+        const resp = await this.axios.get(Endpoints.getFriends(), {})
+
         return resp.data.map(el => new Profile.FromFriends(el))
     }
 

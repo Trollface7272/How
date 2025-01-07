@@ -4,7 +4,9 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { Client } from "@src/class/Client";
-import { OAuth2Scopes } from "discord.js";
+import { OAuth2Scopes, SlashCommandBuilder } from "discord.js";
+import { CONTEXT_FULL } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
     Client: Client
@@ -26,6 +28,7 @@ class InviteData extends CommandData implements CommandDataAbstract {
 
 class Invite extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["invite", "inv"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: InviteData
 
 
@@ -44,4 +47,11 @@ class Invite extends CommandBase implements CommandAbstract {
 
 }
 
+Invite.interactionData
+    .setContexts(CONTEXT_FULL)
+    .setName("invite")
+    .setDescription("Get invite link for the bot")
+
+
 CommandEmitterInstance.AddCommand(Invite, Invite.names)
+InteractionRegistrerInstance.AddInteraction(Invite.interactionData)

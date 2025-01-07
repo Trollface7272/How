@@ -4,7 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Profile as OsuProfile } from "@src/class/api/osu/class/Profile";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionReplyOptions, MessageReplyOptions, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionReplyOptions, MessageReplyOptions, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
 import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { ButtonEmojis, GetFlag, HandleAsync } from "@src/Utils";
@@ -14,6 +14,8 @@ import { CommandBase } from "@src/class/base/Command";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Logger } from "@src/class/Logger";
 import { FetcherError, FetcherErrors } from "@src/class/api/osu/class/FetcherError";
+import { CONTEXT_FULL, getGamemodeStringOption } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
   username: string
@@ -42,7 +44,7 @@ class ProfileData extends CommandData implements CommandDataAbstract {
     if (!isNaN(Number(mode)))
       mode = GamemodeNumToStr[Number(mode)] ?? mode
     const events = this.data.GetBoolean("events", ["e"])
-    const username = this.data.GetUsername()
+    const username = this.data.GetRemaining()
     return {
       mode,
       username,
@@ -53,6 +55,7 @@ class ProfileData extends CommandData implements CommandDataAbstract {
 
 class Profile extends CommandBase implements CommandAbstract {
   public static readonly names: string[] = ["osu", "std", "mania", "ctb", "fruits", "profile"]
+  public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
   private data: ProfileData
 
   constructor(data: MessageEventData) {
@@ -89,7 +92,7 @@ class Profile extends CommandBase implements CommandAbstract {
     let replyOptions: InteractionReplyOptions | MessageReplyOptions
 
     if (events) {
-      const [profile, errProfile] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: mode}))
+      const [profile, errProfile] = await HandleAsync(username ? fetcher.GetProfile({ Username: username, Gamemode: mode }) : fetcher.GetOwnProfile({ Gamemode: mode }))
       if (errProfile) return await this.ApiError(errProfile, username)
       const [events, err] = await HandleAsync(fetcher.GetRecentEvents({ id: profile.id, Limit: perPage, Offset: (page - 1) * perPage }))
       if (err) return await this.ApiError(err, username)
@@ -186,7 +189,7 @@ class Profile extends CommandBase implements CommandAbstract {
               Logger.Error("Profile - ApiError", err)
               return CommandResponseCodes.UnknownError
           }
-        
+
         }
       }
     }
@@ -392,4 +395,24 @@ class Profile extends CommandBase implements CommandAbstract {
 
 }
 
+Profile.interactionData
+  .setContexts(CONTEXT_FULL)
+  .setName("profile")
+  .setDescription("Osu profile for user")
+  .addStringOption(opt =>
+    opt
+      .setName("username")
+      .setDescription("Username to get profile for")
+      .setRequired(false)
+  )
+  .addStringOption(getGamemodeStringOption)
+  .addBooleanOption(opt =>
+    opt
+      .setName("events")
+      .setDescription("Show profile events")
+      .setRequired(false)
+  )
+
+
 CommandEmitterInstance.AddCommand(Profile, Profile.names)
+InteractionRegistrerInstance.AddInteraction(Profile.interactionData)

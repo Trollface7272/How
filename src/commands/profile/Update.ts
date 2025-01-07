@@ -8,6 +8,9 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Logger } from "@src/class/Logger";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { EmojiFactory } from "@src/class/Emojis";
+import { SlashCommandBuilder } from "discord.js";
+import { CONTEXT_FULL } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
     Username: string
@@ -22,13 +25,14 @@ class UpdateData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         return {
-            Username: this.data.GetUsername()
+            Username: this.data.GetRemaining()
         }
     }
 }
 
 class Update extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["update", "u"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: UpdateData
 
 
@@ -57,7 +61,7 @@ class Update extends CommandBase implements CommandAbstract {
         }
 
         const text = TextRenderer.render("profile/update", {
-            global_rank: profile.statistics.global_rank.toLocaleString(), 
+            global_rank: profile.statistics.global_rank.toLocaleString(),
             gain: formatAsGain(updated.pp_rank * -1) || "0",
             pp: profile.statistics.pp.toLocaleString(),
             ppGain: formatAsGain(updated.pp_raw),
@@ -91,4 +95,16 @@ class Update extends CommandBase implements CommandAbstract {
 
 }
 
+Update.interactionData
+    .setContexts(CONTEXT_FULL)
+    .setName("update")
+    .setDescription("Get profile changes since last update")
+    .addStringOption(opt =>
+        opt
+            .setRequired(false)
+            .setName("username")
+            .setDescription("Username to get data for")
+    )
+
 CommandEmitterInstance.AddCommand(Update, Update.names)
+InteractionRegistrerInstance.AddInteraction(Update.interactionData)

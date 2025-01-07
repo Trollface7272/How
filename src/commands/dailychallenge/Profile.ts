@@ -8,6 +8,7 @@ import { GetFlag, HandleAsync } from "@src/Utils";
 import { DailyChallengeProfileFactory } from "@src/class/database/DailyChallengeProfile";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { EmojiFactory } from "@src/class/Emojis";
+import { SlashCommandBuilder } from "discord.js";
 
 interface args {
     Username: string
@@ -22,13 +23,13 @@ class DailyChallengeProfileData extends CommandData implements CommandDataAbstra
 
     public GetComandArgs(): args {
         return {
-            Username: this.data.GetUsername()
+            Username: this.data.GetRemaining()
         }
     }
 }
 
 class DailyChallengeProfile extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["dcp", "dcprofile", "dailychallengeprofile"]
+    public static readonly names: string[] = ["dcp", "dcprofile", "dailychallengeprofile", "daily-challenge-profile"]
     private data: DailyChallengeProfileData
 
 

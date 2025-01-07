@@ -6,6 +6,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { randomBytes } from "crypto";
 import { CommandBase } from "@src/class/base/Command";
+import { CONTEXT_FULL } from "@src/utils/discord/interaction";
 
 interface args {
     Friends: boolean
@@ -66,7 +67,7 @@ class Link extends CommandBase implements CommandAbstract {
 Link.interactionData
     .setName("link")
     .setDescription("Link your osu! account")
-    .setDMPermission(true)
+    .setContexts(CONTEXT_FULL)
     .addBooleanOption(option =>
         option.setName("friends")
             .setDescription("Allow the bot to read your friends list (not required for friends leaderboards)")

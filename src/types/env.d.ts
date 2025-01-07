@@ -17,6 +17,7 @@ declare global {
             ASSETS_PATH: string
             PERFORMANCE_CALCULATOR: string
             BEATMAP_CACHE: string
+            DISABLE_TRACKING: number
         }
     }
 }

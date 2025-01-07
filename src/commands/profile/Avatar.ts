@@ -6,6 +6,9 @@ import { CommandBase } from "@src/class/base/Command";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
+import { SlashCommandBuilder } from "discord.js";
+import { CONTEXT_FULL } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
     Username: string
@@ -20,13 +23,14 @@ class AvatarData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         return {
-            Username: this.data.GetUsername()
+            Username: this.data.GetRemaining()
         }
     }
 }
 
 class Avatar extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["avatar", "pfp"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: AvatarData
 
 
@@ -35,13 +39,13 @@ class Avatar extends CommandBase implements CommandAbstract {
         this.data = new AvatarData(data)
     }
     public async Handle(): Promise<CommandResponseCodes> {
-        const {Username: _name} = this.data.args
+        const { Username: _name } = this.data.args
         const user = this.data.GetUser()
 
         const Username = _name ?? user.osu.username
 
         const fetcher = await Fetcher.Create(user.id)
-        const [profile, profileErr] = await HandleAsync(fetcher.GetProfile({Username: Username, Gamemode: "osu"}))
+        const [profile, profileErr] = await HandleAsync(fetcher.GetProfile({ Username: Username, Gamemode: "osu" }))
         if (profileErr) {
             Logger.Error(profileErr)
             return CommandResponseCodes.UnknownError
@@ -49,14 +53,26 @@ class Avatar extends CommandBase implements CommandAbstract {
 
         const avatar = profile.avatar_url
         const embed = this.GetBaseEmbed()
-            .setAuthor({name: `${profile.username}`, iconURL: GetFlag(profile.country_code), url: profile.url})
+            .setAuthor({ name: `${profile.username}`, iconURL: GetFlag(profile.country_code), url: profile.url })
             .setImage(avatar)
-            .setFooter({text: `Currently ${profile.is_online ? "Online" : "Offline"}`})
+            .setFooter({ text: `Currently ${profile.is_online ? "Online" : "Offline"}` })
 
-        await this.data.Reply({embeds: [embed]})
+        await this.data.Reply({ embeds: [embed] })
         return CommandResponseCodes.OK
     }
 
 }
 
+Avatar.interactionData
+    .setContexts(CONTEXT_FULL)
+    .setName("avatar")
+    .setDescription("Get osu user avatar")
+    .addStringOption(opt =>
+        opt
+            .setName("username")
+            .setDescription("Username")
+            .setRequired(false)
+    )
+
 CommandEmitterInstance.AddCommand(Avatar, Avatar.names)
+InteractionRegistrerInstance.AddInteraction(Avatar.interactionData)

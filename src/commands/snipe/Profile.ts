@@ -43,7 +43,7 @@ class SnipeProfileData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         return {
-            Username: this.data.GetUsername()
+            Username: this.data.GetRemaining()
         }
     }
 }

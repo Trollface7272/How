@@ -50,7 +50,7 @@ class CompareData extends CommandData implements CommandDataAbstract {
             Page: Page,
             Id: this.data.GetNumber("id", []),
             Beatmap: beatmap,
-            Username: this.data.GetUsername(),
+            Username: this.data.GetRemaining(),
         }
     }
 

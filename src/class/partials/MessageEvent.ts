@@ -56,7 +56,7 @@ export abstract class MessageEventData {
         throw Event.ReturnCode.Unimplemented
     }
 
-    public GetUsername(): string {
+    public GetRemaining(str: string="username"): string {
         throw Event.ReturnCode.Unimplemented
     }
 

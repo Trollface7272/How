@@ -11,7 +11,7 @@ import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { Logger } from "@src/class/Logger";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { randomBytes } from "crypto";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from "discord.js";
 import NodeCache from "node-cache";
 
 interface args {
@@ -36,14 +36,14 @@ class DailyChallengeLeaderboardsData extends CommandData implements CommandDataA
     public GetComandArgs(): args {
         return {
             Country: this.data.GetString("country", ["-c", "-country", "c"]) || null,
-            Friends: this.data.GetCommand() === "dcflb",
+            Friends: this.data.GetCommand() === "dcflb" || this.data.GetBoolean("friends", []),
             Page: 1
         }
     }
 }
 
 class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["dclb", "dcflb"]
+    public static readonly names: string[] = ["dclb", "dcflb", "daily-challenge-leaderboards"]
     private data: DailyChallengeLeaderboardsData
     private args: args
     private componentId: string
@@ -168,5 +168,6 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
     }
 
 }
+
 
 CommandEmitterInstance.AddCommand(DailyChallengeLeaderboards, DailyChallengeLeaderboards.names)
