@@ -9,7 +9,8 @@ import { GetFlag, HandleAsync } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
 import { GamemodeNames } from "@src/class/api/osu/Consts";
 import { SlashCommandBuilder } from "discord.js";
-import { CONTEXT_FULL, getGamemodeStringOption } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, GamemodeStringOption, UsernameStringOption } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
     Gamemode: Gamemode
@@ -94,12 +95,8 @@ CountMods.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("count-mods")
     .setDescription("Show user mod distribution in top 100")
-    .addStringOption(opt =>
-        opt
-            .setName("username")
-            .setDescription("Username")
-            .setRequired(false)
-    )
-    .addStringOption(getGamemodeStringOption)
+    .addStringOption(UsernameStringOption)
+    .addStringOption(GamemodeStringOption)
 
 CommandEmitterInstance.AddCommand(CountMods, CountMods.names)
+InteractionRegistrerInstance.AddInteraction(CountMods.interactionData)

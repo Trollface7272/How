@@ -15,7 +15,7 @@ import { CommandBase } from "@src/class/base/Command";
 import { Score } from "@src/class/api/osu/class/Score";
 import { Mods as ModsClass } from "@src/class/api/osu/class/Mods";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
-import { CONTEXT_FULL, getGamemodeStringOption } from "@src/utils/discord/interaction";
+import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, ModsStringOption } from "@src/utils/discord/interaction";
 
 interface args {
   Gamemode: Gamemode
@@ -219,18 +219,9 @@ Beatmap.interactionData
   .setContexts(CONTEXT_FULL)
   .setName("beatmap")
   .setDescription("Get info about a beatmap")
-  .addStringOption(opt =>
-    opt
-      .setName("beatmap")
-      .setDescription("Beatmap url or id")
-      .setRequired(false)
-  ).addStringOption(getGamemodeStringOption)
-  .addStringOption(opt =>
-    opt
-      .setName("mods")
-      .setDescription("Beatmap mods")
-      .setRequired(false)
-  ).addBooleanOption(opt =>
+  .addStringOption(BeatmapStringOption)
+  .addStringOption(GamemodeStringOption)
+  .addStringOption(ModsStringOption).addBooleanOption(opt =>
     opt
       .setName("background")
       .setDescription("Returns beatmap background")

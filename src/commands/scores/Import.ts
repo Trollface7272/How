@@ -4,6 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { importScores } from "@src/sockets/Importer";
+import { SlashCommandBuilder } from "discord.js";
 
 interface args {
     Username: string

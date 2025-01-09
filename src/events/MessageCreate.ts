@@ -200,7 +200,7 @@ export class MessageCreateData implements EventData, MessageEventData {
         }
     }
 
-    public GetNumber(key: string, aliases: string[], def?: number): number {
+    public GetNumber(key: string, aliases: string[], def?: number, match_any?: boolean): number {
         aliases.push(key)
         for (const alias of aliases) {
             const index = this.args.findIndex((arg) => arg === alias)
@@ -210,6 +210,12 @@ export class MessageCreateData implements EventData, MessageEventData {
             this.args.splice(index, 2)
             return val
         }
+
+        if (match_any) {
+            const idx = this.args.findIndex(el => el.isNumber())
+            return parseInt(this.args.splice(idx, 1)[0])
+        }
+
         return def
     }
 
@@ -263,7 +269,7 @@ export class MessageCreate implements Event {
         this.RunTriggers(data)
         if (data.GetRawUser().bot) return
         await data.LoadDbData()
-        const prefix = data.guild.prefix ?? "!"
+        const prefix = process.env.PREFIX_FORCE ?? data.guild.prefix ?? "!"
         const content = data.GetContent().toLowerCase()
 
         if (!content.startsWith(prefix)) return 0

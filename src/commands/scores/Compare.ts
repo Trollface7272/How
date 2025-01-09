@@ -10,8 +10,10 @@ import { Score } from "@src/class/api/osu/class/Score";
 import { ButtonEmojis, FormatCombo, FormatHits } from "@src/Utils";
 import NodeCache from "node-cache";
 import { randomBytes } from "crypto";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from "discord.js";
 import { matchForId } from "@src/class/api/osu/Utils";
+import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
     Gamemode: Gamemode
@@ -68,6 +70,7 @@ class CompareData extends CommandData implements CommandDataAbstract {
 
 class Compare extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["compare", "c", "comparison", "comparescore", "cs", "comparescoresonbeatmap", "myscoresonthisbeatmap", "scorecomparison"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: CompareData
     private args: args
     private componentId: string
@@ -200,4 +203,15 @@ class Compare extends CommandBase implements CommandAbstract {
 
 }
 
+Compare.interactionData
+    .setContexts(CONTEXT_FULL)
+    .setName("compare")
+    .setDescription("Show your score on a map")
+    .addStringOption(BeatmapStringOption)
+    .addStringOption(UsernameStringOption)
+    .addStringOption(GamemodeStringOption)
+    .addNumberOption(PageNumberOption)
+
+
 CommandEmitterInstance.AddCommand(Compare, Compare.names)
+InteractionRegistrerInstance.AddInteraction(Compare.interactionData)

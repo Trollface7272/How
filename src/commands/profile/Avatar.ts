@@ -7,7 +7,7 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
 import { SlashCommandBuilder } from "discord.js";
-import { CONTEXT_FULL } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
@@ -67,12 +67,7 @@ Avatar.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("avatar")
     .setDescription("Get osu user avatar")
-    .addStringOption(opt =>
-        opt
-            .setName("username")
-            .setDescription("Username")
-            .setRequired(false)
-    )
+    .addStringOption(UsernameStringOption)
 
 CommandEmitterInstance.AddCommand(Avatar, Avatar.names)
 InteractionRegistrerInstance.AddInteraction(Avatar.interactionData)

@@ -10,7 +10,7 @@ import { Channel, Client, EmbedBuilder, MessageCreateOptions } from "discord.js"
 let fetcher: Fetcher
 
 async function initFetcher() {
-    if (!fetcher) fetcher = await Fetcher.Create(null)
+    fetcher = await Fetcher.Create(null)
 }
 
 export async function BeatmapTrackingLoop(client: Client) {
@@ -88,7 +88,7 @@ async function RunBeatmapType(event: Event, type: string, client: Client) {
     })
 
     const promises = channels.map(async chnl => {
-        const channel: Channel|null = client.channels.cache.get(chnl.id) ?? await client.channels.fetch(chnl.id).catch(err => {
+        const channel: Channel | null = client.channels.cache.get(chnl.id) ?? await client.channels.fetch(chnl.id).catch(err => {
             Logger.Error(err, chnl.id)
             return null
         })
@@ -117,7 +117,7 @@ async function RunBeatmapType(event: Event, type: string, client: Client) {
             if (chnl.modes.some((el: RulesetIds) => modes.includes(el))) {
                 return channel.send(msg)
             }
-                
+
         })))
         if (err) {
             Logger.Error(err)

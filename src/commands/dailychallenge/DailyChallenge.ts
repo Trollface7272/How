@@ -6,7 +6,7 @@ import { CommandBase } from "@src/class/base/Command";
 import { DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { Logger } from "@src/class/Logger";
 import { SlashCommandBuilder } from "discord.js";
-import { CONTEXT_FULL } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
@@ -100,24 +100,13 @@ DailyChallenge.interactionData
                     .setDescription("Only show scores by friends")
                     .setRequired(false)
             )
-            .addNumberOption(opt =>
-                opt
-                    .setName("page")
-                    .setDescription("Leaderboards page to get")
-                    .setRequired(false)
-                    .setMinValue(1)
-            )
+            .addNumberOption(PageNumberOption)
     )
     .addSubcommand(sub =>
         sub
             .setName("profile")
             .setDescription("Get daily challenge profile")
-            .addStringOption(opt =>
-                opt
-                    .setName("username")
-                    .setDescription("Username to get profile for")
-                    .setRequired(false)
-            )
+            .addStringOption(UsernameStringOption)
     )
     .addSubcommand(sub =>
         sub
@@ -141,12 +130,7 @@ DailyChallenge.interactionData
                     .setDescription("Show today daily challenge placement")
                     .setRequired(false)
             )
-            .addNumberOption(opt =>
-                opt
-                    .setName("page")
-                    .setDescription("Page to get")
-                    .setRequired(false)
-            )
+            .addNumberOption(PageNumberOption)
     )
 
 CommandEmitterInstance.AddCommand(DailyChallenge, DailyChallenge.names)

@@ -8,12 +8,14 @@ import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync, lookupScor
 import { Logger } from "@src/class/Logger";
 import { Document, Filter, Sort } from "mongodb";
 import { ScoreFactory } from "@src/class/database/Score";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown, InteractionType, MessageComponentInteraction } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown, InteractionType, MessageComponentInteraction, SlashCommandBuilder } from "discord.js";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { EmojiFactory } from "@src/class/Emojis";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { randomBytes } from "crypto";
 import NodeCache from "node-cache";
+import { GamemodeStringOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 
 type SortType = "ar" | "od" | "cs" | "hp" | "pp" | "bpm" | "score" | "difference" | "diff"
@@ -30,7 +32,7 @@ interface args {
     Filter: string[]
     Mods: ParsedMods
     Anyone: boolean
-    PpVer: string|undefined
+    PpVer: string | undefined
 }
 
 const signs = {
@@ -83,7 +85,7 @@ class ScoreData extends CommandData implements CommandDataAbstract {
     }
 
     private translatePpVer(ppVer: string) {
-        switch(ppVer) {
+        switch (ppVer) {
             case "lazer":
             case "next":
             case "next-deploy":
@@ -96,6 +98,7 @@ class ScoreData extends CommandData implements CommandDataAbstract {
 
 class Score extends CommandWithComponentsBase implements CommandAbstract {
     public static readonly names: string[] = ["sc", "score", "scores"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     declare protected data: ScoreData
     protected args: args
 
@@ -146,7 +149,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         for (const filter of Filter) {
             merge(filterQuery, this.parseFilter(filter))
         }
-        
+
         if (Mods.exactExclude?.mods.length > 0) {
             merge(filterQuery, { mods: { $not: { $all: Mods.exactExclude.mods } } })
         }
@@ -188,7 +191,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
                 const isFc = (score.combo > (score.beatmap.difficulty.combo * 0.95)) && score.counts.misses === 0
                 pp.improved = (isFc ? fpp.ss.pp.roundFixed(3) : fpp.fc.pp.roundFixed(3)) + `(${fpp.difference >= 0 ? "+" : ""}${fpp.difference.roundFixed(2)})`
                 pp.normal = fpp.normal.pp.roundFixed(3),
-                pp.stars = fpp.difficulty.star_rating.roundFixed(2)
+                    pp.stars = fpp.difficulty.star_rating.roundFixed(2)
             }
             return TextRenderer.render("score/score", {
                 index: index, title: escapeMarkdown(score.beatmap.title, { escape: false }), version: escapeMarkdown(score.beatmap.version, { escape: false }), url: score.beatmap.url, mods: score.mods.join(""), difficulty: pp.stars,
@@ -271,4 +274,55 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
 
 }
 
+Score.interactionData
+    .setName("score")
+    .setDescription("Get user scores")
+    .addStringOption(UsernameStringOption)
+    .addStringOption(GamemodeStringOption)
+    .addNumberOption(PageNumberOption)
+    .addStringOption(ModsStringOption)
+    .addBooleanOption(ReversedBooleanOption)
+    .addBooleanOption(RandomBooleanOption)
+    .addStringOption(opt =>
+        opt
+            .setName("sort")
+            .setDescription("Sort filtered scores by")
+            .setRequired(false)
+            .setChoices({
+                name: "Approach Rate",
+                value: "ar"
+            }, {
+                name: "Overall Difficulty",
+                value: "od"
+            }, {
+                name: "Circle Size",
+                value: "cs"
+            }, {
+                name: "Health Drain",
+                value: "hp"
+            }, {
+                name: "Performance Points",
+                value: "pp"
+            }, {
+                name: "BPM",
+                value: "bpm"
+            }, {
+                name: "Score",
+                value: "score"
+            })
+    )
+    .addBooleanOption(opt =>
+        opt
+            .setName("anyone")
+            .setDescription("Get scores by all users")
+            .setRequired(false)
+    )
+    .addStringOption(opt =>
+        opt
+            .setName("filter")
+            .setDescription("Filter scores by")
+            .setRequired(false)
+    )
+
 CommandEmitterInstance.AddCommand(Score, Score.names)
+InteractionRegistrerInstance.AddInteraction(Score.interactionData)

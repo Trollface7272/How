@@ -11,10 +11,12 @@ import NodeCache from "node-cache";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { Profile } from "@src/class/api/osu/class/Profile";
 import { randomBytes } from "crypto";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from "discord.js";
 import { Beatmap } from "@src/class/api/osu/class/Beatmap";
 import { Score } from "@src/class/api/osu/class/Score";
 import { Mods } from "@src/class/api/osu/class/Mods";
+import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, ModsStringOption, PageNumberOption } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 enum lbType {
     global = "global",
@@ -82,6 +84,7 @@ class LeaderboardsData extends CommandData implements CommandDataAbstract {
 
 class Leaderboards extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["leaderboards", "lb", "clb", "countryleaderboards", "flb", "friendleaderboards", "rleaderboards", "rlb", "rclb", "rcountryleaderboards", "rflb", "rfriendleaderboards"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: LeaderboardsData
     private args: args
     private componentId: string
@@ -157,7 +160,7 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             await this.data.Reply(this.RenderNoScores())
             return CommandResponseCodes.OK
         }
- 
+
         const userids = lb.scores.map(score => score.UserId)
         const users = isButton ? cached.users : await fetcher.GetByUserIds({ ids: userids })
         const userRanks: { [key: number]: Profile.FromIds } = {}
@@ -183,7 +186,7 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             })
             .setThumbnail(map.beatmapset.covers["list@2x"])
 
-        
+
 
         const [_, err] = await HandleAsync(this.data.Reply({ embeds: [embed], components: this.RenderComponents(Page, Math.ceil(lb.scores.length / 10)) }))
 
@@ -229,4 +232,31 @@ class Leaderboards extends CommandBase implements CommandAbstract {
 
 }
 
+Leaderboards.interactionData
+    .setContexts(CONTEXT_FULL)
+    .setName("leaderboards")
+    .setDescription("Get leaderboards for beatmap")
+    .addStringOption(BeatmapStringOption)
+    .addStringOption(opt =>
+        opt
+            .setName("type")
+            .setDescription("Leaderboards type to get")
+            .setRequired(false)
+            .setChoices({
+                name: "Global",
+                value: "global"
+            }, {
+                name: "Country",
+                value: "country"
+            }, {
+                name: "Friends",
+                value: "friends"
+            })
+    )
+    .addStringOption(GamemodeStringOption)
+    .addStringOption(ModsStringOption)
+    .addNumberOption(PageNumberOption)
+
+
 CommandEmitterInstance.AddCommand(Leaderboards, Leaderboards.names)
+InteractionRegistrerInstance.AddInteraction(Leaderboards.interactionData)

@@ -9,7 +9,7 @@ import { Logger } from "@src/class/Logger";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { EmojiFactory } from "@src/class/Emojis";
 import { SlashCommandBuilder } from "discord.js";
-import { CONTEXT_FULL } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
@@ -99,12 +99,7 @@ Update.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("update")
     .setDescription("Get profile changes since last update")
-    .addStringOption(opt =>
-        opt
-            .setRequired(false)
-            .setName("username")
-            .setDescription("Username to get data for")
-    )
+    .addStringOption(UsernameStringOption)
 
 CommandEmitterInstance.AddCommand(Update, Update.names)
 InteractionRegistrerInstance.AddInteraction(Update.interactionData)

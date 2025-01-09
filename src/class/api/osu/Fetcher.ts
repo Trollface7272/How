@@ -13,6 +13,7 @@ import { Multiplayer } from "./class/Multiplayer"
 import { OsuTrack } from "./class/Ameo"
 import { Snipe } from "./class/Snipe"
 import { Mods } from "./class/Mods"
+import { RespektiveScoreAPI } from "./class/respektive/Score"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
@@ -53,6 +54,7 @@ export class Fetcher {
     private axios: AxiosInstance
     private ameoAxios: AxiosInstance
     private snipeAxios: AxiosInstance
+    private scoreRespektiveAxios: AxiosInstance
     private userCache = new Map<number, Profile.FromId>()
     public constructor(private oauth: OAuth, private isUser: boolean) {
         this.axios = axios.create({
@@ -74,6 +76,13 @@ export class Fetcher {
         })
         this.snipeAxios = axios.create({
             baseURL: "https://api.huismetbenen.nl",
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            }
+        })
+        this.scoreRespektiveAxios = axios.create({
+            baseURL: "https://score.respektive.pw",
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
@@ -303,6 +312,19 @@ export class Fetcher {
 
     public async SnipeHistory({ name }: { name: number | string }) {
         const resp = await this.snipeAxios.get(Endpoints.Snipe.snipeHistory(name))
-        return resp.data.map(el => new Snipe.History(el))
+        return resp.data.map((el: Snipe.History) => new Snipe.History(el))
+    }
+
+
+
+    public async ScoreRequiredForRank({ pos }: { pos: number }): Promise<RespektiveScoreAPI.GetRank> {
+        const resp = await this.scoreRespektiveAxios.get(Endpoints.Respektive.Score.rank(pos))
+        return new RespektiveScoreAPI.GetRank(resp.data[0])
+    }
+
+    public async ScoreProfile({ user_id }: { user_id: number }) {
+        const resp = await this.scoreRespektiveAxios.get(Endpoints.Respektive.Score.profile(user_id))
+        if (!resp.data[0] || resp.data[0].rank == 0) return null
+        return new RespektiveScoreAPI.Profile(resp.data[0])
     }
 }

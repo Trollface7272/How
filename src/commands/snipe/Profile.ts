@@ -16,7 +16,7 @@ import { BarChart, BarChartOptions } from "@src/class/graphs/Bar";
 import sharp from "sharp";
 import { Canvas } from "canvas";
 import { DoughnutChart, DoughnutChartOptions } from "@src/class/graphs/Doughnut";
-import {color} from "chart.js/helpers"
+import { color } from "chart.js/helpers"
 
 
 const colors = [
@@ -71,6 +71,7 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
             Logger.Error("snipeProfileErr", snipeProfileErr)
             return CommandResponseCodes.UnknownError
         }
+
         const sphReq = HandleAsync(fetcher.SnipeHistory({ name: snipeProfile.user_id }))
         const oldestScoreReq = HandleAsync(fetcher.GetBeatmapUserScore({ Beatmap: snipeProfile.oldest_date_map_id, Id: snipeProfile.user_id, Gamemode: "osu" }))
         const oldestMapReq = HandleAsync(fetcher.GetBeatmap({ id: snipeProfile.oldest_date_map_id, Gamemode: "osu" }))
@@ -105,12 +106,14 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
             score: oldestScore.ScoreFormatted, combo: FormatCombo(oldestScore.MaxCombo, oldestScore.Beatmap.max_combo, "osu"), hits: FormatHits(oldestScore.Statistics, 0), timestamp: oldestScore.EndedAt.toDiscordToolTip()
         })
 
-        const charts = await Promise.all([this.RenderDatesChart(snipeProfile.dates_ranked, snipeProfile.dates_set), this.RenderCountChart(snipeProfileHistory), this.RenderModsChart(snipeProfile.mods_count)])
 
-        const img = new Canvas(1400, 600, "image").toBuffer()
+        const charts = await Promise.all([this.RenderDatesChart(snipeProfile.dates_ranked, snipeProfile.dates_set), this.RenderCountChart(snipeProfileHistory)])
+
+        const img = new Canvas(1000, 600, "image").toBuffer()
 
         const chart = await sharp(img)
-            .composite([{ input: charts[0], gravity: sharp.gravity.southwest }, {input: charts[1], gravity: sharp.gravity.northwest}, {input: charts[2], gravity: sharp.gravity.east}]).toBuffer()
+            .flatten({ background: { r: 70, g: 57, b: 63, alpha: 255 } })
+            .composite([{ input: charts[0], gravity: sharp.gravity.south }, { input: charts[1], gravity: sharp.gravity.north }]).toBuffer()
 
         const embed = this.GetBaseEmbed()
             .setAuthor({
@@ -140,6 +143,7 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
         const values = history.map(h => h.count_total)
         const options: ChartOptions = {
             reverse: false, yLines: true, fill: "start", labels, data: values,
+            width: 950,
             yTitle: {
                 display: true,
                 text: "#1 History",
@@ -178,6 +182,7 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
         }
         const options: BarChartOptions = {
             reverse: false, yLines: true, datasets: data,
+            width: 950,
             yTitle: {
                 display: true,
                 text: "Dates",
@@ -205,7 +210,7 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
             mods[k] = v
         })
         mods["Other"] = other
-        
+
         const data: ChartData<"doughnut"> = {
             labels: Object.keys(mods),
             datasets: [{

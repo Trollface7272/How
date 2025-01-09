@@ -8,7 +8,7 @@ import { Gamemode } from "@src/class/api/osu/types/MiscTypes"
 import { GamemodeNames } from "@src/class/api/osu/Consts"
 import { EmojiFactory } from "@src/class/Emojis"
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync } from "@src/Utils"
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, escapeMarkdown } from "discord.js"
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionReplyOptions, MessageReplyOptions, SlashCommandBuilder, escapeMarkdown } from "discord.js"
 import { TextRenderer } from "@src/class/renderer/Text"
 import NodeCache from "node-cache"
 import { randomBytes } from "crypto"
@@ -17,6 +17,8 @@ import { Beatmap } from "@src/class/api/osu/class/Beatmap"
 import { BeatmapSet } from "@src/class/api/osu/class/BeatmapSet"
 import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
 import { CommandBase } from "@src/class/base/Command"
+import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, IndexNumberOption, ListBooleanOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction"
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer"
 
 interface args {
     Gamemode?: Gamemode
@@ -52,7 +54,7 @@ class RecentData extends CommandData implements CommandDataAbstract {
         const Page = 0
         const Id = this.data.GetNumber("id", ["id", "-id"]) ?? undefined
         const Best = this.data.GetBoolean("best", ["b", "best", "-b", "-best"]) ?? false
-        const Fails = !(this.data.GetBoolean("fails", ["pass", "p", "-pass", "-p"]) ?? false)
+        const Fails = !(this.data.GetBoolean("exclude-fails", ["pass", "p", "-pass", "-p"]) ?? false)
         const List = this.data.GetBoolean("list", ["l", "list", "-l", "-list"]) ?? false
         const Count = this.data.GetBoolean("count", ["c", "count", "-c", "-count"]) ?? false
         const Map = this.data.GetBoolean("map", ["m", "map", "-m", "-map"]) ?? false
@@ -73,6 +75,7 @@ class RecentData extends CommandData implements CommandDataAbstract {
 
 class Recent extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["recent", "r", "rs", "recents", "recentscores", "recentscore"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: RecentData
     private args: args
     private componentId: string
@@ -363,4 +366,28 @@ class Recent extends CommandBase implements CommandAbstract {
     }
 }
 
+Recent.interactionData
+    .setContexts(CONTEXT_FULL)
+    .setName("recent")
+    .setDescription("Get recent score")
+    .addStringOption(GamemodeStringOption)
+    .addNumberOption(PageNumberOption)
+    .addStringOption(BeatmapStringOption)
+    .addStringOption(UsernameStringOption)
+    .addBooleanOption(ListBooleanOption)
+    .addNumberOption(IndexNumberOption)
+    .addBooleanOption(opt =>
+        opt
+            .setName("best")
+            .setDescription("Get recent top plays")
+            .setRequired(false)
+    )
+    .addBooleanOption(opt =>
+        opt
+            .setName("exclude-fails")
+            .setDescription("Only get passes")
+            .setRequired(false)
+    )
+
 CommandEmitterInstance.AddCommand(Recent, Recent.names)
+InteractionRegistrerInstance.AddInteraction(Recent.interactionData)

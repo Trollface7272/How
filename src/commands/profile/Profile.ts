@@ -14,8 +14,9 @@ import { CommandBase } from "@src/class/base/Command";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Logger } from "@src/class/Logger";
 import { FetcherError, FetcherErrors } from "@src/class/api/osu/class/FetcherError";
-import { CONTEXT_FULL, getGamemodeStringOption } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, GamemodeStringOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { RespektiveScoreAPI } from "@src/class/api/osu/class/respektive/Score";
 
 interface args {
   username: string
@@ -107,7 +108,13 @@ class Profile extends CommandBase implements CommandAbstract {
         }
         return CommandResponseCodes.UnknownError
       }
-      replyOptions = this.RenderProfile({ profile, mode })
+      const [scoreProfile, scoreProfileErr] = await HandleAsync(fetcher.ScoreProfile({ user_id: profile.id }))
+      if (scoreProfileErr) {
+        const embed = this.HandleProfileError(scoreProfileErr, username)
+        await this.data.Reply(embed)
+        return CommandResponseCodes.OK
+      }
+      replyOptions = this.RenderProfile({ profile, mode, scoreProfile })
     }
 
     await this.data.Reply(replyOptions)
@@ -116,7 +123,7 @@ class Profile extends CommandBase implements CommandAbstract {
     return CommandResponseCodes.OK
   }
 
-  private RenderProfile({ profile, mode }: { profile: OsuProfile.FromId, mode: Gamemode }) {
+  private RenderProfile({ profile, mode, scoreProfile }: { profile: OsuProfile.FromId, mode: Gamemode, scoreProfile: RespektiveScoreAPI.Profile }) {
     const embed = this.GetBaseEmbed()
     const { statistics, username, country_code, is_online } = profile
     const { global_rank, level, pp, hit_accuracy: accuracy, ranked_score, total_score, grade_counts, play_count, play_time, country_rank } = statistics
@@ -126,7 +133,7 @@ class Profile extends CommandBase implements CommandAbstract {
     const globalRank = !global_rank ? "-" : `${global_rank.toLocaleString("en-US")}`
 
     const description = TextRenderer.render("profile/profile", {
-      globalRank: globalRank, countryRank: countryRank,
+      globalRank: globalRank, countryRank: countryRank, scoreRank: scoreProfile?.rank,
       currentLevel: currentLevel, levelProgress: (levelProgress % 1 !== 0) ? levelProgress.roundFixed(2) : levelProgress,
       pp: pp.roundFixed(2), accuracy: accuracy.roundFixed(2),
       rankedScore: ranked_score.asScientificNotation(), totalScore: total_score.asScientificNotation(),
@@ -399,13 +406,8 @@ Profile.interactionData
   .setContexts(CONTEXT_FULL)
   .setName("profile")
   .setDescription("Osu profile for user")
-  .addStringOption(opt =>
-    opt
-      .setName("username")
-      .setDescription("Username to get profile for")
-      .setRequired(false)
-  )
-  .addStringOption(getGamemodeStringOption)
+  .addStringOption(UsernameStringOption)
+  .addStringOption(GamemodeStringOption)
   .addBooleanOption(opt =>
     opt
       .setName("events")

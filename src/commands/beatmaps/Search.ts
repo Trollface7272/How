@@ -12,7 +12,7 @@ import { TextRenderer } from "@src/class/renderer/Text";
 import { ActionRowBuilder, SlashCommandBuilder, SlashCommandStringOption, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { randomBytes } from "crypto";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
-import { CONTEXT_FULL, getGamemodeStringOption } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, GamemodeStringOption } from "@src/utils/discord/interaction";
 
 
 const typeRegex = /-(any|ranked|qualified|loved|favourites|pending|wip|graveyard|mine)/
@@ -116,7 +116,7 @@ Search.interactionData
             .setDescription("Text to search")
             .setRequired(true)
     )
-    .addStringOption(getGamemodeStringOption)
+    .addStringOption(GamemodeStringOption)
     .addStringOption(opt =>
         opt
             .setName("status")

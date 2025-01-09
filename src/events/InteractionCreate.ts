@@ -91,7 +91,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public GetSpecific(): number[] {
-        return this.GetString("specific")?.split(",")?.map(e => Number(e) - 1) || []
+        return this.GetString("index")?.split(",")?.map(e => Number(e) - 1) || []
     }
 
     public GetCommand(): string {

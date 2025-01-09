@@ -8,12 +8,14 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import NodeCache from "node-cache";
 import { Logger } from "@src/class/Logger";
 import { TextRenderer } from "@src/class/renderer/Text";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown, SlashCommandBuilder } from "discord.js";
 import { Score } from "@src/class/api/osu/class/Score";
 import { randomBytes, randomInt } from "crypto";
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag } from "@src/Utils";
 import { GamemodeNames } from "@src/class/api/osu/Consts";
 import { Mods } from "@src/class/api/osu/class/Mods";
+import { CONTEXT_FULL, GamemodeStringOption, IndexNumberOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
     Gamemode: Gamemode
@@ -49,7 +51,7 @@ class TopData extends CommandData implements CommandDataAbstract {
 
         return {
             Gamemode: Mode,
-            GreaterThan: this.data.GetNumber("g", ["-g", "gt", "-gt"]),
+            GreaterThan: this.data.GetNumber("greater-than", ["g", "-g", "gt", "-gt"]),
             Id: this.data.GetNumber("id", ["-id"]),
             Page: 0,
             Random: this.data.GetBoolean("rand", ["-rand"]),
@@ -102,6 +104,7 @@ class TopData extends CommandData implements CommandDataAbstract {
 
 class Top extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["top", "osutop", "maniatop", "taikotop", "ctbtop", "fruitstop", "pinned", "firsts"]
+    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: TopData
     private componentId: string
     private oldComponentId: string
@@ -153,10 +156,10 @@ class Top extends CommandBase implements CommandAbstract {
         }
 
 
-        
-        if (Specific.length === 0 ) await Promise.all(scores.map(el => el.fetchPerformance()))
-        
-        
+
+        if (Specific.length === 0) await Promise.all(scores.map(el => el.fetchPerformance()))
+
+
         if (GreaterThan) {
             let username = scores[0].User.username
             scores = scores.filter(el => el.PP > GreaterThan)
@@ -204,10 +207,10 @@ class Top extends CommandBase implements CommandAbstract {
 
         await Promise.all(pickedScores.map(el => Promise.all([el.fetchPosition(user.id), el.fetchPerformance()])))
         const embed = this.RenderScores({ scores: pickedScores, totalScores: scores.length })
-        const buttonsRow = 
-            Random ? 
-            this.renderRandomButton() :
-            this.renderNavigationButtons({ curentPage: Page, maxPage: Math.ceil(scores.length / listPageSize) })
+        const buttonsRow =
+            Random ?
+                this.renderRandomButton() :
+                this.renderNavigationButtons({ curentPage: Page, maxPage: Math.ceil(scores.length / listPageSize) })
 
         this.data.Reply({ embeds: [embed], components: [buttonsRow] })
 
@@ -300,7 +303,7 @@ class Top extends CommandBase implements CommandAbstract {
                 iconURL: GetFlag(scores[0].User.country_code), url: `https://osu.ppy.sh/users/${scores[0].User.id}`
             })
             .setThumbnail(scores[0].User.avatar_url)
-            
+
         if (!this.args.Random)
             embed.setFooter({
                 text: `Page ${this.args.Page + 1}/${Math.ceil(totalScores / 5)}`
@@ -337,4 +340,23 @@ class Top extends CommandBase implements CommandAbstract {
     }
 }
 
+Top.interactionData
+    .setContexts(CONTEXT_FULL)
+    .setName("top")
+    .setDescription("Get top plays")
+    .addStringOption(UsernameStringOption)
+    .addStringOption(GamemodeStringOption)
+    .addBooleanOption(ReversedBooleanOption)
+    .addBooleanOption(RandomBooleanOption)
+    .addNumberOption(IndexNumberOption)
+    .addNumberOption(PageNumberOption)
+    .addStringOption(ModsStringOption)
+    .addNumberOption(opt =>
+        opt
+            .setName("greater-than")
+            .setDescription("Get scores that are more than x pp")
+            .setRequired(false)
+    )
+
 CommandEmitterInstance.AddCommand(Top, Top.names)
+InteractionRegistrerInstance.AddInteraction(Top.interactionData)

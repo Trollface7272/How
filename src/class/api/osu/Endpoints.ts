@@ -5,8 +5,14 @@ export namespace Endpoints {
         export const update = () => `/update`
     }
     export namespace Snipe {
-        export const snipeProfile = (name: number|string) => `/player/cz/${name}?mode=osu`
-        export const snipeHistory = (name: number|string) => `/player/cz/${name}/history`
+        export const snipeProfile = (name: number | string) => `/player/cz/${name}?mode=osu`
+        export const snipeHistory = (name: number | string) => `/player/cz/${name}/history`
+    }
+    export namespace Respektive {
+        export namespace Score {
+            export const rank = (rank: number | string) => `/rank/${rank}`
+            export const profile = (user_id: number) => `/u/${user_id}`
+        }
     }
     export const self = (Gamemode: Gamemode) => `/me/${Gamemode}`
     export const profile = (Gamemode: Gamemode, Username: string | number) => `/users/${Username}/${Gamemode}`
