@@ -41,6 +41,7 @@ export class Client extends DiscordClient {
         if (!process.env.DISABLE_TRACKING) {
             Logger.Info(`Creating Beatmap Tracking Loop`)
             this.BeatmapTrackingLoop = setInterval(() => BeatmapTrackingLoop(this), 1000 * 60 * 5)
+            BeatmapTrackingLoop(this)
         }
     }
 

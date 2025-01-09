@@ -45,6 +45,7 @@ export class Fetcher {
         let oauth = await OAuthGenerator.GetTokenByUserId({ userId: userId, defaultToClientCredentials: false })
         if (!oauth?.IsValid()) {
             if (!ClientCredentials) ClientCredentials = await OAuthGenerator.GetClientCredentialsToken()
+            if (!ClientCredentials.IsValid()) ClientCredentials = await OAuthGenerator.GetClientCredentialsToken()
             oauth = ClientCredentials
             isUser = false
         }
