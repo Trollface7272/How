@@ -14,7 +14,7 @@ async function initFetcher() {
 }
 
 export async function BeatmapTrackingLoop(client: Client) {
-    await HandleAsync(initFetcher())
+    console.log(await HandleAsync(initFetcher()))
 
 
     const [events, eventsErr] = await HandleAsync(EventFactory.GetEvents([EventType.QualifiedBeatmaps, EventType.RankedBeatmaps]))
