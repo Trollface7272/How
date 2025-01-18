@@ -59,6 +59,12 @@ export const IndexNumberOption = (opt: SlashCommandNumberOption) => opt
     .setDescription("index of score to get")
     .setRequired(false)
 
+export const CountryStringOption = (opt: SlashCommandStringOption) => opt
+    .setName("country")
+    .setDescription("2 letter country code")
+    .setRequired(false)
+    .setMinLength(2)
+    .setMaxLength(2)
 
 
 export const CONTEXT_FULL = [InteractionContextType.BotDM, InteractionContextType.Guild, InteractionContextType.PrivateChannel]

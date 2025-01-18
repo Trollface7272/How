@@ -12,4 +12,9 @@ export class ErrorHandler extends ErrorRenderer {
         Logger.Error(err)
         return this.RenderApiError()
     }
+
+    protected HandleRankingError(err: AxiosError | unknown) {
+        Logger.Error(err)
+        return this.RenderApiError()
+    }
 }

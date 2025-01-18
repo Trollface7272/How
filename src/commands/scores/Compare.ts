@@ -206,7 +206,7 @@ class Compare extends CommandBase implements CommandAbstract {
 Compare.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("compare")
-    .setDescription("Show your score on a map")
+    .setDescription("Display your score on a map")
     .addStringOption(BeatmapStringOption)
     .addStringOption(UsernameStringOption)
     .addStringOption(GamemodeStringOption)

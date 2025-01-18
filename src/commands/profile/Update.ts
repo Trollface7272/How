@@ -98,7 +98,7 @@ class Update extends CommandBase implements CommandAbstract {
 Update.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("update")
-    .setDescription("Get profile changes since last update")
+    .setDescription("Display profile changes since last update")
     .addStringOption(UsernameStringOption)
 
 CommandEmitterInstance.AddCommand(Update, Update.names)

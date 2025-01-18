@@ -219,7 +219,7 @@ class Recent extends CommandBase implements CommandAbstract {
         const pp = this.RenderBeatmapPP(pps, [100, 99, 98, 95])
 
         const description = TextRenderer.render("beatmap/beatmap", {
-            length: length.asTime(), drain: length != beatmap.drain ? ` (${beatmap.drain.asTime()})` : "", bpm: beatmap.bpm, mods: beatmap.mods.Formatted,
+            length: beatmap.total_length.asTime(), drain: beatmap.total_length != beatmap.drain ? ` (${beatmap.drain.asTime()})` : "", bpm: beatmap.bpm, mods: beatmap.mods.Formatted,
             setid: beatmapset.id, id: beatmap.id,
             difficulty: EmojiFactory.GetDifficultyEmoji(beatmap.difficulty_rating, beatmap.mode), version: beatmap.version,
             stars: beatmap.difficulty_rating.roundFixed(2), maxCombo: beatmap.max_combo,
@@ -369,7 +369,7 @@ class Recent extends CommandBase implements CommandAbstract {
 Recent.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("recent")
-    .setDescription("Get recent score")
+    .setDescription("Display 100 recent scores")
     .addStringOption(GamemodeStringOption)
     .addNumberOption(PageNumberOption)
     .addStringOption(BeatmapStringOption)

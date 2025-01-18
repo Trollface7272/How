@@ -218,7 +218,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
 Beatmap.interactionData
   .setContexts(CONTEXT_FULL)
   .setName("beatmap")
-  .setDescription("Get info about a beatmap")
+  .setDescription("Display info about a beatmap")
   .addStringOption(BeatmapStringOption)
   .addStringOption(GamemodeStringOption)
   .addStringOption(ModsStringOption).addBooleanOption(opt =>

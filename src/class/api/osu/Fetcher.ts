@@ -1,7 +1,7 @@
 import { AxiosInstance } from "axios"
 import { OAuth, OAuthGenerator } from "./OAuth"
 import axios from "axios"
-import { Gamemode, RulesetIds } from "./types/MiscTypes"
+import { Gamemode, RankingType, RulesetIds } from "./types/MiscTypes"
 import { Profile } from "./class/Profile"
 import { Score } from "./class/Score"
 import { Endpoints } from "./Endpoints"
@@ -14,6 +14,7 @@ import { OsuTrack } from "./class/Ameo"
 import { Snipe } from "./class/Snipe"
 import { Mods } from "./class/Mods"
 import { RespektiveScoreAPI } from "./class/respektive/Score"
+import { Ranking } from "./class/Ranking"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
@@ -287,6 +288,19 @@ export class Fetcher {
         const resp = await this.axios.get(Endpoints.getFriends(), {})
 
         return resp.data.map(el => new Profile.FromFriends(el))
+    }
+
+    public async GetRankings({ gamemode, type, page, filter, country }: { gamemode: Gamemode, type: RankingType, page: number, filter: "all" | "friends", country?: string }) {
+        const resp = await this.axios.get(Endpoints.getRankings(gamemode, type), {
+            params: {
+                "cursor[page]": page,
+                filter: filter,
+                country
+            }
+        })
+
+        return new Ranking.Rankings(resp.data, { gamemode, type, page, filter, country })
+
     }
 
 

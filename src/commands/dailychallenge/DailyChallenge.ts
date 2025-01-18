@@ -6,7 +6,7 @@ import { CommandBase } from "@src/class/base/Command";
 import { DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { Logger } from "@src/class/Logger";
 import { SlashCommandBuilder } from "discord.js";
-import { CONTEXT_FULL, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, CountryStringOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
@@ -85,15 +85,8 @@ DailyChallenge.interactionData
     .addSubcommand(sub =>
         sub
             .setName("leaderboards")
-            .setDescription("Get daily challenge leaderboards")
-            .addStringOption(opt =>
-                opt
-                    .setName("country")
-                    .setDescription("Country code to get leaderboards for")
-                    .setRequired(false)
-                    .setMinLength(2)
-                    .setMaxLength(2)
-            )
+            .setDescription("Display daily challenge leaderboards")
+            .addStringOption(CountryStringOption)
             .addBooleanOption(opt =>
                 opt
                     .setName("friends")
@@ -105,25 +98,20 @@ DailyChallenge.interactionData
     .addSubcommand(sub =>
         sub
             .setName("profile")
-            .setDescription("Get daily challenge profile")
+            .setDescription("Display user daily challenge profile")
             .addStringOption(UsernameStringOption)
     )
     .addSubcommand(sub =>
         sub
             .setName("thresholds")
-            .setDescription("Daily challenge placement thresholds")
+            .setDescription("Display daily challenge placement thresholds")
 
     )
     .addSubcommand(sub =>
         sub
             .setName("top-players")
-            .setDescription("Daily challenge top players leaderboards")
-            .addStringOption(opt =>
-                opt
-                    .setName("country")
-                    .setDescription("Country code to get leaderboards for")
-                    .setRequired(false)
-            )
+            .setDescription("Display daily challenge top players leaderboards")
+            .addStringOption(CountryStringOption)
             .addBooleanOption(opt =>
                 opt
                     .setName("today")

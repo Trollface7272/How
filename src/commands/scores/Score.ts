@@ -276,7 +276,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
 
 Score.interactionData
     .setName("score")
-    .setDescription("Get user scores")
+    .setDescription("Display imported user scores")
     .addStringOption(UsernameStringOption)
     .addStringOption(GamemodeStringOption)
     .addNumberOption(PageNumberOption)

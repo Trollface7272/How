@@ -405,7 +405,7 @@ class Profile extends CommandBase implements CommandAbstract {
 Profile.interactionData
   .setContexts(CONTEXT_FULL)
   .setName("profile")
-  .setDescription("Osu profile for user")
+  .setDescription("Display user osu profile")
   .addStringOption(UsernameStringOption)
   .addStringOption(GamemodeStringOption)
   .addBooleanOption(opt =>

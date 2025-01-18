@@ -94,7 +94,7 @@ class RequiredScore extends CommandBase implements CommandAbstract {
 RequiredScore.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("required-score")
-    .setDescription("Get required score for rank")
+    .setDescription("Display required score for rank")
     .addNumberOption(opt =>
         opt
             .setName("rank")

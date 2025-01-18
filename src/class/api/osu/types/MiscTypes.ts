@@ -14,3 +14,10 @@ export type ParsedMods = {
 export type Dictionary<T> = {
     [key: string]: T
 }
+
+export enum RankingType {
+    charts = "charts",
+    country = "country",
+    performance = "performance",
+    score = "score"
+}

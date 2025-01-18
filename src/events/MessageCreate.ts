@@ -43,7 +43,8 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
     public async SendTyping(): Promise<void> {
         try {
-            return await this.message.channel.sendTyping();
+            if (this.message.channel.isTextBased() && 'sendTyping' in this.message.channel)
+                return await this.message.channel.sendTyping();
         } catch (err) {
             console.error("Error sending typing", err);
         }

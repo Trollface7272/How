@@ -94,7 +94,7 @@ class CountMods extends CommandBase implements CommandAbstract {
 CountMods.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("count-mods")
-    .setDescription("Show user mod distribution in top 100")
+    .setDescription("Display user mod distribution in top 100")
     .addStringOption(UsernameStringOption)
     .addStringOption(GamemodeStringOption)
 

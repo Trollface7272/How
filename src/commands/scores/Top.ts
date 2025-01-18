@@ -343,7 +343,7 @@ class Top extends CommandBase implements CommandAbstract {
 Top.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("top")
-    .setDescription("Get top plays")
+    .setDescription("Display current user top 100 scores")
     .addStringOption(UsernameStringOption)
     .addStringOption(GamemodeStringOption)
     .addBooleanOption(ReversedBooleanOption)

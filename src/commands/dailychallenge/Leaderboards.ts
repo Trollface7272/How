@@ -92,6 +92,7 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
             }
             const friends = await fetcher.GetUserFriends()
             const friendIds = friends.map(el => el.id)
+            friendIds.push(user.osu.userId)
             query["user.id"] = { $in: friendIds }
         }
 

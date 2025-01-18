@@ -66,7 +66,7 @@ class Avatar extends CommandBase implements CommandAbstract {
 Avatar.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("avatar")
-    .setDescription("Get osu user avatar")
+    .setDescription("Display osu user avatar")
     .addStringOption(UsernameStringOption)
 
 CommandEmitterInstance.AddCommand(Avatar, Avatar.names)

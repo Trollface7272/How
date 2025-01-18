@@ -235,7 +235,7 @@ class Leaderboards extends CommandBase implements CommandAbstract {
 Leaderboards.interactionData
     .setContexts(CONTEXT_FULL)
     .setName("leaderboards")
-    .setDescription("Get leaderboards for beatmap")
+    .setDescription("Display map leaderboards")
     .addStringOption(BeatmapStringOption)
     .addStringOption(opt =>
         opt

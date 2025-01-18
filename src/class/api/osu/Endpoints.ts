@@ -1,4 +1,4 @@
-import { Gamemode, RulesetIds } from "./types/MiscTypes";
+import { Gamemode, RankingType, RulesetIds } from "./types/MiscTypes";
 
 export namespace Endpoints {
     export namespace Ameo {
@@ -29,4 +29,5 @@ export namespace Endpoints {
     export const getPlaylists = () => `/rooms`
     export const getPlaylistScores = (room: number, playlist: number) => `/rooms/${room}/playlist/${playlist}/scores`
     export const getFriends = () => `/friends`
+    export const getRankings = (mode: Gamemode, type: RankingType) => `/rankings/${mode}/${type}`
 }
