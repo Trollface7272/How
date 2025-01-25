@@ -81,7 +81,6 @@ class cOAuthGenerator {
 
 
     public async GetClientCredentialsToken() {
-        console.log(this.clientCredentials?.expires_in?.getTime() >= Date.now() ? "expired" : "unexpired")
         if (this.clientCredentials?.expires_in?.getTime() >= Date.now()) return this.clientCredentials as OAuth
 
         const data = (await axios.post(tokenEndpoint, {
