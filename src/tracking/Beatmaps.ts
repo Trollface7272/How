@@ -1,5 +1,6 @@
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { RulesetIds } from "@src/class/api/osu/types/MiscTypes";
+import { DBBeatmapSet } from "@src/class/database/BeatmapSet";
 import { Event, EventFactory, EventType } from "@src/class/database/Events";
 import { Logger } from "@src/class/Logger";
 import { TextRenderer } from "@src/class/renderer/Text";
@@ -48,6 +49,12 @@ async function RunBeatmapType(event: Event, type: string, client: Client) {
 
     const newMaps = maps.beatmapsets.filter(el => el.RankedDate > lastCheck)
     if (!newMaps.length) return
+
+    if (type === "ranked") {
+        maps.beatmapsets.map(el => {
+            return new DBBeatmapSet(el as unknown as DBBeatmapSet).save().catch(Logger.Error)
+        })
+    }
 
     event.lastCheck = new Date(Math.max(...maps.beatmapsets.map(el => el.RankedDate.getTime())))
     await event.Save()
