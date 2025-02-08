@@ -281,6 +281,8 @@ export class MessageCreate implements Event {
         const content = data.GetContent().toLowerCase()
 
         if (!content.startsWith(prefix)) {
+            //forced prefix == dev
+            if (process.env.PREFIX_FORCE) return 0
             const prefixes = [...data.user.prefixes, ...data.guild.prefixes]
             prefix = prefixes.find(prefix => content.startsWith(prefix))
             if (!prefix) return 0

@@ -12,6 +12,7 @@ interface args {
     Prefix: string
     Clear: boolean
     Remove: boolean
+    List: boolean
 }
 
 class PrefixAliasData extends CommandData implements CommandDataAbstract {
@@ -26,6 +27,7 @@ class PrefixAliasData extends CommandData implements CommandDataAbstract {
             Type: this.data.GetString("type", ["-type", "t", "-t"]) as "server" | "user" ?? "user",
             Clear: this.data.GetBoolean("clear", ["-clear"]),
             Remove: this.data.GetBoolean("remove", ["-remove"]),
+            List: this.data.GetBoolean("list", ["-list"]),
             Prefix: this.data.GetRemaining("prefix")
         }
     }
@@ -44,11 +46,13 @@ class PrefixAlias extends CommandBase implements CommandAbstract {
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
 
-        const { Type, Prefix } = this.data.args
+        const { Type } = this.data.args
+
+        let ret: string = null
 
         switch (Type) {
             case "user": {
-                await this.HandleEntity(user)
+                ret = await this.HandleEntity(user)
                 break
             }
 
@@ -71,7 +75,7 @@ class PrefixAlias extends CommandBase implements CommandAbstract {
                     return CommandResponseCodes.UnknownError
                 }
 
-                await this.HandleEntity(guild)
+                ret = await this.HandleEntity(guild)
                 break;
             }
 
@@ -82,7 +86,7 @@ class PrefixAlias extends CommandBase implements CommandAbstract {
         }
 
         const embed = this.GetBaseEmbed()
-            .setDescription(`Successfully modified prefixes`)
+            .setDescription(ret ?? `Successfully modified prefixes`)
 
         await this.data.Reply({
             embeds: [embed]
@@ -94,19 +98,25 @@ class PrefixAlias extends CommandBase implements CommandAbstract {
     }
 
     private async HandleEntity(entity: User | Guild) {
-        const { Prefix, Clear, Remove } = this.data.args
+        const { Prefix, Clear, Remove, List } = this.data.args
+
+        if (List) {
+            if (entity.prefixes.length === 0) return "No prefix aliases found"
+            return entity.prefixes.join(", ")
+        }
+
         if (Clear) {
             entity.prefixes = []
-            return entity.Save()
+            await entity.Save()
         }
 
         if (Remove) {
             entity.prefixes = entity.prefixes.filter(el => el !== Prefix)
-            return entity.Save()
+            await entity.Save()
         }
         
         entity.prefixes.push(Prefix)
-        return entity.Save()
+        await entity.Save()
     }
 
 }
