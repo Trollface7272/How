@@ -3,13 +3,14 @@ import { db } from "./Main";
 import { BeatmapSet } from "../api/osu/class/BeatmapSet";
 
 
-export class DBBeatmapSet extends BeatmapSet.FromId {
+export class DBBeatmapSet extends BeatmapSet.SearchSet {
     public _id: ObjectId
 
 
     public constructor(data: DBBeatmapSet) {
         super(data)
         Object.assign(this, data)
+        this.FixTypes()
     }
 
     public save() {
@@ -27,12 +28,23 @@ export class DBBeatmapSet extends BeatmapSet.FromId {
 class cBeatmapSetFactory {
 
     public async GetDailyChallenge(id: number) {
-        const dc = await db.collection("beatmapsets").findOne<DBBeatmapSet>({
+        const set = await db.collection("beatmapsets").findOne<DBBeatmapSet>({
             id: id
         })
-        if (!dc) return false
-        return new DBBeatmapSet(dc)
+        if (!set) return false
+        return new DBBeatmapSet(set)
+    }
+
+    public async GetByRange(start: Date, end: Date) {
+        const sets = await db.collection<DBBeatmapSet>("beatmapsets").find<DBBeatmapSet>({
+            ranked_date: {
+                $gte: start,
+                $lte: end
+            }
+        }).toArray()
+
+        return sets.map(s => new DBBeatmapSet(s))
     }
 }
 
-export const BeatmapStringOptionFactory = new cBeatmapSetFactory()
+export const BeatmapSetFactory = new cBeatmapSetFactory()

@@ -57,23 +57,30 @@ export namespace BeatmapSet {
         discussion_locked: boolean
         hype: Hype
         is_scoreable: boolean
-        last_updated: string
+        last_updated: Date
         legacy_thread_url: string
         nominations?: Nominations
         nominations_summary?: Nominations
         ranked: -2 | -1 | 0 | 1 | 2 | 3 | 4
-        ranked_date: string
+        ranked_date: Date
         storyboard: boolean
-        submitted_date: string
+        submitted_date: Date
         tags: string
 
         public get RankedDate() {
             return new Date(this.ranked_date)
         }
 
+        public FixTypes() {
+            this.ranked_date = new Date(this.ranked_date)
+            this.last_updated = new Date(this.last_updated)
+            this.submitted_date = new Date(this.submitted_date)
+        }
+
         constructor(set: Base) {
             super(set)
             Object.assign(this, set)
+            this.FixTypes()
         }
     }
     //Beatmapset types for Beatmap endpoints
@@ -96,7 +103,7 @@ export namespace BeatmapSet {
     }
     export class SearchSet extends Base {
         beatmaps: _Beatmap.Base[]
-        
+
         public get Url() {
             return `https://osu.ppy.sh/s/${this.id}`
         }
@@ -124,6 +131,12 @@ export namespace BeatmapSet {
         constructor(set: SearchSet) {
             super(set)
             Object.assign(this, set)
+            
+            this.FixTypes()
+        }
+
+        public FixTypes(): void {
+            super.FixTypes()
             this.beatmaps = this.beatmaps.sort((a, b) => a.difficulty_rating - b.difficulty_rating).map(map => {
                 return new _Beatmap.Base(map, new Mods.ModList([]))
             })
@@ -131,6 +144,7 @@ export namespace BeatmapSet {
     }
     export class Search {
         beatmapsets: SearchSet[]
+        cursor_string: string
         cursor: {
             approved_date: string
             _id: string
@@ -153,6 +167,11 @@ export namespace BeatmapSet {
         constructor(set: FromId) {
             super(set)
             Object.assign(this, set)
+            this.FixTypes()
+        }
+
+        public FixTypes(): void {
+            super.FixTypes()
             this.beatmaps = this.beatmaps.map(map => {
                 return new _Beatmap.Compact(map)
             })

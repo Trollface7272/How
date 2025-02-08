@@ -1,4 +1,4 @@
-import { Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageReaction, MessageReplyOptions } from "discord.js";
+import { GuildMember, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageReaction, MessageReplyOptions } from "discord.js";
 import { Client } from "../Client";
 import { RawUser } from "../RawUser";
 import { Event } from "./Event";
@@ -97,6 +97,14 @@ export abstract class MessageEventData {
     }
 
     public SendTyping(): Promise<void> {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public IsInGuild(): boolean {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetMember(): GuildMember {
         throw Event.ReturnCode.Unimplemented
     }
 }

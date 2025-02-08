@@ -45,4 +45,12 @@ export class CommandData {
         if (interaction.isChatInputCommand()) return null
         if (interaction.isMessageComponent()) return interaction.customId.split(";")[1]
     }
+
+    public IsInGuild() {
+        return this.data.IsInGuild()
+    }
+
+    public GetMember() {
+        return this.data.GetMember()
+    }
 }

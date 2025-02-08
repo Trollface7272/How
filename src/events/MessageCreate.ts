@@ -1,6 +1,6 @@
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Event, EventData } from "@src/class/partials/Event";
-import { Interaction, InteractionType, Message, MessageReaction, ReplyOptions } from "discord.js";
+import { GuildMember, Interaction, InteractionType, Message, MessageReaction, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Logger } from "@src/class/Logger";
@@ -40,6 +40,13 @@ export class MessageCreateData implements EventData, MessageEventData {
     ) {
         this.args = message.content.replace(/🤓/, "pristine").split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
         this.args.shift()
+    }
+    public GetMember(): GuildMember {
+        if (!this.IsInGuild()) return null
+        return this.message.member
+    }
+    public IsInGuild(): boolean {
+        return this.message.inGuild()
     }
     public async SendTyping(): Promise<void> {
         try {
@@ -270,10 +277,14 @@ export class MessageCreate implements Event {
         this.RunTriggers(data)
         if (data.GetRawUser().bot) return
         await data.LoadDbData()
-        const prefix = process.env.PREFIX_FORCE ?? data.guild.prefix ?? "!"
+        let prefix = process.env.PREFIX_FORCE ?? data.guild.prefix ?? "!"
         const content = data.GetContent().toLowerCase()
 
-        if (!content.startsWith(prefix)) return 0
+        if (!content.startsWith(prefix)) {
+            const prefixes = [...data.user.prefixes, ...data.guild.prefixes]
+            prefix = prefixes.find(prefix => content.startsWith(prefix))
+            if (!prefix) return 0
+        }
 
         const [command, ...args] = content.substring(prefix.length).split(" ")
 

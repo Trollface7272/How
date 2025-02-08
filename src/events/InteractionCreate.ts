@@ -1,5 +1,5 @@
 import { Event, EventData } from "@src/class/partials/Event";
-import { ChatInputCommandInteraction, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, ReplyOptions } from "discord.js";
+import { ChatInputCommandInteraction, GuildMember, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Client } from "@src/class/Client";
@@ -11,8 +11,8 @@ import { Logger } from "@src/class/Logger";
 import { CommandResponseCodes } from "@src/class/partials/Command";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
-import { Score } from "@src/class/api/osu/class/Score";
 import { Mods } from "@src/class/api/osu/class/Mods";
+import { assert } from "console";
 
 export class InteractionCreateData implements EventData, MessageEventData {
     private _user: User
@@ -28,6 +28,14 @@ export class InteractionCreateData implements EventData, MessageEventData {
     constructor(
         private interaction: Interaction
     ) { }
+    public GetMember(): GuildMember {
+        if (!this.IsInGuild()) return null
+        return this.interaction.member as GuildMember
+    }
+
+    public IsInGuild(): boolean {
+        return this.interaction.inGuild()
+    }
     public SendTyping(): Promise<void> {
         return
     }

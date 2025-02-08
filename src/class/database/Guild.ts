@@ -13,6 +13,7 @@ export class Guild extends RawGuild {
     public messages: number
     public commands: number
     public embedColor: string
+    public prefixes: string[]
 
 
     constructor(guild?: DiscordGuild | Document) {
@@ -25,6 +26,7 @@ export class Guild extends RawGuild {
                 this[key] = guild[key]
             }
         }
+        if (!this.prefixes) this.prefixes = []
     }
 
     private LoadDefault(guild: DiscordGuild) {
@@ -36,6 +38,7 @@ export class Guild extends RawGuild {
         this.messages = 0
         this.commands = 0
         this.embedColor = "Random"
+        this.prefixes = []
     }
 
     public async LoadGuild() {
@@ -65,6 +68,7 @@ export class Guild extends RawGuild {
                 messages: this.messages,
                 commands: this.commands,
                 embedColor: this.embedColor,
+                prefixes: this.prefixes
             }
         }, { upsert: true })
     }

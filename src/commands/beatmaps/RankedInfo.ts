@@ -5,8 +5,9 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { SlashCommandBuilder } from "discord.js";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
-import { HandleAsync } from "@src/Utils";
+import { convertSeconds, HandleAsync } from "@src/Utils";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
+import { BeatmapSetFactory } from "@src/class/database/BeatmapSet";
 
 interface args {
     Month: number
@@ -49,40 +50,38 @@ class RankedInfo extends CommandBase implements CommandAbstract {
 
         const fetcher = await Fetcher.Create(user.id)
 
-        let query = `ranked=${Year}-${Month}`
+        const start = new Date(Year, Month, 1)
+        const end = new Date(Year, Month + 1, 0)
 
         if (Day) {
-            query += `-${Day}`
+            start.setDate(Day)
+            end.setDate(Day)
         }
 
-        const [search, search_err] = await HandleAsync(fetcher.SearchBeatmaps({
-            gamemode: Gamemode,
-            type: null,
-            query: query
-        }))
+        const [sets, sets_err] = await HandleAsync(BeatmapSetFactory.GetByRange(start, end))
 
-        const info = search.beatmapsets.map(set => {
-            return set.beatmaps.map(map => {
-                return {
-                    length: map.Length,
-                    drain: map.hit_length
-                }
-            }).reduce((prev, cur) => {
-                prev.drain += cur.drain
-                prev.length += cur.length
-                return prev
-            })
-        }).reduce((prev, cur) => {
-            prev.drain += cur.drain
-            prev.length += cur.length
-            return prev
-        })
+        const info = {
+            drain: [],
+            length: [],
+        }
+
+        for (const set of sets) {
+            for (const map of set.beatmaps) {
+                info.drain.push(map.hit_length)
+                info.length.push(map.total_length)
+            }
+        }
+
+
+
+
+
 
         
 
         console.log(info, {
-            a: Math.floor(info.drain / 60 / 60) + ":" + Math.floor(info.drain / 60) % 60 + ":" + info.drain % 60,
-            b: Math.floor(info.length / 60 / 60) + ":" + Math.floor(info.length / 60) % 60 + ":" + info.length % 60
+            a: convertSeconds(info.drain.sum()),
+            b: convertSeconds(info.length.sum())
         })
         
 

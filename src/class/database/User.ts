@@ -40,6 +40,7 @@ export class User extends RawUser {
     public settings: {
         missesTheme: string
     }
+    public prefixes: string[]
 
     public osu: Osu
 
@@ -53,6 +54,7 @@ export class User extends RawUser {
                 this[key] = user[key]
             }
         }
+        if (!this.prefixes) this.prefixes = []
     }
 
     private LoadDefault(user: DiscordUser) {
@@ -76,6 +78,7 @@ export class User extends RawUser {
         this.settings = {
             missesTheme: "default"
         }
+        this.prefixes = []
     }
 
     public async LoadUser() {
@@ -134,7 +137,8 @@ export class User extends RawUser {
                 knownIps: this.knownIps,
                 osuTemp: this.osuTemp,
                 settings: this.settings,
-                osu: this.osu
+                osu: this.osu,
+                prefixes: this.prefixes
             }
         }, { upsert: true })
     }

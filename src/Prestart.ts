@@ -51,3 +51,7 @@ Number.prototype.roundDynamicFixed = function (this: number, minDigits: number, 
 String.prototype.isNumber = function (this: string): boolean {
     return /^\d+$/.test(this)
 }
+
+Array.prototype.sum = function (this: Array<any>): number {
+    return this.reduce((a, b) => a + b, 0)
+}

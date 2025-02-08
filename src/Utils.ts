@@ -191,3 +191,13 @@ export function GetCountryFlag(countryCode: string) {
         .map(char => 127397 + char.charCodeAt(0));
     return String.fromCodePoint(...codePoints);
 }
+
+export function convertSeconds(seconds: number): { days: number, hours: number, minutes: number, seconds: number } {
+    const days = Math.floor(seconds / (24 * 3600));
+    seconds %= 24 * 3600;
+    const hours = Math.floor(seconds / 3600);
+    seconds %= 3600;
+    const minutes = Math.floor(seconds / 60);
+    seconds %= 60;
+    return { days, hours, minutes, seconds };
+}
