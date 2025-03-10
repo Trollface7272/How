@@ -30,6 +30,7 @@ interface args {
     Type: "best" | "firsts" | "pinned"
     Sort: string
     Mods: Mods.ModList
+    Recalculate: boolean
 }
 
 const componentCache = new NodeCache({
@@ -61,6 +62,7 @@ class TopData extends CommandData implements CommandDataAbstract {
             Specific: this.data.GetSpecific(),
             Type: this.GetTypeFromCommand(),
             Mods: this.data.GetMods(),
+            Recalculate: this.data.GetBoolean("recalculate", []),
             Username: this.data.GetRemaining()
         }
     }
@@ -122,7 +124,7 @@ class Top extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        const { GreaterThan, Gamemode, Id: _id, Mods, Page: _Page, Random, Recent, Reversed, Sort, Specific, Type, Username } = this.args
+        const { GreaterThan, Gamemode, Id: _id, Mods, Page: _Page, Random, Recent, Reversed, Sort, Specific, Type, Username, Recalculate } = this.args
         const Id = !Username && !_id ? user.osu.userId : _id
 
         const listPageSize = 5
@@ -157,7 +159,7 @@ class Top extends CommandBase implements CommandAbstract {
 
 
 
-        if (Specific.length === 0) await Promise.all(scores.map(el => el.fetchPerformance()))
+        if (Recalculate) await Promise.all(scores.map(el => el.fetchPerformance()))
 
 
         if (GreaterThan) {
