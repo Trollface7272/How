@@ -227,7 +227,7 @@ export class PerformanceCalculator {
             Object.keys(el.settings).map(key =>
                 ` -o ${el.acronym}_${key}=${el.settings[key]} `
             ).join(" ")
-        )
+        ).join(" ")
 
         const command = `${process.env.PERFORMANCE_CALCULATOR} difficulty "${resolve(path)}" -r:${this.beatmap.mode_int} -j ${mods}`
         const [response, err] = await HandleAsync(RunProcess(command))
