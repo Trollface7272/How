@@ -103,7 +103,7 @@ export class PerformanceCalculator {
 
     private fabricateScore(beatmap: Beatmap.Base, accuracy: number) {
         const score = {
-            accuracy: accuracy/100,
+            accuracy: accuracy / 100,
             beatmap_id: 0,
             best_id: 0,
             build_id: 0,
@@ -222,7 +222,14 @@ export class PerformanceCalculator {
         if (birthtime < this.beatmap.lastUpdated)
             await this.DownloadFile(path)
 
-        const command = `${process.env.PERFORMANCE_CALCULATOR} difficulty "${resolve(path)}" -r:${this.beatmap.mode_int} -j ${this.starRatingMods.Mods.map(el => `-m "${JSON.stringify(el).replaceAll(`"`, `'`)}"`).join(" ")}`
+        const mods = this.starRatingMods.Mods.map(el =>
+            ` -m ${el.acronym} ` +
+            Object.keys(el.settings).map(key =>
+                ` -o ${el.acronym}_${key}=${el.settings[key]} `
+            ).join(" ")
+        )
+
+        const command = `${process.env.PERFORMANCE_CALCULATOR} difficulty "${resolve(path)}" -r:${this.beatmap.mode_int} -j ${mods}`
         const [response, err] = await HandleAsync(RunProcess(command))
         if (err) {
             Logger.Error("Performance Calculator - GetAttributes - Calculation", err)
