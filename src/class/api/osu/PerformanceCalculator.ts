@@ -222,7 +222,7 @@ export class PerformanceCalculator {
         if (birthtime < this.beatmap.lastUpdated)
             await this.DownloadFile(path)
 
-        const command = `${process.env.PERFORMANCE_CALCULATOR} difficulty -nc "${resolve(path)}" -r:${this.beatmap.mode_int} -j ${this.starRatingMods.Mods.map(el => `-m "${JSON.stringify(el).replaceAll(`"`, `'`)}"`).join(" ")}`
+        const command = `${process.env.PERFORMANCE_CALCULATOR} difficulty "${resolve(path)}" -r:${this.beatmap.mode_int} -j ${this.starRatingMods.Mods.map(el => `-m "${JSON.stringify(el).replaceAll(`"`, `'`)}"`).join(" ")}`
         const [response, err] = await HandleAsync(RunProcess(command))
         if (err) {
             Logger.Error("Performance Calculator - GetAttributes - Calculation", err)
