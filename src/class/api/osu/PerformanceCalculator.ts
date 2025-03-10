@@ -235,7 +235,7 @@ export class PerformanceCalculator {
             Logger.Error("Performance Calculator - GetAttributes - Calculation", err)
             return null
         }
-        const [parsed, errJson] = await ParseJson<{ errors: unknown[], results: { attributes: Difficulty[] } }>(response)
+        const [parsed, errJson] = await ParseJson<{ errors: unknown[], results: { attributes: Difficulty, approach_rate: number, overall_difficulty: number }[] }>(response)
         if (errJson) {
             Logger.Error("Performance Calculator - GetAttributes - JSON Parse", errJson, "raw ->", response, "command ->", command)
             return null
@@ -243,7 +243,10 @@ export class PerformanceCalculator {
         const attributes = parsed.results[0].attributes
         attributes.id = this.beatmap.id
         attributes.gamemode = this.beatmap.mode_int
+        attributes.approach_rate = parsed.results[0].approach_rate
+        attributes.overall_difficulty = parsed.results[0].overall_difficulty
         const data = new Difficulty(attributes, this.starRatingMods)
+
         await data.Save()
         return data
     }
