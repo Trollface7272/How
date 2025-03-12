@@ -224,7 +224,7 @@ export class PerformanceCalculator {
 
         const mods = this.starRatingMods.Mods.map(el =>
             ` -m ${el.acronym} ` +
-            Object.keys(el.settings).map(key =>
+            Object.keys(el.settings || {}).map(key =>
                 ` -o ${el.acronym}_${key}=${el.settings[key]} `
             ).join(" ")
         ).join(" ")
