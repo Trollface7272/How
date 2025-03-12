@@ -243,8 +243,8 @@ export class PerformanceCalculator {
         const attributes = parsed.results[0].attributes
         attributes.id = this.beatmap.id
         attributes.gamemode = this.beatmap.mode_int
-        attributes.approach_rate = parsed.results[0].approach_rate
-        attributes.overall_difficulty = parsed.results[0].overall_difficulty
+        attributes.approach_rate = this.beatmap.AR
+        attributes.overall_difficulty = this.beatmap.OD
         const data = new Difficulty(attributes, this.starRatingMods)
 
         await data.Save()

@@ -184,7 +184,7 @@ export namespace Beatmap {
         constructor(map: Base, mods: Mods.ModList) {
             super(map)
             Object.assign(this, map)
-            this.mods = mods
+            this.mods = new Mods.ModList(mods)
         }
 
         public setMods(mods: Mods.ModList) {
