@@ -34,7 +34,7 @@ class SearchData extends CommandData implements CommandDataAbstract {
     public GetComandArgs(): args {
         return {
             Gamemode: this.data.GetGamemode(),
-            Type: this.data.findString(typeRegex)?.slice(1) as type || this.data.GetString("status", ["-status", "type", "-t", "-type"]).replace("-", "") as type || "ranked",
+            Type: this.data.findString(typeRegex)?.slice(1) as type || this.data.GetString("status", ["-status", "type", "-t", "-type"])?.replace("-", "") as type || "ranked",
             Text: this.data.GetRemaining("search")
         }
     }
