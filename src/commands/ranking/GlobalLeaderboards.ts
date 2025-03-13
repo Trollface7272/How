@@ -59,7 +59,7 @@ class GlobalLeaderboards extends CommandBase implements CommandAbstract {
         const { Me, Country, Type, Gamemode, Friends } = this.data.args
 
         const user_id = user.osu.userId
-        const username = user.osu.username
+        const username = user?.osu?.username
 
         let page = 1
 

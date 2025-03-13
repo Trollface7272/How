@@ -45,7 +45,7 @@ class RequiredScore extends CommandBase implements CommandAbstract {
         const user = this.data.GetUser()
 
         const { Rank, Username: _username } = this.data.args
-        const Username = _username ?? user.osu.username
+        const Username = _username ?? user?.osu?.username
 
         const fetcher = await Fetcher.Create(user.id)
 

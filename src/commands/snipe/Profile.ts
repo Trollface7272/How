@@ -61,7 +61,7 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
         const { Username: username } = this.data.args
         const user = this.data.GetUser()
 
-        const Username = username || user.osu.username
+        const Username = username || user?.osu?.username
 
         const fetcher = await Fetcher.Create(user.id)
 
