@@ -192,6 +192,9 @@ export class InteractionCreate implements Event {
     public async Handle(data: InteractionCreateData): Promise<Event.ReturnCode> {
         await data.LoadDbData()
 
+        if (data.GetRawUser().bot) return
+        await data.LoadDbData()
+
         const command = data.GetCommand()
 
         Logger.Info(`Running interaction command ->`, command)

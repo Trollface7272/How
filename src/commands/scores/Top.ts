@@ -125,7 +125,7 @@ class Top extends CommandBase implements CommandAbstract {
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
         const { GreaterThan, Gamemode, Id: _id, Mods, Page: _Page, Random, Recent, Reversed, Sort, Specific, Type, Username, Recalculate } = this.args
-        const Id = !Username && !_id ? user.osu.userId : _id
+        const Id = !Username && !_id ? user?.osu?.userId : _id
 
         const listPageSize = 5
         let Page = _Page

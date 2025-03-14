@@ -80,7 +80,7 @@ class RequiredScore extends CommandBase implements CommandAbstract {
                 url: profile.url,
                 iconURL: GetFlag(profile.country.code)
             })
-            .setThumbnail(user.AvatarUrl)
+            .setThumbnail(profile.avatar_url)
 
         await this.data.Reply({
             embeds: [embed]
