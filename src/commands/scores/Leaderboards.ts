@@ -21,7 +21,8 @@ import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 enum lbType {
     global = "global",
     country = "country",
-    friend = "friend"
+    friend = "friend",
+    team = "team"
 }
 
 interface args {
@@ -41,7 +42,8 @@ interface cache {
 const lbAliases = {
     global: ["leaderboards", "lb", "rleaderboards", "rlb"],
     country: ["countryleaderboards", "clb", "rclb", "rcountryleaderboards"],
-    friend: ["friendleaderboards", "flb", "rflb", "rfriendleaderboards"]
+    friend: ["friendleaderboards", "flb", "rflb", "rfriendleaderboards"],
+    team: ["teamleaderboards", "tlb", "rtlb", "rteamleaderboards"]
 }
 
 const cache = new NodeCache({
@@ -64,8 +66,11 @@ class LeaderboardsData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         const command = this.data.GetCommand()
+        const type = Object.keys(lbAliases).find(key => {
+            return lbAliases[key]!.includes(command)
+        }) as lbType
         return {
-            Type: lbAliases.country.includes(command) ? lbType.country : lbAliases.friend.includes(command) ? lbType.friend : lbType.global,
+            Type: type,
             Gamemode: this.data.GetGamemode(),
             Map: this.data.GetBeatmap(),
             Page: 0,
@@ -83,7 +88,7 @@ class LeaderboardsData extends CommandData implements CommandDataAbstract {
 }
 
 class Leaderboards extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["leaderboards", "lb", "clb", "countryleaderboards", "flb", "friendleaderboards", "rleaderboards", "rlb", "rclb", "rcountryleaderboards", "rflb", "rfriendleaderboards"]
+    public static readonly names: string[] = Object.values(lbAliases).reduce((prev, cur) => {prev.push(...cur); return prev}, [])
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: LeaderboardsData
     private args: args
