@@ -127,6 +127,8 @@ class Top extends CommandBase implements CommandAbstract {
         const { GreaterThan, Gamemode, Id: _id, Mods, Page: _Page, Random, Recent, Reversed, Sort, Specific, Type, Username, Recalculate } = this.args
         const Id = !Username && !_id ? user?.osu?.userId : _id
 
+        this.args.Id = Id
+
         const listPageSize = 5
         let Page = _Page
         if (Specific?.length == 1) {

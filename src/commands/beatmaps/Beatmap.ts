@@ -77,10 +77,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
       }
     }
 
-    let id = _id
-    if (!id) {
-      id = await this.data.GetBeatmap()
-    }
+    let id = _id ?? await this.data.GetBeatmap()
 
     const fetcher = await Fetcher.Create(user.id)
     const [beatmap, err] = await HandleAsync(fetcher.GetBeatmap({ Gamemode: Gamemode, id: id }))
