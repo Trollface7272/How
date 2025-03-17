@@ -49,6 +49,11 @@ class CountMods extends CommandBase implements CommandAbstract {
         const { Gamemode, Id: _id, Username } = this.data.args
         const Id = !Username && !_id ? user?.osu?.userId : _id
 
+        if (!Id && !Username) {
+            this.data.Reply(this.RenderNoUserError())
+            return CommandResponseCodes.OK
+        }
+
         const fetcher = await Fetcher.Create(user.id)
         const [scores, err] = await HandleAsync(fetcher.GetUserScores({ Id: Id, Username: Username, Gamemode: Gamemode, Limit: 100, Type: "best" }))
         if (err) {

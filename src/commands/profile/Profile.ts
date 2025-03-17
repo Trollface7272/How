@@ -41,7 +41,7 @@ class ProfileData extends CommandData implements CommandDataAbstract {
 
   public GetComandArgs(): args {
     let mode = this.aliasToGamemode[this.data.GetCommand()] ?? "osu"
-    mode = this.data.GetString("gamemode", ["m", "mode", "-m", "-mode"]) ?? mode
+    mode = this.data.GetGamemode() ?? mode
     if (!isNaN(Number(mode)))
       mode = GamemodeNumToStr[Number(mode)] ?? mode
     const events = this.data.GetBoolean("events", ["e"])

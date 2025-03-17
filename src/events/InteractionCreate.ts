@@ -83,7 +83,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public GetGamemode(): Gamemode {
-        return this.GetString("gamemode") as Gamemode
+        return this.GetString("gamemode") as Gamemode ?? "osu"
     }
 
     public GetInteraction(): Interaction {
@@ -114,7 +114,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
             return this.interaction.customId.split(";")[0]
     }
 
-    public GetRemaining(str: string): string {
+    public GetRemaining(str: string="username"): string {
         const name = this.GetString(str)
         if (name == "") return null
         return name

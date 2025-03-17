@@ -46,7 +46,7 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
             return CommandResponseCodes.UnknownError
         }
 
-        const [userScore, userScoreError] = await HandleAsync(DailyChallengeScoreFactory.GetDailyChallengeScoreByUser(user.osu.userId, challenge.id))
+        const [userScore, userScoreError] = user.osu ? await HandleAsync(DailyChallengeScoreFactory.GetDailyChallengeScoreByUser(user?.osu?.userId, challenge.id)) : [null, null]
         if (userScoreError) {
             this.data.Reply(this.RenderApiError())
             Logger.Error(userScoreError)

@@ -64,4 +64,12 @@ export class ErrorRenderer {
             embeds: [embed]
         }
     }
+
+    protected RenderRequiredSupporterError() {
+        const embed = this.GetBaseEmbed()
+            .setDescription(`**Command requires osu!supporter.**`)
+        return {
+            embeds: [embed]
+        }
+    }
 }

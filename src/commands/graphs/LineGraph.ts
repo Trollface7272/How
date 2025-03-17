@@ -92,7 +92,12 @@ class Playcount extends CommandBase implements CommandAbstract {
         const user = this.data.GetUser()
         const { Username: _username, Gamemode, Type, Ranks } = this.data.args
 
-        const Username = _username || user.osu?.username
+        const Username = _username || user?.osu?.username
+
+        if (!Username) {
+            this.data.Reply(this.RenderNoUserError())
+            return CommandResponseCodes.OK
+        }
 
         const fetcher = await Fetcher.Create(user.id)
         const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: Gamemode }))
