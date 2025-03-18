@@ -2,7 +2,7 @@ import { InteractionContextType, SlashCommandBooleanOption, SlashCommandNumberOp
 
 export const GamemodeStringOption = (opt: SlashCommandStringOption) => opt
     .setName("gamemode")
-    .setDescription("Beatmap gamemode")
+    .setDescription("Gamemode to use")
     .setRequired(false)
     .addChoices({
         name: "Standart",

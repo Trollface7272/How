@@ -4,6 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { SlashCommandBuilder } from "discord.js";
+import { CommandHelp } from "@src/class/help/CommandHelp";
 
 interface args {
 
@@ -22,8 +23,10 @@ class CommandNameData extends CommandData implements CommandDataAbstract {
 }
 
 class CommandName extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = [""]
-    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly name: string = "help"
+    public static readonly names: string[] = [this.name]
+    public static readonly interactionData = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: CommandNameData
 
 

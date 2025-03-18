@@ -9,13 +9,17 @@ import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
 import { Logger } from "@src/class/Logger";
 import { AxiosError } from "axios";
 import { TextRenderer } from "@src/class/renderer/Text";
-import { ActionRowBuilder, InteractionContextType, SlashCommandBooleanOption, SlashCommandBuilder, SlashCommandStringOption, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { ActionRowBuilder, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
 import { EmojiFactory } from "@src/class/Emojis";
 import { CommandBase } from "@src/class/base/Command";
-import { Score } from "@src/class/api/osu/class/Score";
 import { Mods as ModsClass } from "@src/class/api/osu/class/Mods";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, ModsStringOption } from "@src/utils/discord/interaction";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
+import { CommandArg } from "@src/class/partials/CommandArg";
+import { GamemodeArg, ModsArg } from "@src/utils/discord/help";
+import { CommandHelpDataInstance } from "@src/class/help/CommandHelpData";
 
 interface args {
   Gamemode: Gamemode
@@ -23,6 +27,10 @@ interface args {
   id: number
   Acc: number
   Background: boolean
+}
+
+const argsConfig = {
+  Background: new CommandArg("background", ["bg", "-background", "-bg"])
 }
 
 class BeatmapData extends CommandData implements CommandDataAbstract {
@@ -40,7 +48,7 @@ class BeatmapData extends CommandData implements CommandDataAbstract {
     const Gamemode = this.data.GetGamemode() || "osu"
     const Mods = this.data.GetMods()
     const Acc = this.data.GetNumber("accuracy", ["acc", "a", "-accuracy", "-acc", "-a"])
-    const Background = this.data.GetBoolean("background", ["bg", "-background", "-bg"])
+    const Background = this.data.GetBoolean(argsConfig.Background.name, argsConfig.Background.aliases)
     const id = parseInt(this.data.GetRemaining())
     return {
       Gamemode, Mods, id: !isNaN(id) ? id : null, Acc: Acc, Background
@@ -49,8 +57,10 @@ class BeatmapData extends CommandData implements CommandDataAbstract {
 }
 
 class Beatmap extends CommandBase implements CommandAbstract {
-  public static readonly names: string[] = ["map", "beatmap", "m"]
-  public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+  public static readonly name: string = "beatmap"
+  public static readonly names: string[] = [this.name, "map", "m"]
+  public static readonly interactionData = new SlashCommandBuilder()
+  public static readonly helpData = new CommandHelp()
   private data: BeatmapData
 
   constructor(data: MessageEventData) {
@@ -212,9 +222,26 @@ class Beatmap extends CommandBase implements CommandAbstract {
 
 }
 
+Beatmap.helpData
+  .setCommand(Beatmap.name)
+  .setAliases(Beatmap.names.filter(el => el !== Beatmap.name))
+  .setDescription(`Display info about beatmap`)
+  .setUsage(`!beatmap [options] [id/url]`)
+  .setGroup(CommandGroup.Beatmaps)
+  .addArg(ModsArg)
+  .addArg(
+    new CommandHelpArg()
+      .setName(argsConfig.Background.name)
+      .setAliases(argsConfig.Background.aliases)
+      .setDescription("Display beatmap background")
+  )
+  .addArg(GamemodeArg)
+
+  
+
 Beatmap.interactionData
   .setContexts(CONTEXT_FULL)
-  .setName("beatmap")
+  .setName(Beatmap.name)
   .setDescription("Display info about a beatmap")
   .addStringOption(BeatmapStringOption)
   .addStringOption(GamemodeStringOption)
@@ -225,5 +252,6 @@ Beatmap.interactionData
       .setRequired(false)
   )
 
+CommandHelpDataInstance.addHelp(Beatmap.helpData)
 CommandEmitterInstance.AddCommand(Beatmap, Beatmap.names)
 InteractionRegistrerInstance.AddInteraction(Beatmap.interactionData)
