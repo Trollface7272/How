@@ -157,9 +157,18 @@ export namespace Mods {
         }
     }
 
+    export class SpeedAdjustMod extends BaseMod {
+
+    }
+
+    //TODO: more mod defs
     const modMap = {
         [ModAcronyms.Classic]: Classic,
-        [ModAcronyms.DifficultyAdjust]: DifficultyAdjust
+        [ModAcronyms.DifficultyAdjust]: DifficultyAdjust,
+        // [ModAcronyms.DoubleTime]: SpeedAdjustMod,
+        // [ModAcronyms.Nightcore]: SpeedAdjustMod,
+        // [ModAcronyms.HalfTime]: SpeedAdjustMod,
+        // [ModAcronyms.DayCore]: SpeedAdjustMod,
     }
 
     export class ModList {

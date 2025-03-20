@@ -109,7 +109,7 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
             return CommandResponseCodes.UnknownError
         }
 
-        const user_score = allScores.find(score => score.UserId === user.osu.userId)
+        const user_score = allScores.find(score => score.UserId === user?.osu?.userId)
         const scores = allScores.slice((Page - 1) * PER_PAGE, Page * PER_PAGE)
         const ejsScoresData = scores.map((score, i) => {
             return {
@@ -121,7 +121,7 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
         })
 
         const text = TextRenderer.render("leaderboards", {
-            scores: ejsScoresData, user_score: user_score, author: user.osu.userId
+            scores: ejsScoresData, user_score: user_score, author: user?.osu?.userId
         })
 
         const row = this.CreateButtons(Page, Math.ceil(allScores.length / PER_PAGE))

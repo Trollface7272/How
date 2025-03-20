@@ -1,4 +1,4 @@
-import { AxiosInstance } from "axios"
+import { AxiosError, AxiosInstance } from "axios"
 import { OAuth, OAuthGenerator } from "./OAuth"
 import axios from "axios"
 import { Gamemode, RankingType, RulesetIds } from "./types/MiscTypes"
@@ -8,17 +8,19 @@ import { Endpoints } from "./Endpoints"
 import NodeCache from "node-cache"
 import { Beatmap } from "./class/Beatmap"
 import { BeatmapSet } from "./class/BeatmapSet"
-import { FetcherMissingIdentifyScopeError, FetcherUserNotLinkedError } from "./class/FetcherError"
+import { FetcherMissingIdentifyScopeError, FetcherRequiredSupporterError, FetcherUserNotLinkedError } from "./class/FetcherError"
 import { Multiplayer } from "./class/Multiplayer"
 import { OsuTrack } from "./class/Ameo"
 import { Snipe } from "./class/Snipe"
 import { Mods } from "./class/Mods"
 import { RespektiveScoreAPI } from "./class/respektive/Score"
 import { Ranking } from "./class/Ranking"
+import { HandleAsync } from "@src/Utils"
 
 export enum OsuFetcherErrors {
     UserNotLinked,
-    MissingIdentifyScope
+    MissingIdentifyScope,
+    RequiresSupporter
 }
 
 const BeatmapRankCache = new NodeCache({ stdTTL: 60 * 60 * 2 })
@@ -39,6 +41,13 @@ const setCache = (id: number, username: string) => {
 
 type GetScoreType = "best" | "recent" | "firsts" | "pinned"
 type GetScoreTypeReturn<T> = T extends "best" ? Score.Best : T extends "recent" ? Score.Recent : T extends "firsts" ? Score.Firsts : T extends "pinned" ? Score.Pinned : never
+
+export enum LeaderboardsType {
+    global = "global",
+    country = "country",
+    friend = "friend",
+    team = "team"
+}
 
 export class Fetcher {
     public static async Create(userId: string) {
@@ -232,14 +241,23 @@ export class Fetcher {
         return set
     }
 
-    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: Mods.ModList, gamemode: Gamemode, type: string }) {
-        const resp = await this.axios.get(Endpoints.leaderboards(id), {
+    public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: Mods.ModList, gamemode: Gamemode, type: LeaderboardsType }) {
+        if (type !== LeaderboardsType.global && !this.isUser) throw new FetcherUserNotLinkedError() 
+        const [resp, err] = await HandleAsync<any, AxiosError>(this.axios.get(Endpoints.leaderboards(id), {
             params: {
                 mode: gamemode,
                 mods: mods.Mods.map(mod => mod.acronym),
                 type
             }
-        })
+        }))
+
+        if (err) {
+            if (err.response.status === 422) {
+                throw new FetcherRequiredSupporterError()
+            }
+            throw err
+        }
+
         resp.data.scores.forEach((score, i) => score.index = i)
         return new Score.Leaderboards(resp.data)
     }

@@ -122,7 +122,12 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         }
 
         if (!this.args.Username && !this.args.Id && !this.args.Anyone) {
-            this.args.Id = user.osu.userId
+            this.args.Id = user.osu?.userId
+
+            if (!this.args.Id) {
+                this.data.Reply(this.RenderNoUserError())
+                return CommandResponseCodes.OK
+            }
         }
 
         const fetcher = await Fetcher.Create(user.id)

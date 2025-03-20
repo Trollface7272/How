@@ -38,7 +38,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     constructor(
         private message: Message
     ) {
-        this.args = message.content.replace(/🤓/, "pristine").split(/('.*?'|".*?"|\S+)/).filter(e => e !== ' ' && e !== '')
+        this.args = Array.from(message.content.replace(/🤓/, "pristine").matchAll(/(?:[^\s"]+|"[^"]*")+/g)).flat().filter(e => e !== ' ' && e !== '').map(el => el.replaceAll('\"', ""))
         this.args.shift()
     }
     public GetMember(): GuildMember {
@@ -152,7 +152,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
 
     public GetGamemode(): Gamemode {
-        let Gamemode = this.GetString("gamemode", ["m", "mode", "-m", "-mode"]) as Gamemode ?? "osu"
+        let Gamemode = this.GetString("gamemode", ["-gamemode", "m", "mode", "-m", "-mode"]) as Gamemode ?? "osu"
         if (!isNaN(Number(Gamemode)))
             Gamemode = GamemodeNumToStr[Number(Gamemode)] ?? "osu"
         return Gamemode

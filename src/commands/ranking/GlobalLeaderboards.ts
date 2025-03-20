@@ -58,14 +58,18 @@ class GlobalLeaderboards extends CommandBase implements CommandAbstract {
 
         const { Me, Country, Type, Gamemode, Friends } = this.data.args
 
-        const user_id = user.osu.userId
-        const username = user?.osu?.username
+        const user_id = user.osu?.userId
+        const username = user.osu?.username
 
         let page = 1
 
         const fetcher = await Fetcher.Create(user.id)
 
         if (Me) {
+            if (!user_id && !username) {
+                this.data.Reply(this.RenderNoUserError())
+                return CommandResponseCodes.OK
+            }
             const [profile_score, scoreProfile_err] = await HandleAsync(fetcher.ScoreProfile({ user_id: user_id }))
             if (scoreProfile_err) {
                 const embed = this.HandleProfileError(scoreProfile_err, username)
@@ -114,6 +118,8 @@ class GlobalLeaderboards extends CommandBase implements CommandAbstract {
             })
         }).join("\n")
 
+        console.log(text)
+
 
         const embed = this.GetBaseEmbed()
             .setDescription(text)
@@ -121,6 +127,7 @@ class GlobalLeaderboards extends CommandBase implements CommandAbstract {
                 name: `${Friends ? "Friends" : "Global"}${Type === RankingType.score ? " Score" : ""} Leaderboards`,
                 url: `https://osu.ppy.sh/rankings/${Gamemode}/${Type}`
             })
+
 
         await this.data.Reply({ embeds: [embed] })
 

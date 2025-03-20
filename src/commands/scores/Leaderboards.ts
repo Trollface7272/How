@@ -5,7 +5,7 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { ButtonEmojis, GetFlag, HandleAsync } from "@src/Utils";
-import { Fetcher } from "@src/class/api/osu/Fetcher";
+import { Fetcher, LeaderboardsType } from "@src/class/api/osu/Fetcher";
 import { Logger } from "@src/class/Logger";
 import NodeCache from "node-cache";
 import { TextRenderer } from "@src/class/renderer/Text";
@@ -18,14 +18,8 @@ import { Mods } from "@src/class/api/osu/class/Mods";
 import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, ModsStringOption, PageNumberOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
-enum lbType {
-    global = "global",
-    country = "country",
-    friend = "friend"
-}
-
 interface args {
-    Type: lbType
+    Type: LeaderboardsType
     Gamemode: Gamemode
     Map: number
     Page: number
@@ -41,7 +35,8 @@ interface cache {
 const lbAliases = {
     global: ["leaderboards", "lb", "rleaderboards", "rlb"],
     country: ["countryleaderboards", "clb", "rclb", "rcountryleaderboards"],
-    friend: ["friendleaderboards", "flb", "rflb", "rfriendleaderboards"]
+    friend: ["friendleaderboards", "flb", "rflb", "rfriendleaderboards"],
+    team: ["teamleaderboards", "tlb", "rtlb", "rteamleaderboards"]
 }
 
 const cache = new NodeCache({
@@ -64,8 +59,11 @@ class LeaderboardsData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         const command = this.data.GetCommand()
+        const type = Object.keys(lbAliases).find(key => {
+            return lbAliases[key]!.includes(command)
+        }) as LeaderboardsType
         return {
-            Type: lbAliases.country.includes(command) ? lbType.country : lbAliases.friend.includes(command) ? lbType.friend : lbType.global,
+            Type: type,
             Gamemode: this.data.GetGamemode(),
             Map: this.data.GetBeatmap(),
             Page: 0,
@@ -83,7 +81,7 @@ class LeaderboardsData extends CommandData implements CommandDataAbstract {
 }
 
 class Leaderboards extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["leaderboards", "lb", "clb", "countryleaderboards", "flb", "friendleaderboards", "rleaderboards", "rlb", "rclb", "rcountryleaderboards", "rflb", "rfriendleaderboards"]
+    public static readonly names: string[] = Object.values(lbAliases).reduce((prev, cur) => { prev.push(...cur); return prev }, [])
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: LeaderboardsData
     private args: args
@@ -150,9 +148,12 @@ class Leaderboards extends CommandBase implements CommandAbstract {
 
         const [lb, scoresErr] = isButton ? [cached.lb] : await HandleAsync(fetcher.GetLeaderboards({ id: Map, mods: Mods, gamemode: Gamemode, type: Type }))
         if (scoresErr) {
-            await this.data.Reply(this.RenderApiError())
-            Logger.Error(scoresErr)
-            return CommandResponseCodes.OK
+            const errorReply = this.HandleLeaderboardsError(scoresErr)
+            if (errorReply) {
+                this.data.Reply(errorReply)
+                return CommandResponseCodes.OK
+            }
+            return CommandResponseCodes.UnknownError
         }
         const { user_score } = lb
         const scores = lb.scores.slice(Page * 10, (Page + 1) * 10)
@@ -177,12 +178,12 @@ class Leaderboards extends CommandBase implements CommandAbstract {
 
         const embed = this.GetBaseEmbed()
         const text = TextRenderer.render("leaderboards", {
-            scores: ejsScoresData, user_score: user_score, author: user.osu.userId
+            scores: ejsScoresData, user_score: user_score, author: user.osu?.userId
         })
 
         embed.setDescription(text)
             .setAuthor({
-                name: `Top ${Page * 10 + 1}-${Math.min((Page + 1) * 10, lb.scores.length)} ${Type == lbType.friend ? "Friend" : Type == lbType.country ? "Country" : "Global"} Scores On ${map.beatmapset.title} [${map.version}]`, iconURL: GetFlag(scores[0].User.country_code), url: map.url
+                name: `Top ${Page * 10 + 1}-${Math.min((Page + 1) * 10, lb.scores.length)} ${Type == LeaderboardsType.friend ? "Friend" : Type == LeaderboardsType.country ? "Country" : "Global"} Scores On ${map.beatmapset.title} [${map.version}]`, iconURL: GetFlag(scores[0].User.country_code), url: map.url
             })
             .setThumbnail(map.beatmapset.covers["list@2x"])
 

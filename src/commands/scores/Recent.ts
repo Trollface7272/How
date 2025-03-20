@@ -96,7 +96,9 @@ class Recent extends CommandBase implements CommandAbstract {
         const response: InteractionReplyOptions | MessageReplyOptions = {}
         //Map is unused here
         const { Username, Id: _id, Gamemode, Specific, Best, Count, Fails, List, Map, OD, Page: _Page, Scores } = this.args
-        const Id = !Username && !_id ? user.osu.userId : _id
+        const Id = !Username && !_id ? user?.osu?.userId : _id
+
+        this.args.Id = Id
 
         if (!Username && !Id) {
             await this.data.Reply(this.RenderNoUserError())

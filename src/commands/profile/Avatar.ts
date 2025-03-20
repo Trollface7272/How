@@ -44,6 +44,11 @@ class Avatar extends CommandBase implements CommandAbstract {
 
         const Username = _name ?? user?.osu?.username
 
+        if (!Username) {
+            this.data.Reply(this.RenderNoUserError())
+            return CommandResponseCodes.OK
+        }
+
         const fetcher = await Fetcher.Create(user.id)
         const [profile, profileErr] = await HandleAsync(fetcher.GetProfile({ Username: Username, Gamemode: "osu" }))
         if (profileErr) {

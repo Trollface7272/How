@@ -29,6 +29,7 @@ const lookup = [
 
 const rx = /\.0+$|(\.[0-9]*[1-9])0+$/
 
+
 Number.prototype.asScientificNotation = function (this: number): string {
     const item = lookup.find((item) => {
         return this >= item.value
@@ -48,10 +49,17 @@ Number.prototype.roundDynamicFixed = function (this: number, minDigits: number, 
     return this.roundFixed(digits)
 }
 
+
 String.prototype.isNumber = function (this: string): boolean {
     return /^\d+$/.test(this)
 }
 
+String.prototype.capitalize = function (this: string): string {
+    return this.charAt(0).toUpperCase() + this.slice(1)
+}
+
+
 Array.prototype.sum = function (this: Array<any>): number {
     return this.reduce((a, b) => a + b, 0)
 }
+

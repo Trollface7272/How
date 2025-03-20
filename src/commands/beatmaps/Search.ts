@@ -13,10 +13,19 @@ import { ActionRowBuilder, SlashCommandBuilder, SlashCommandStringOption, String
 import { randomBytes } from "crypto";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { CONTEXT_FULL, GamemodeStringOption } from "@src/utils/discord/interaction";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg } from "@src/utils/discord/help";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
+import { CommandArg } from "@src/class/partials/CommandArg";
+import { CommandHelpDataInstance } from "@src/class/help/CommandHelpData";
 
 
 const typeRegex = /-(any|ranked|qualified|loved|favourites|pending|wip|graveyard|mine)/
 type type = "any" | "ranked" | "qualified" | "loved" | "favourites" | "pending" | "wip" | "graveyard" | "mine"
+
+const argsConfig = {
+    Type: new CommandArg("status", ["-status", "type", "-t", "-type"])
+}
 
 interface args {
     Gamemode: Gamemode
@@ -34,15 +43,17 @@ class SearchData extends CommandData implements CommandDataAbstract {
     public GetComandArgs(): args {
         return {
             Gamemode: this.data.GetGamemode(),
-            Type: this.data.findString(typeRegex)?.slice(1) as type || this.data.GetString("status", ["-status", "type", "-t", "-type"])?.replace("-", "") as type || "ranked",
+            Type: this.data.findString(typeRegex)?.slice(1) as type || this.data.GetString(argsConfig.Type.name, argsConfig.Type.aliases)?.replace("-", "") as type || "ranked",
             Text: this.data.GetRemaining("search")
         }
     }
 }
 
 class Search extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["search", "s"]
-    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly name: string = "search"
+    public static readonly names: string[] = [this.name, "s"]
+    public static readonly interactionData = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: SearchData
 
 
@@ -106,6 +117,21 @@ class Search extends CommandBase implements CommandAbstract {
 
 }
 
+Search.helpData
+    .setCommand(Search.name)
+    .setAliases(Search.names.filter(el => el !== Search.name))
+    .setDescription(`Search for beatmap`)
+    .setUsage(`!search [options] [query]`)
+    .setGroup(CommandGroup.Beatmaps)
+    .addArg(
+        new CommandHelpArg()
+            .setName(argsConfig.Type.name)
+            .setAliases(argsConfig.Type.aliases)
+            .setDescription(`Filter by beatmap ranked status`)
+            .setUsage(`${argsConfig.Type.name} [any/ranked/qualified/loved/favourites/pending/wip/graveyard/mine]`)
+    )
+    .addArg(GamemodeArg)
+
 Search.interactionData
     .setName("search")
     .setDescription("Search for beatmap")
@@ -155,6 +181,6 @@ Search.interactionData
             })
     )
 
-
+CommandHelpDataInstance.addHelp(Search.helpData)
 CommandEmitterInstance.AddCommand(Search, Search.names)
 InteractionRegistrerInstance.AddInteraction(Search.interactionData)

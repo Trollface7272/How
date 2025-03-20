@@ -1,7 +1,8 @@
 
 export enum FetcherErrors {
     UserNotLinked,
-    MissingIdentifyScope
+    MissingIdentifyScope,
+    RequiresSupporter
 }
 
 export class FetcherError {
@@ -17,4 +18,9 @@ export class FetcherUserNotLinkedError extends FetcherError {
 export class FetcherMissingIdentifyScopeError extends FetcherError {
     public code = FetcherErrors.MissingIdentifyScope
     public message = "Missing identify scope"
+}
+
+export class FetcherRequiredSupporterError extends FetcherError {
+    public code = FetcherErrors.RequiresSupporter
+    public message = "Command requires osu!supporter"
 }

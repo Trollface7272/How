@@ -91,9 +91,14 @@ class Compare extends CommandBase implements CommandAbstract {
         let Id = _id
         let Username = _username
         if (!Username && !_id) {
-            this.args.Id = user.osu.userId
-            Id = user.osu.userId
-            Username = user?.osu?.username
+            this.args.Id = user.osu?.userId
+            Id = user.osu?.userId
+            Username = user.osu?.username
+        }
+
+        if (!Username && !Id) {
+            this.data.Reply(this.RenderNoUserError())
+            return CommandResponseCodes.OK
         }
 
         const Beatmap = _Beatmap || await this.data.GetBeatmapFromConversation()
