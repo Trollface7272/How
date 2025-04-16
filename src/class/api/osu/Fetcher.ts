@@ -86,7 +86,7 @@ export class Fetcher {
             }
         })
         this.snipeAxios = axios.create({
-            baseURL: "https://api.huismetbenen.nl",
+            baseURL: "https://api.snipe.staging.huismetbenen.nl",
             headers: {
                 "Content-Type": "application/json",
                 Accept: "application/json",
@@ -156,7 +156,7 @@ export class Fetcher {
                 mode: Gamemode
             }
         })
-        resp.data.forEach((score, i) => score.index = i)
+        resp.data.forEach((score, i) => score.index = (Offset ?? 0) + i)
         switch (Type) {
             case "best":
                 return resp.data.map(score => new Score.Best(score)) as GetScoreTypeReturn<T>[]
@@ -242,7 +242,7 @@ export class Fetcher {
     }
 
     public async GetLeaderboards({ id, mods, gamemode, type }: { id: number, mods: Mods.ModList, gamemode: Gamemode, type: LeaderboardsType }) {
-        if (type !== LeaderboardsType.global && !this.isUser) throw new FetcherUserNotLinkedError() 
+        if (type !== LeaderboardsType.global && !this.isUser) throw new FetcherUserNotLinkedError()
         const [resp, err] = await HandleAsync<any, AxiosError>(this.axios.get(Endpoints.leaderboards(id), {
             params: {
                 mode: gamemode,
@@ -339,14 +339,46 @@ export class Fetcher {
 
 
 
-    public async SnipeProfile({ name }: { name: number | string }) {
-        const resp = await this.snipeAxios.get(Endpoints.Snipe.snipeProfile(name))
-        return new Snipe.Profile(resp.data)
+    public async SnipeProfile({ name, country }: { name: number | string, country: string }) {
+        const [resp, err] = await HandleAsync(this.snipeAxios.get(Endpoints.Snipe.snipeProfile(name, country)))
+
+        if (err) {
+            console.log(err)
+            throw err
+        }
+
+        return new Snipe.Profile(resp.data, country)
     }
 
-    public async SnipeHistory({ name }: { name: number | string }) {
-        const resp = await this.snipeAxios.get(Endpoints.Snipe.snipeHistory(name))
+    public async SnipeHistory({ name, country }: { name: number | string, country: string }) {
+        const [resp, err] = await HandleAsync(this.snipeAxios.get(Endpoints.Snipe.snipeHistory(name, country)))
+
+        if (err) {
+            console.log((err as AxiosError).request)
+            throw err
+        }
+
         return resp.data.map((el: Snipe.History) => new Snipe.History(el))
+    }
+
+    public async SnipeGetScores({ name, country, own, from, to, gains }: { name: number | string, country: string, own?: boolean, from: Date, to: Date, gains: boolean }) {
+        const [resp, err] = await HandleAsync(
+            this.snipeAxios.get(Endpoints.Snipe.snipeGetSnipes(name, country, gains), {
+                params: {
+                    gamemode: 0,
+                    start_date: from.toISOString(),
+                    end_date: to.toISOString(),
+                    include_own_snipes: own ?? false,
+                }
+            })
+        )
+
+        if (err) {
+            console.log(err)
+            throw err
+        }
+
+        return resp.data.map((el: Snipe.SnipeInfo) => new Snipe.SnipeInfo(el)) as Snipe.SnipeInfo[]
     }
 
 

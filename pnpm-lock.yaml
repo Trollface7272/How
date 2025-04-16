@@ -47,6 +47,9 @@ dependencies:
   node-cache:
     specifier: ^5.1.2
     version: 5.1.2
+  node-execution-context:
+    specifier: ^3.1.0
+    version: 3.1.0
   object-hash:
     specifier: ^3.0.0
     version: 3.0.0
@@ -2800,6 +2803,11 @@ packages:
     engines: {node: '>= 8.0.0'}
     dependencies:
       clone: 2.1.2
+    dev: false
+
+  /node-execution-context@3.1.0:
+    resolution: {integrity: sha512-5h7Ofw6Q8HcNtzUNnL1Sx3UVmV8krL3R9NCYFjzMoyOd5aCHAc86lFF0Uqb7EqVJnL+mdTnLCowUyx8OIC6k0g==}
+    engines: {node: '>=8.6.0'}
     dev: false
 
   /node-fetch@2.7.0:

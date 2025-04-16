@@ -13,6 +13,8 @@ import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 import { Mods } from "@src/class/api/osu/class/Mods";
 import { assert } from "console";
+import context from "node-execution-context";
+import { Context } from "@src/types/Context";
 
 export class InteractionCreateData implements EventData, MessageEventData {
     private _user: User
@@ -109,13 +111,19 @@ export class InteractionCreateData implements EventData, MessageEventData {
             }
             return this.interaction.commandName
         }
-            
+
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton())
             return this.interaction.customId.split(";")[0]
     }
 
-    public GetRemaining(str: string="username"): string {
+    public GetRemaining(str: string = "username"): string {
         const name = this.GetString(str)
+
+        if (!name && str === "username") {
+            const ctx = context.get<Context>()
+            return ctx.user?.osu?.username || null
+        }
+
         if (name == "") return null
         return name
     }
@@ -201,24 +209,33 @@ export class InteractionCreate implements Event {
 
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
-        try {
-            await data.deferButton()
-            const command = new commandData(data)
-            const code = await command.Handle()
-            switch (code) {
-                case CommandResponseCodes.OK:
-                    return Event.ReturnCode.OK
-                default:
-                    console.log("Unknown CommandResponseCode", code)
-                    break;
-            }
-        } catch (err) {
-            Logger.Error(err)
-            Logger.Trace()
-        }
 
+        return new Promise((resolve) => {
+            context.run(async () => {
+                try {
+                    await data.deferButton()
+                    const command = new commandData(data)
+                    const code = await command.Handle()
+                    switch (code) {
+                        case CommandResponseCodes.OK:
+                            return resolve(Event.ReturnCode.OK)
+                            
+                        default:
+                            console.log("Unknown CommandResponseCode", code)
+                            return resolve(code)
+                            break;
+                    }
+                    resolve(0)
+                } catch (err) {
+                    Logger.Error(err)
+                    Logger.Trace()
+                }
+            }, {
+                command: commandData.name,
 
-        return Event.ReturnCode.Unimplemented
+            })
+
+        })
     }
 
 }

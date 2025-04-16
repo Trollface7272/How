@@ -8,6 +8,7 @@ import { Logger } from "@src/class/Logger";
 import { SlashCommandBuilder } from "discord.js";
 import { CONTEXT_FULL, CountryStringOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { CommandHelp } from "@src/class/help/CommandHelp";
 
 interface args {
     List: boolean
@@ -39,8 +40,10 @@ class DailyChallengeData extends CommandData implements CommandDataAbstract {
 }
 
 class DailyChallenge extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["dc", "dcl"]
-    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly name: string = "daily-challenge"
+    public static readonly names: string[] = [this.name, "dailychallenge", "dc", "dcl"]
+    public static readonly interactionData = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: DailyChallengeData
 
 
@@ -77,6 +80,8 @@ class DailyChallenge extends CommandBase implements CommandAbstract {
     }
 
 }
+
+DailyChallenge.helpData
 
 DailyChallenge.interactionData
     .setName("daily-challenge")

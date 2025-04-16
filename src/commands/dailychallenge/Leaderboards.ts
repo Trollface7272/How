@@ -13,11 +13,19 @@ import { TextRenderer } from "@src/class/renderer/Text";
 import { randomBytes } from "crypto";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from "discord.js";
 import NodeCache from "node-cache";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
+import { CommandArg } from "@src/class/partials/CommandArg";
 
 interface args {
     Country: string
     Friends: boolean
     Page: number
+}
+
+const argsConfig = {
+    Country: new CommandArg("country", ["-country", "c", "-c"]),
+    Friends: new CommandArg("friends", ["-friends", "f", "-f"])
 }
 
 const componentCache = new NodeCache({
@@ -35,15 +43,17 @@ class DailyChallengeLeaderboardsData extends CommandData implements CommandDataA
 
     public GetComandArgs(): args {
         return {
-            Country: this.data.GetString("country", ["-c", "-country", "c"]) || null,
-            Friends: this.data.GetCommand() === "dcflb" || this.data.GetBoolean("friends", []),
+            Country: this.data.GetString(argsConfig.Country.name, argsConfig.Country.aliases) || null,
+            Friends: this.data.GetCommand() === "dcflb" || this.data.GetBoolean(argsConfig.Friends.name, argsConfig.Friends.aliases),
             Page: 1
         }
     }
 }
 
 class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["dclb", "dcflb", "daily-challenge-leaderboards"]
+    public static readonly name: string = "daily-challenge-leaderboards"
+    public static readonly names: string[] = [this.name, "dclb", "dcflb", "dailychallengeleaderboards"]
+    public static readonly helpData = new CommandHelp()
     private data: DailyChallengeLeaderboardsData
     private args: args
     private componentId: string
@@ -169,6 +179,27 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
     }
 
 }
+
+DailyChallengeLeaderboards.helpData
+    .setCommand(DailyChallengeLeaderboards.name)
+    .setAliases(DailyChallengeLeaderboards.names.filter(el => el !== DailyChallengeLeaderboards.name))
+    .setDescription(`Display currents daily challenge leaderboards`)
+    .setUsage(`!daily-challenge-leaderboards [options]`)
+    .setGroup(CommandGroup.DailyChallenge)
+    .addArg(
+        new CommandHelpArg()
+            .setName(argsConfig.Country.name)
+            .setAliases(argsConfig.Country.aliases)
+            .setDescription(`Filter by country`)
+            .setUsage(`${argsConfig.Country.name} code`)
+    )
+    .addArg(
+        new CommandHelpArg()
+            .setName(argsConfig.Friends.name)
+            .setAliases(argsConfig.Friends.aliases)
+            .setDescription(`Filter by friends`)
+            .setUsage(`!dcflb/-${argsConfig.Friends.name}`)
+    )
 
 
 CommandEmitterInstance.AddCommand(DailyChallengeLeaderboards, DailyChallengeLeaderboards.names)

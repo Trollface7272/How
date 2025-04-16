@@ -5,8 +5,9 @@ export namespace Endpoints {
         export const update = () => `/update`
     }
     export namespace Snipe {
-        export const snipeProfile = (name: number | string) => `/player/cz/${name}?mode=osu`
-        export const snipeHistory = (name: number | string) => `/player/cz/${name}/history`
+        export const snipeProfile = (name: number | string, country: string) => `/player/stats/${country}/${name}/osu`
+        export const snipeHistory = (name: number | string, country: string) => `/player/${country}/${name}/history`
+        export const snipeGetSnipes = (name: number | string, country: string, gains: boolean) => `/changes/${gains ? "new" : "old"}/${country}/${name}`
     }
     export namespace Respektive {
         export namespace Score {

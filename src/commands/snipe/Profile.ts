@@ -70,16 +70,23 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
 
         const fetcher = await Fetcher.Create(user.id)
 
-        const [snipeProfile, snipeProfileErr] = await HandleAsync(fetcher.SnipeProfile({ name: Username }))
+        const [profile, profileErr] = await HandleAsync(fetcher.GetProfile({ Gamemode: "osu", Username }))
+        if (profileErr) {
+            this.data.Reply(this.HandleProfileError(profileErr, Username))
+            Logger.Error("profileErr", profileErr)
+            return CommandResponseCodes.UnknownError
+        }
+
+        const [snipeProfile, snipeProfileErr] = await HandleAsync(fetcher.SnipeProfile({ name: profile.id, country: profile.country_code }))
         if (snipeProfileErr) {
             this.data.Reply(this.RenderApiError())
             Logger.Error("snipeProfileErr", snipeProfileErr)
             return CommandResponseCodes.UnknownError
         }
 
-        const sphReq = HandleAsync(fetcher.SnipeHistory({ name: snipeProfile.user_id }))
-        const oldestScoreReq = HandleAsync(fetcher.GetBeatmapUserScore({ Beatmap: snipeProfile.oldest_date_map_id, Id: snipeProfile.user_id, Gamemode: "osu" }))
-        const oldestMapReq = HandleAsync(fetcher.GetBeatmap({ id: snipeProfile.oldest_date_map_id, Gamemode: "osu" }))
+        const sphReq = HandleAsync(fetcher.SnipeHistory({ name: profile.id, country: profile.country_code }))
+        const oldestScoreReq = HandleAsync(fetcher.GetBeatmapUserScore({ Beatmap: snipeProfile.oldest_topscore.map_id, Id: profile.id, Gamemode: "osu" }))
+        const oldestMapReq = HandleAsync(fetcher.GetBeatmap({ id: snipeProfile.oldest_topscore.map_id, Gamemode: "osu" }))
 
         const [snipeProfileHistory, snipeProfileHistoryErr] = await sphReq
         if (snipeProfileHistoryErr) {
@@ -122,7 +129,7 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
 
         const embed = this.GetBaseEmbed()
             .setAuthor({
-                name: `Country #1 statistics for ${snipeProfile.username}`,
+                name: `Country #1 statistics for ${profile.username}`,
                 iconURL: GetFlag(snipeProfile.country),
                 url: snipeProfile.URL
             })
@@ -130,7 +137,7 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
             .addFields([{
                 name: "Average PP:", value: snipeProfile.average_pp.toLocaleString(), inline: true
             }, {
-                name: "Average acc:", value: (snipeProfile.average_acc * 100).roundFixed(2) + "%", inline: true
+                name: "Average acc:", value: (snipeProfile.average_accuracy * 100).roundFixed(2) + "%", inline: true
             }, {
                 name: "Average stars:", value: snipeProfile.average_sr.toLocaleString() + "★", inline: true
             }, {
@@ -164,15 +171,15 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
         return chart.Render()
     }
 
-    private async RenderDatesChart(datesRanked: Dictionary<number>, datesSet: Dictionary<number>) {
-        const drDateAsMs = Object.keys(datesRanked).map(k => new Date(k).getTime())
-        const dsDateAsMs = Object.keys(datesSet).map(k => new Date(k).getTime())
+    private async RenderDatesChart(datesRanked: Snipe.Dates[], datesSet: Snipe.Dates[]) {
+        const drDateAsMs = datesRanked.map(k => new Date(k.year + "-01-01").getTime())
+        const dsDateAsMs = datesSet.map(k => new Date(k.year + "-01-01").getTime())
 
         const oldestDate = new Date(Math.min(...drDateAsMs, ...dsDateAsMs))
         const newestDate = new Date(Math.max(...drDateAsMs, ...dsDateAsMs))
 
-        const [rankedData, rankedLabels] = this.NormalizeDatedData(Object.entries(datesRanked).map(el => ({ start_date: el[0], count: el[1] })), { start: oldestDate, end: newestDate, yearly: true })
-        const [setData, setLabels] = this.NormalizeDatedData(Object.entries(datesSet).map(el => ({ start_date: el[0], count: el[1] })), { start: oldestDate, end: newestDate, yearly: true })
+        const [rankedData, rankedLabels] = this.NormalizeDatedData((datesRanked).map(el => ({ start_date: el.year + "-01-01", count: el.count })), { start: oldestDate, end: newestDate, yearly: true })
+        const [setData, setLabels] = this.NormalizeDatedData((datesSet).map(el => ({ start_date: el.year + "-01-01", count: el.count })), { start: oldestDate, end: newestDate, yearly: true })
         const data: ChartData<"bar"> = {
             datasets: [{
                 data: setData,

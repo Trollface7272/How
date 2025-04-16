@@ -14,6 +14,8 @@ import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
 import { Score } from "@src/class/api/osu/class/Score";
 import { TriggerEmitterInstance } from "@src/class/TriggerEmitter";
 import { Mods } from "@src/class/api/osu/class/Mods";
+import context from "node-execution-context";
+import { Context } from "@src/types/Context";
 
 const regexes = {
     normal: /^\+?(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi,
@@ -171,7 +173,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
 
     public GetSpecific(): number[] {
-        const regex = /^[1-9][0-9]?$|^100$/
+        const regex = /^[1]?[1-9][0-9]?$|^100|200$/
         const idxs = this.args.map((arg, index) => {
             if (regex.test(arg))
                 return index
@@ -189,9 +191,16 @@ export class MessageCreateData implements EventData, MessageEventData {
     public GetCommand(): string {
         return this.command
     }
-    public GetRemaining(str: string): string {
-        if (this.args.length == 0) return null
+    public GetRemaining(str: string= "username"): string {
         const username = this.args.join(" ")
+        
+        if (!username && str === "username") {
+            const ctx = context.get<Context>()
+            return ctx.user?.osu?.username || null
+        }
+
+        if (this.args.length == 0) return null
+
         if (username == "") return null
         return username
     }
@@ -296,23 +305,31 @@ export class MessageCreate implements Event {
 
         const commandData = CommandEmitterInstance.GetCommand(command)
         if (!commandData) return 0
-        try {
-            const command = new commandData(data)
-            await data.SendTyping()
-            const code = await command.Handle()
-            switch (code) {
-                case CommandResponseCodes.OK:
-                    return Event.ReturnCode.OK
-                default:
-                    console.log("Unknown CommandResponseCode", code)
-                    break;
-            }
-        } catch (err) {
-            Logger.Error(err)
-            Logger.Trace()
-        }
 
-        return 0
+
+        return new Promise((resolve) => {
+            context.run(async () => {
+                try {
+                    const command = new commandData(data)
+                    await data.SendTyping()
+                    
+                    const code = await command.Handle()
+                    switch (code) {
+                        case CommandResponseCodes.OK:
+                            return resolve(Event.ReturnCode.OK)
+                        default:
+                            console.log("Unknown CommandResponseCode", code)
+                            break;
+                    }
+                } catch (err) {
+                    Logger.Error(err)
+                    Logger.Trace()
+                }
+                resolve(0)
+            }, {
+                command: command
+            })
+        })
     }
 
     private RunTriggers(data: MessageCreateData) {

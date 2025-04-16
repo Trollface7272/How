@@ -15,6 +15,7 @@ class CommandHelpData {
 
     public addHelp(help: CommandHelp) {
         this.data.set(help.command, help)
+        help.aliases.forEach(alias => this.data.set(alias, help))
         this.groups.get(help.group).add(help.command)
     }
 

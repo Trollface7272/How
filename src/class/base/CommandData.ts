@@ -3,9 +3,15 @@ import { Client } from "../Client";
 import { MessageEventData } from "../partials/MessageEvent";
 import { User } from "../database/User";
 import { Logger } from "../Logger";
+import context from "node-execution-context";
+import { Context } from "@src/types/Context";
 
 export class CommandData {
-    constructor(protected data: MessageEventData) { }
+    constructor(protected data: MessageEventData) {
+        const ctx = context.get<Context>()
+        ctx.user = this.GetUser()
+        context.set(ctx)
+    }
 
     public Reply(msg: MessageReplyOptions | InteractionReplyOptions) {
         return this.data.Reply(msg)

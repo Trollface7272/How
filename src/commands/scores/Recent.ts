@@ -271,8 +271,12 @@ class Recent extends CommandBase implements CommandAbstract {
             }
         }
 
+        let fcpp = score.performance.improved ? `/${score.performance.improved.total.roundFixed(3)}pp` : ""
+
+        if (score.Accuracy === 1) fcpp = ""
+
         const description = TextRenderer.render(`recent/single`, {
-            grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance.improved ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", accuracy: (score.Accuracy * 100).roundFixed(2), rank,
+            grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp, accuracy: (score.Accuracy * 100).roundFixed(2), rank,
             score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
             timestamp: score.EndedAt.toDiscordToolTip(),
             completion: !score.Passed ? `\n▸ **Map Completion:** ${CalculateProgress(score.Statistics, { circles: score.Beatmap.count_circles, sliders: score.Beatmap.count_sliders, spinners: score.Beatmap.count_spinners }, score.RulesetId)}%` : ""

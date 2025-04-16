@@ -11,7 +11,7 @@ import { TextRenderer } from "@src/class/renderer/Text";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, escapeMarkdown, SlashCommandBuilder } from "discord.js";
 import { Score } from "@src/class/api/osu/class/Score";
 import { randomBytes, randomInt } from "crypto";
-import { ButtonEmojis, FormatCombo, FormatHits, GetFlag } from "@src/Utils";
+import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync } from "@src/Utils";
 import { GamemodeNames } from "@src/class/api/osu/Consts";
 import { Mods } from "@src/class/api/osu/class/Mods";
 import { CONTEXT_FULL, GamemodeStringOption, IndexNumberOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
@@ -152,13 +152,19 @@ class Top extends CommandBase implements CommandAbstract {
 
         const fetcher = await Fetcher.Create(user.id)
 
-        let scores = await fetcher.GetUserScores({ Gamemode: Gamemode, Type: Type, Id: Id, Username: Username, Limit: 100 })
-        if (!scores) {
+        let [_scores, error] = await HandleAsync(
+            Promise.all([
+                fetcher.GetUserScores({ Gamemode: Gamemode, Type: Type, Id: Id, Username: Username, Limit: 100 }),
+                fetcher.GetUserScores({ Gamemode: Gamemode, Type: Type, Id: Id, Username: Username, Limit: 100, Offset: 100 })
+            ])
+        )
+        if (error) {
             await this.data.Reply(this.RenderApiError())
-            Logger.Error(scores)
+            Logger.Error(error)
             return CommandResponseCodes.OK
         }
 
+        let scores = [..._scores[0], ..._scores[1]]
 
 
         if (Recalculate) await Promise.all(scores.map(el => el.fetchPerformance()))
