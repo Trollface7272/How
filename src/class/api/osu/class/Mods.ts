@@ -96,7 +96,7 @@ export namespace Mods {
         }
 
         public isDefaultSpeedChange() {
-            return this.settings?.speed_change == DefaultSpeedChange[this.acronym]
+            return !this.settings?.speed_change || (this.settings?.speed_change == DefaultSpeedChange[this.acronym])
         }
     }
 
