@@ -55,11 +55,18 @@ class CountMods extends CommandBase implements CommandAbstract {
         }
 
         const fetcher = await Fetcher.Create(user.id)
-        const [scores, err] = await HandleAsync(fetcher.GetUserScores({ Id: Id, Username: Username, Gamemode: Gamemode, Limit: 100, Type: "best" }))
+        const [_scores, err] = await HandleAsync(
+            Promise.all([
+                fetcher.GetUserScores({ Id: Id, Username: Username, Gamemode: Gamemode, Limit: 100, Type: "best" }),
+                fetcher.GetUserScores({ Id: Id, Username: Username, Gamemode: Gamemode, Limit: 100, Type: "best", Offset: 100 })
+            ])
+        )
         if (err) {
             Logger.Error(err)
             return CommandResponseCodes.OK
         }
+
+        const scores = [..._scores[0], ..._scores[1]]
 
         const mods = new Map<string, { count: number, mods: string, pp: number }>()
         for (const score of scores) {
