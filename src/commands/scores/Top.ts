@@ -14,7 +14,7 @@ import { randomBytes, randomInt } from "crypto";
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync } from "@src/Utils";
 import { GamemodeNames } from "@src/class/api/osu/Consts";
 import { Mods } from "@src/class/api/osu/class/Mods";
-import { CONTEXT_FULL, GamemodeStringOption, IndexNumberOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, GamemodeStringOption, IndexStringOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 interface args {
@@ -358,7 +358,7 @@ Top.interactionData
     .addStringOption(GamemodeStringOption)
     .addBooleanOption(ReversedBooleanOption)
     .addBooleanOption(RandomBooleanOption)
-    .addNumberOption(IndexNumberOption)
+    .addStringOption(IndexStringOption)
     .addNumberOption(PageNumberOption)
     .addStringOption(ModsStringOption)
     .addNumberOption(opt =>

@@ -54,9 +54,9 @@ export const RandomBooleanOption = (opt: SlashCommandBooleanOption) => opt
     .setDescription("Get random filtered score")
     .setRequired(false)
 
-export const IndexNumberOption = (opt: SlashCommandNumberOption) => opt
+export const IndexStringOption = (opt: SlashCommandStringOption) => opt
     .setName("index")
-    .setDescription("index of score to get")
+    .setDescription("Indexes of scores to get, split by ,")
     .setRequired(false)
 
 export const CountryStringOption = (opt: SlashCommandStringOption) => opt

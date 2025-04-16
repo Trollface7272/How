@@ -17,7 +17,7 @@ import { Beatmap } from "@src/class/api/osu/class/Beatmap"
 import { BeatmapSet } from "@src/class/api/osu/class/BeatmapSet"
 import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
 import { CommandBase } from "@src/class/base/Command"
-import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, IndexNumberOption, ListBooleanOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction"
+import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, IndexStringOption, ListBooleanOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction"
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer"
 
 interface args {
@@ -381,7 +381,7 @@ Recent.interactionData
     .addStringOption(BeatmapStringOption)
     .addStringOption(UsernameStringOption)
     .addBooleanOption(ListBooleanOption)
-    .addNumberOption(IndexNumberOption)
+    .addStringOption(IndexStringOption)
     .addBooleanOption(opt =>
         opt
             .setName("best")
