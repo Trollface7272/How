@@ -30,6 +30,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
     constructor(
         private interaction: Interaction
     ) { }
+
     public GetMember(): GuildMember {
         if (!this.IsInGuild()) return null
         return this.interaction.member as GuildMember
@@ -201,7 +202,6 @@ export class InteractionCreate implements Event {
         await data.LoadDbData()
 
         if (data.GetRawUser().bot) return
-        await data.LoadDbData()
 
         const command = data.GetCommand()
 
@@ -232,6 +232,8 @@ export class InteractionCreate implements Event {
                 }
             }, {
                 command: commandData.name,
+                user: data.user,
+                guild: data.guild,
 
             })
 

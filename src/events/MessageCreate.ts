@@ -283,9 +283,9 @@ export class MessageCreateData implements EventData, MessageEventData {
 
 export class MessageCreate implements Event {
     public async Handle(data: MessageCreateData): Promise<Event.ReturnCode> {
+        await data.LoadDbData()
         this.RunTriggers(data)
         if (data.GetRawUser().bot) return
-        await data.LoadDbData()
         let prefix = process.env.PREFIX_FORCE ?? data.guild.prefix ?? "!"
         const content = data.GetContent().toLowerCase()
 
@@ -327,7 +327,9 @@ export class MessageCreate implements Event {
                 }
                 resolve(0)
             }, {
-                command: command
+                command: command,
+                user: data.user,
+                guild: data.guild,
             })
         })
     }

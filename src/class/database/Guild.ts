@@ -15,6 +15,12 @@ export class Guild extends RawGuild {
     public embedColor: string
     public prefixes: string[]
 
+    public settings: {
+        autoreply: {
+            neverKillYourself: boolean
+        }
+    }
+
 
     constructor(guild?: DiscordGuild | Document) {
         if (guild instanceof DiscordGuild) {
@@ -27,6 +33,12 @@ export class Guild extends RawGuild {
             }
         }
         if (!this.prefixes) this.prefixes = []
+
+        this.settings ??= {
+            autoreply: {
+                neverKillYourself: false
+            }
+        }
     }
 
     private LoadDefault(guild: DiscordGuild) {
@@ -68,7 +80,8 @@ export class Guild extends RawGuild {
                 messages: this.messages,
                 commands: this.commands,
                 embedColor: this.embedColor,
-                prefixes: this.prefixes
+                prefixes: this.prefixes,
+                settings: this.settings
             }
         }, { upsert: true })
     }
