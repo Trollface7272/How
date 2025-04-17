@@ -173,7 +173,7 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
 
     public GetSpecific(): number[] {
-        const regex = /^[1]?[1-9][0-9]?$|^100|200$/
+        const regex = /^[1]?[0-9][0-9]?$|^100|200$/
         const idxs = this.args.map((arg, index) => {
             if (regex.test(arg))
                 return index
