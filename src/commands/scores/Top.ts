@@ -367,6 +367,12 @@ Top.interactionData
             .setDescription("Get scores that are more than x pp")
             .setRequired(false)
     )
+    .addBooleanOption(opt =>
+        opt
+            .setName("recent")
+            .setDescription("Show most recent top plays")
+            .setRequired(false)
+    )
 
 CommandEmitterInstance.AddCommand(Top, Top.names)
 InteractionRegistrerInstance.AddInteraction(Top.interactionData)
