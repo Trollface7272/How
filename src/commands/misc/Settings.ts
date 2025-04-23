@@ -8,6 +8,7 @@ import { CommandHelp } from "@src/class/help/CommandHelp";
 import context from "node-execution-context";
 import { Context } from "@src/types/Context";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { CONTEXT_FULL } from "@src/utils/discord/interaction";
 
 interface args {
     Type: "user" | "server"
@@ -103,6 +104,7 @@ class Settings extends CommandBase implements CommandAbstract {
 
 Settings.interactionData
     .setName(Settings.name)
+    .setContexts(CONTEXT_FULL)
     .setDescription("Set server settings")
     .addStringOption(option =>
         option.setName("type")

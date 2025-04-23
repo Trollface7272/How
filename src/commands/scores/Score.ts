@@ -14,7 +14,7 @@ import { EmojiFactory } from "@src/class/Emojis";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { randomBytes } from "crypto";
 import NodeCache from "node-cache";
-import { GamemodeStringOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
+import { CONTEXT_FULL, GamemodeStringOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 
@@ -282,6 +282,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
 Score.interactionData
     .setName("score")
     .setDescription("Display imported user scores")
+    .setContexts(CONTEXT_FULL)
     .addStringOption(UsernameStringOption)
     .addStringOption(GamemodeStringOption)
     .addNumberOption(PageNumberOption)
