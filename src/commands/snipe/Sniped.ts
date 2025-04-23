@@ -16,6 +16,7 @@ import { ChartPlugins } from "@src/class/graphs/Bar";
 import { LinkedList } from "@src/class/LinkedList";
 import { Canvas } from "canvas";
 import sharp from "sharp";
+import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
 type Color = string
 
@@ -314,4 +315,5 @@ Sniped.interactionData
     .setDescription("Get your snipe stats")
     .addStringOption(option => option.setName("username").setDescription("The username to get the snipe stats for").setRequired(false))
 
+InteractionRegistrerInstance.AddInteraction(Sniped.interactionData)
 CommandEmitterInstance.AddCommand(Sniped, Sniped.names)
