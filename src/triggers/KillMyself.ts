@@ -19,7 +19,7 @@ class NeverKillYourselfData extends MessageEventData {
 
 class NeverKillYourself implements TriggerAbstract {
     private data: NeverKillYourselfData
-    public static readonly trigger: (RegExp|string)[] = ["kill myself"]
+    public static readonly trigger: (RegExp|string)[] = [/kill(?:ing) myself/]
 
     constructor(data: NeverKillYourselfData) {
         this.data = data
