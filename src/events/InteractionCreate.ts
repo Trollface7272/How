@@ -66,7 +66,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
             if (id) return id
         }
 
-        const messages = await this.interaction.channel.messages.fetch({ limit: 32 })
+        const messages = await this.interaction.channel.messages.fetch({ limit: 32 }).catch(() => [])
         for (const msgData of messages) {
             const id = searchMessage(msgData[1])
             if (id) return id

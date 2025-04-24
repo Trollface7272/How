@@ -111,11 +111,13 @@ export class MessageCreateData implements EventData, MessageEventData {
                 return parseInt(el)
             }
         }
-        const messages = await this.message.channel.messages.fetch({ limit: 32, before: this.message.id })
+        const messages = await this.message.channel.messages.fetch({ limit: 32, before: this.message.id }).catch(() => [])
         for (const msgData of messages) {
             const id = searchMessage(msgData[1])
             if (id) return id
         }
+
+        return channelBeatmapCache.get(this.message.channel.id)
     }
 
     public GetMods(): Mods.ModList {
