@@ -1,5 +1,5 @@
 import { Event, EventData } from "@src/class/partials/Event";
-import { ChatInputCommandInteraction, GuildMember, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, ReplyOptions } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, GuildMember, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Client } from "@src/class/Client";
@@ -10,11 +10,12 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Logger } from "@src/class/Logger";
 import { CommandResponseCodes } from "@src/class/partials/Command";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
-import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
+import { matchForId, searchEmbed, searchMessage } from "@src/class/api/osu/Utils";
 import { Mods } from "@src/class/api/osu/class/Mods";
 import { assert } from "console";
 import context from "node-execution-context";
 import { Context } from "@src/types/Context";
+import { channelBeatmapCache } from "@src/utils/osu/cache";
 
 export class InteractionCreateData implements EventData, MessageEventData {
     private _user: User
@@ -26,6 +27,10 @@ export class InteractionCreateData implements EventData, MessageEventData {
     public get guild() {
         return this._guild
     }
+    public get channel() {
+        return this.interaction.channel
+    }
+
 
     constructor(
         private interaction: Interaction
@@ -66,6 +71,8 @@ export class InteractionCreateData implements EventData, MessageEventData {
             const id = searchMessage(msgData[1])
             if (id) return id
         }
+
+        return channelBeatmapCache.get(this.interaction.channel.id)
     }
 
     public GetMods(): Mods.ModList {
@@ -170,6 +177,12 @@ export class InteractionCreateData implements EventData, MessageEventData {
     }
 
     public async Reply(msg: ReplyOptions): Promise<Message<boolean> | InteractionResponse> {
+        // @ts-ignore
+        const embeds = msg.embeds! as EmbedBuilder[] ?? []
+        for (const embed of embeds) {
+            const id = searchEmbed(embed.data)
+            if (id) channelBeatmapCache.set(this.interaction.channel.id, id)
+        }
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton()) {
             if (this.interaction.deferred) {
                 return this.interaction.editReply(msg as MessageEditOptions)
@@ -178,6 +191,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
         }
         if (this.interaction.isCommand()) {
             if (this.interaction.replied) return
+            if (this.interaction.deferred) return this.interaction.editReply(msg as MessageEditOptions)
             return this.interaction.reply(msg as InteractionReplyOptions)
         }
 
@@ -213,13 +227,13 @@ export class InteractionCreate implements Event {
         return new Promise((resolve) => {
             context.run(async () => {
                 try {
-                    await data.deferButton()
+                    await Promise.all([data.deferButton(), data.defer()])
                     const command = new commandData(data)
                     const code = await command.Handle()
                     switch (code) {
                         case CommandResponseCodes.OK:
                             return resolve(Event.ReturnCode.OK)
-                            
+
                         default:
                             console.log("Unknown CommandResponseCode", code)
                             return resolve(code)
@@ -234,7 +248,7 @@ export class InteractionCreate implements Event {
                 command: commandData.name,
                 user: data.user,
                 guild: data.guild,
-
+                channel: data.channel
             })
 
         })

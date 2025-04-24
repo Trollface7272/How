@@ -1,6 +1,6 @@
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Event, EventData } from "@src/class/partials/Event";
-import { GuildMember, Interaction, InteractionType, Message, MessageReaction, ReplyOptions } from "discord.js";
+import { EmbedBuilder, GuildMember, Interaction, InteractionType, Message, MessageReaction, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Logger } from "@src/class/Logger";
@@ -10,12 +10,13 @@ import { Guild } from "@src/class/database/Guild";
 import { CommandResponseCodes } from "@src/class/partials/Command";
 import { Gamemode, ParsedMods } from "@src/class/api/osu/types/MiscTypes";
 import { GamemodeNumToStr } from "@src/class/api/osu/Consts";
-import { matchForId, searchMessage } from "@src/class/api/osu/Utils";
+import { matchForId, searchEmbed, searchMessage } from "@src/class/api/osu/Utils";
 import { Score } from "@src/class/api/osu/class/Score";
 import { TriggerEmitterInstance } from "@src/class/TriggerEmitter";
 import { Mods } from "@src/class/api/osu/class/Mods";
 import context from "node-execution-context";
 import { Context } from "@src/types/Context";
+import { channelBeatmapCache } from "@src/utils/osu/cache";
 
 const regexes = {
     normal: /^\+?(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi,
@@ -35,6 +36,9 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
     public get guild() {
         return this._guild
+    }
+    public get channel() {
+        return this.message.channel
     }
 
     constructor(
@@ -191,9 +195,9 @@ export class MessageCreateData implements EventData, MessageEventData {
     public GetCommand(): string {
         return this.command
     }
-    public GetRemaining(str: string= "username"): string {
+    public GetRemaining(str: string = "username"): string {
         const username = this.args.join(" ")
-        
+
         if (!username && str === "username") {
             const ctx = context.get<Context>()
             return ctx.user?.osu?.username || null
@@ -273,6 +277,12 @@ export class MessageCreateData implements EventData, MessageEventData {
     }
 
     public async Reply(msg: ReplyOptions): Promise<Message<boolean>> {
+        //@ts-ignore
+        const embeds = msg.embeds! as EmbedBuilder[] ?? []
+        for (const embed of embeds) {
+            const id = searchEmbed(embed.data)
+            if (id) channelBeatmapCache.set(this.message.channel.id, id)
+        }
         return await this.message.reply(msg)
     }
 
@@ -312,7 +322,7 @@ export class MessageCreate implements Event {
                 try {
                     const command = new commandData(data)
                     await data.SendTyping()
-                    
+
                     const code = await command.Handle()
                     switch (code) {
                         case CommandResponseCodes.OK:
@@ -330,6 +340,7 @@ export class MessageCreate implements Event {
                 command: command,
                 user: data.user,
                 guild: data.guild,
+                channel: data.channel
             })
         })
     }

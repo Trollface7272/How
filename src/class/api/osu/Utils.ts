@@ -2,7 +2,7 @@ import { createWriteStream } from "fs"
 import axios from "axios"
 import { Logger } from "@src/class/Logger"
 import { Score } from "./class/Score"
-import { Message } from "discord.js"
+import { APIEmbed, Embed, Message } from "discord.js"
 
 export const Clamp = (num: number, min: number, max: number) => {
   return Math.min(Math.max(num, min), max)
@@ -75,12 +75,17 @@ export const matchForId = (input: string) => {
 export const searchMessage = (msg: Message) => {
   let matches = matchForId(msg.content)
   if (matches) return matches
-  for (const embed of msg.embeds) {
-      matches = matchForId(embed.title) ?? matchForId(embed?.author?.url) ?? matchForId(embed.url) ?? matchForId(embed.description)
+  for (const embed of msg.embeds ?? []) {
+      matches = searchEmbed(embed)
       if (matches) return matches
-      for (const field of embed.fields) {
-          matches = matchForId(field.name) ?? matchForId(field.value)
-          if (matches) return matches
-      }
+  }
+}
+
+export const searchEmbed = (embed: Embed|APIEmbed) => {
+  let matches = matchForId(embed.title) ?? matchForId(embed?.author?.url) ?? matchForId(embed.url) ?? matchForId(embed.description)
+  if (matches) return matches
+  for (const field of embed.fields ?? []) {
+      matches = matchForId(field.name) ?? matchForId(field.value)
+      if (matches) return matches
   }
 }
