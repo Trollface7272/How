@@ -21,6 +21,7 @@ export abstract class CommandDataAbstract {
 
 export abstract class CommandAbstract {
     public static readonly names: string[] = []
+    public static readonly doNotDefer?: boolean = false
     constructor(data: MessageEventData) {
         if (this.constructor == CommandAbstract)
             throw new Error("Cannot instanciate abstract class")

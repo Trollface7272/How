@@ -227,7 +227,7 @@ export class InteractionCreate implements Event {
         return new Promise((resolve) => {
             context.run(async () => {
                 try {
-                    await Promise.all([data.deferButton(), data.defer()])
+                    if (!commandData.doNotDefer) await Promise.all([data.deferButton(), data.defer()])
                     const command = new commandData(data)
                     const code = await command.Handle()
                     switch (code) {

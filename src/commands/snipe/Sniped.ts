@@ -277,7 +277,7 @@ class Sniped extends CommandBase implements CommandAbstract {
         const config: ChartConfiguration = {
             type: "bar",
             data: {
-                labels: labels,
+                labels: labels.reverse(),
                 datasets: datasets
             },
             options: {

@@ -24,6 +24,7 @@ class LinkData extends CommandData implements CommandDataAbstract {
 
 class Link extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["link"]
+    public static readonly doNotDefer: boolean = true
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: LinkData
     private args: args
