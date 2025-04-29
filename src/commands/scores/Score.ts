@@ -207,22 +207,30 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         }).join("\n")
 
         const [profile, profileErr] = await profileQuery
-        if (profileErr) {
-            Logger.Error(profileErr)
-            await this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.UnknownError
+        
+        const profileData = profileErr ? {
+            country: { code: "XX", name: "Unknown" },
+            username: "unknown user " + scores[0].userId,
+            url: undefined,
+            flag: undefined,
+            avatar_url: "https://a.ppy.sh/-1",
+        } : {
+            ...profile,
+            avatar_url: profile.avatar_url ?? "https://a.ppy.sh/-1",
+            flag: GetFlag(profile.country.code),
+            url: profile.url ?? undefined
         }
 
         const embed = this.GetBaseEmbed()
             .setAuthor({
-                name: `Matched scores${Anyone ? "" : ` for ${profile.username}`}`,
-                iconURL: GetFlag(profile.country.code),
-                url: profile.url
+                name: `Matched scores${Anyone && scores.length > 1 ? "" : ` for ${profileData.username}`}`,
+                iconURL: profileData.flag,
+                url: profileData.url
             })
             .setFooter({
                 text: `Page ${Page}/${Math.ceil(total / (Random ? 1 : 5))}`
             })
-            .setThumbnail(profile.avatar_url)
+            .setThumbnail(profileData.avatar_url)
             .setDescription(description)
 
         const buttons = this.CreateButtons(Page, Math.ceil(total / (Random ? 1 : 5)))
