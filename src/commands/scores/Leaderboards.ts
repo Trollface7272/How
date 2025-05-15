@@ -59,7 +59,7 @@ class LeaderboardsData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         const command = this.data.GetCommand()
-        const type = Object.keys(lbAliases).find(key => {
+        const type = this.data.GetString("type", ["-type"]) as LeaderboardsType || Object.keys(lbAliases).find(key => {
             return lbAliases[key]!.includes(command)
         }) as LeaderboardsType
         return {
@@ -251,7 +251,7 @@ Leaderboards.interactionData
                 value: "country"
             }, {
                 name: "Friends",
-                value: "friends"
+                value: "friend"
             })
     )
     .addStringOption(GamemodeStringOption)
