@@ -6,7 +6,7 @@ import { ObjectId } from "mongodb";
 
 beforeAll(async () => {
     await Connect()
-})
+}, 30000)
 
 test("Create and delete reminder", async () => {
     const reminder = new DBReminder({

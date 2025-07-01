@@ -8,6 +8,8 @@ export class DBReminder {
     public messageId: string;
     public message: string;
     public remindAt: Date;
+    public isLooping?: boolean;
+    public loopInterval?: number;
 
     public constructor(data: Partial<DBReminder>) {
         Object.assign(this, data);
@@ -38,5 +40,12 @@ export class DBReminder {
         return db.collection("reminders").deleteOne({
             _id: id
         });
+    }
+
+    public static async GetReminderById(id: ObjectId) {
+        const reminder = await db.collection("reminders").findOne<DBReminder>({
+            _id: id
+        });
+        return reminder ? new DBReminder(reminder) : null;
     }
 }

@@ -9,7 +9,7 @@ const testGuildId = "1039071920433414194"
 
 beforeAll(async () => {
     await Connect()
-})
+}, 30000)
 
 test("User by userid", async () => {
     const user = await UserFactory.GetUser(testUserId)

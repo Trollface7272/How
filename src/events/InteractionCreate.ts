@@ -1,5 +1,5 @@
 import { Event, EventData } from "@src/class/partials/Event";
-import { ChatInputCommandInteraction, EmbedBuilder, GuildMember, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, ReplyOptions } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, GuildMember, Interaction, InteractionReplyOptions, InteractionResponse, InteractionType, Message, MessageEditOptions, MessageFlags, ReplyOptions } from "discord.js";
 import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { RawUser } from "@src/class/RawUser";
 import { Client } from "@src/class/Client";
@@ -192,6 +192,9 @@ export class InteractionCreateData implements EventData, MessageEventData {
             if (id) channelBeatmapCache.set(this.interaction.channel.id, id)
         }
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton()) {
+            if ((msg as InteractionReplyOptions).ephemeral) {
+                this.interaction.reply(msg as InteractionReplyOptions)
+            }
             if (this.interaction.deferred) {
                 return this.interaction.editReply(msg as MessageEditOptions)
             }

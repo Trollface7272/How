@@ -1,7 +1,8 @@
 import { DBReminder } from "@class/database/Reminder";
 import { Logger } from "@src/class/Logger";
 import { HandleAsync } from "@src/Utils";
-import { Client } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, TextChannel } from "discord.js";
+import moment from "moment";
 
 export async function ReminderTrackingLoop(client: Client) {
     const [reminders, err] = await HandleAsync(DBReminder.GetDueReminders());
@@ -50,14 +51,32 @@ async function sendReminder(client: Client, reminder: DBReminder) {
         return;
     }
 
+    const components = [];
+    if (reminder.isLooping) {
+        const row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`remove_reminder;${reminder._id}`)
+                    .setEmoji("❌")
+                    .setStyle(ButtonStyle.Secondary)
+            );
+        components.push(row);
+    }
+
     await channel.send({
         content: `<@${reminder.userId}> Reminder: "${reminder.message}"`,
         allowedMentions: {
             users: [reminder.userId]
-        }
+        },
+        components: components
     }).catch(err => {
         Logger.Error(err);
     });
 
-    await DBReminder.DeleteReminder(reminder._id);
+    if (reminder.isLooping && reminder.loopInterval) {
+        reminder.remindAt = moment(reminder.remindAt).add(reminder.loopInterval, 'milliseconds').toDate();
+        await reminder.save();
+    } else {
+        await DBReminder.DeleteReminder(reminder._id);
+    }
 }

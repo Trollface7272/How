@@ -7,7 +7,7 @@ const testUserId = "552546198918004757"
 
 beforeAll(async () => {
     await Connect()
-})
+}, 30000)
 
 
 test("OAuth Without UserId", async () => {

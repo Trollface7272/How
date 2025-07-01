@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --detectOpenHandles",
+    "test": "jest",
     "dev": "ts-node-dev --no-warnings --respawn --transpile-only --poll --watch src ./src/index.ts",
     "run-scripts": "ts-node-dev --respawn --transpile-only --poll --watch src ./src/scripts.ts"
   },

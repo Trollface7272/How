@@ -13,6 +13,7 @@ import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 interface args {
     duration: string;
     message: string;
+    isLooping: boolean;
 }
 
 class RemindMeData extends CommandData implements CommandDataAbstract {
@@ -26,15 +27,17 @@ class RemindMeData extends CommandData implements CommandDataAbstract {
         if (this.data.IsInteraction()) {
             return {
                 duration: this.data.GetString("duration", []),
-                message: this.data.GetString("message", [])
+                message: this.data.GetString("message", []),
+                isLooping: this.data.GetBoolean("loop", ["-loop", "l"])
             };
         }
 
+        const isLooping = this.data.GetBoolean("loop", ["-loop", "l"]);
         const remaining = this.data.GetRemaining();
         const parts = remaining.split(" ");
         const duration = parts.shift() || "";
         const message = parts.join(" ");
-        return { duration, message };
+        return { duration, message, isLooping };
     }
 }
 
@@ -53,17 +56,30 @@ class RemindMe extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser();
-        const { duration, message } = this.data.args;
+        const { duration, message, isLooping } = this.data.args;
 
         if (!duration || !message) {
-            this.data.Reply({ content: "Please provide a duration and a message for the reminder. Usage: `remindme <duration> <message>`" });
+            this.data.Reply({ content: "Invalid duration" });
             return CommandResponseCodes.USER_ERROR;
         }
 
         const remindAt = this.parseDuration(duration);
         if (!remindAt) {
-            this.data.Reply({ content: "Invalid duration format. Please use a format like `1d`, `2h`, `30m`, `1d12h`." });
+            this.data.Reply({ content: "Invalid duration, valid formats: `1d`, `2h`, `30m`, `1d12h`" });
             return CommandResponseCodes.USER_ERROR;
+        }
+
+        let parsedLoopInterval: number | null = null;
+        if (isLooping) {
+            if (!duration) {
+                this.data.Reply({ content: "Invalid duration" });
+                return CommandResponseCodes.USER_ERROR;
+            }
+            parsedLoopInterval = this.parseDuration(duration)?.diff(moment(), 'milliseconds');
+            if (!parsedLoopInterval || parsedLoopInterval < 60000 * 60) { // Minimum 1 minute
+                this.data.Reply({ content: "Invalid duration, minimum is 1 hour" });
+                return CommandResponseCodes.USER_ERROR;
+            }
         }
 
         const reminder = new DBReminder({
@@ -72,12 +88,14 @@ class RemindMe extends CommandBase implements CommandAbstract {
             channelId: this.data.GetChannelId(),
             messageId: this.data.GetMessageId(),
             message: message,
-            remindAt: remindAt.toDate()
+            remindAt: remindAt.toDate(),
+            isLooping: isLooping || false,
+            loopInterval: parsedLoopInterval || undefined
         });
 
         await reminder.save();
 
-        this.data.Reply({ content: `Reminder set for ${remindAt.toDate().toDiscordToolTip()}` });
+        this.data.Reply({ content: `Reminder set for ${remindAt.toDate().toDiscordToolTip()}${isLooping ? ` repeating every ${duration}` : ''}` });
 
         return CommandResponseCodes.OK
     }
@@ -112,7 +130,15 @@ RemindMe.helpData
     .addArg(new CommandHelpArg()
         .setName("message")
         .setDescription("The reminder message")
-        .setUsage("check on laundry"));
+        .setUsage("check on laundry"))
+    .addArg(new CommandHelpArg()
+        .setName("loop")
+        .setDescription("Set the reminder to loop")
+        .setUsage("-loop"))
+    .addArg(new CommandHelpArg()
+        .setName("interval")
+        .setDescription("The interval for looping reminders (e.g., 1h, 2d, 30m). Minimum 1 minute.")
+        .setUsage("-interval 1h"));
 
 RemindMe.interactionData
     .setName(RemindMe.name)
@@ -124,6 +150,14 @@ RemindMe.interactionData
     .addStringOption(option =>
         option.setName('message')
             .setDescription('The reminder message')
-            .setRequired(true));
+            .setRequired(true))
+    .addBooleanOption(option =>
+        option.setName('loop')
+            .setDescription('Set the reminder to loop')
+            .setRequired(false))
+    .addStringOption(option =>
+        option.setName('interval')
+            .setDescription('The interval for looping reminders (e.g., 1h, 2d, 30m). Minimum 1 minute.')
+            .setRequired(false));
 
 CommandEmitterInstance.AddCommand(RemindMe, RemindMe.names)
