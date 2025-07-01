@@ -7,11 +7,13 @@ import { EmojiFactory } from "./Emojis";
 import { InteractionRegistrerInstance } from "./InteractionRegisterer";
 import { TriggerLoader } from "./TriggerLoader";
 import { BeatmapTrackingLoop } from "@src/tracking/Beatmaps";
+import { ReminderTrackingLoop } from "@src/tracking/Reminders";
 
 export class Client extends DiscordClient {
     public EventEmitter: EventEmitter
     public TriggerEmitter: EventEmitter
     public BeatmapTrackingLoop: NodeJS.Timeout
+    public ReminderTrackingLoop: NodeJS.Timeout
     constructor() {
         super({
             intents: ["DirectMessages", "Guilds", "GuildMembers", "GuildMessages", "MessageContent", "DirectMessages"],
@@ -37,6 +39,10 @@ export class Client extends DiscordClient {
         await this.LoadInteractions()
         Logger.Info(`Creating Event Emitter`)
         this.EventEmitter = new EventEmitter(this)
+
+        Logger.Info("Creating Reminder Tracking Loop")
+        this.ReminderTrackingLoop = setInterval(() => ReminderTrackingLoop(this), 1000 * 60)
+        ReminderTrackingLoop(this)
         
         if (!process.env.DISABLE_TRACKING) {
             Logger.Info(`Creating Beatmap Tracking Loop`)

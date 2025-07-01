@@ -104,15 +104,15 @@ class Profile extends CommandBase implements CommandAbstract {
         const errorReply = this.HandleProfileError(err, username)
         if (errorReply) {
           this.data.Reply(errorReply)
-          return CommandResponseCodes.OK
+          return CommandResponseCodes.USER_ERROR
         }
-        return CommandResponseCodes.UnknownError
+        return CommandResponseCodes.ERROR
       }
       const [scoreProfile, scoreProfileErr] = await HandleAsync(fetcher.ScoreProfile({ user_id: profile.id }))
       if (scoreProfileErr) {
         const embed = this.HandleProfileError(scoreProfileErr, username)
         await this.data.Reply(embed)
-        return CommandResponseCodes.OK
+        return CommandResponseCodes.USER_ERROR
       }
       replyOptions = this.RenderProfile({ profile, mode, scoreProfile })
     }
@@ -169,17 +169,17 @@ class Profile extends CommandBase implements CommandAbstract {
         switch (err.status) {
           case 404: {
             await this.data.Reply(this.RenderUserNotFound({ username }))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
           }
           case 502:
           case 503:
           case 520: {
             await this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.OsuApiDown
+            return CommandResponseCodes.OSU_API_DOWN
           }
           default:
             Logger.Error("Profile - ApiError", err)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
       } else {
         if (err instanceof FetcherError) {
@@ -190,11 +190,11 @@ class Profile extends CommandBase implements CommandAbstract {
             }
             case FetcherErrors.MissingIdentifyScope: {
               await this.data.Reply(this.RenderApiError())
-              return CommandResponseCodes.OsuApiDown
+              return CommandResponseCodes.OSU_API_DOWN
             }
             default:
               Logger.Error("Profile - ApiError", err)
-              return CommandResponseCodes.UnknownError
+              return CommandResponseCodes.ERROR
           }
 
         }

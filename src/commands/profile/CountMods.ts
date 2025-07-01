@@ -51,7 +51,7 @@ class CountMods extends CommandBase implements CommandAbstract {
 
         if (!Id && !Username) {
             this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
@@ -63,7 +63,7 @@ class CountMods extends CommandBase implements CommandAbstract {
         )
         if (err) {
             Logger.Error(err)
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const scores = [..._scores[0], ..._scores[1]]

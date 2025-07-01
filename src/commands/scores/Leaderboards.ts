@@ -115,11 +115,11 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             const [recent, recentErr] = await HandleAsync(fetcher.GetUserScores({ Id: user.osu.userId, Limit: 1, Type: "recent", Gamemode: this.args.Gamemode }))
             if (recentErr) {
                 Logger.Error(recentErr)
-                return CommandResponseCodes.UnknownError
+                return CommandResponseCodes.ERROR
             }
             if (recent.length === 0) {
                 await this.data.Reply(this.RenderNoScores())
-                return CommandResponseCodes.OK
+                return CommandResponseCodes.USER_ERROR
             }
             this.args.Map = recent[0].BeatmapId
         }
@@ -131,7 +131,7 @@ class Leaderboards extends CommandBase implements CommandAbstract {
         const Map = this.data.args.Map || await this.data.GetBeatmapFromConversation()
         if (!Map) {
             await this.data.Reply(this.RenderNoBeatmapError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
 
@@ -143,7 +143,7 @@ class Leaderboards extends CommandBase implements CommandAbstract {
         }
         if (!map.is_scoreable) {
             await this.data.Reply(this.RenderBeatmapUnscoreable())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const [lb, scoresErr] = isButton ? [cached.lb] : await HandleAsync(fetcher.GetLeaderboards({ id: Map, mods: Mods, gamemode: Gamemode, type: Type }))
@@ -151,15 +151,15 @@ class Leaderboards extends CommandBase implements CommandAbstract {
             const errorReply = this.HandleLeaderboardsError(scoresErr)
             if (errorReply) {
                 this.data.Reply(errorReply)
-                return CommandResponseCodes.OK
+                return CommandResponseCodes.USER_ERROR
             }
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
         const { user_score } = lb
         const scores = lb.scores.slice(Page * 10, (Page + 1) * 10)
         if (scores.length === 0) {
             await this.data.Reply(this.RenderNoScores())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const userids = lb.scores.map(score => score.UserId)

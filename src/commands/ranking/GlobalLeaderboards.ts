@@ -68,7 +68,7 @@ class GlobalLeaderboards extends CommandBase implements CommandAbstract {
         if (Me) {
             if (!user_id && !username) {
                 this.data.Reply(this.RenderNoUserError())
-                return CommandResponseCodes.OK
+                return CommandResponseCodes.USER_ERROR
             }
             const [profile_score, scoreProfile_err] = await HandleAsync(fetcher.ScoreProfile({ user_id: user_id }))
             if (scoreProfile_err) {

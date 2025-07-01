@@ -62,7 +62,7 @@ class DailyChallenge extends CommandBase implements CommandAbstract {
         if (!challenges) {
             this.data.Reply(this.RenderApiError())
             Logger.Error(challenges)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const embed = this.GetBaseEmbed()

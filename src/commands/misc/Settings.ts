@@ -48,14 +48,14 @@ class Settings extends CommandBase implements CommandAbstract {
         const user = this.data.GetUser()
         if (!this.data.IsInGuild()) {
             this.data.Reply({ content: "This command can only be used in a server." })
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const member = this.data.GetMember()
 
         if (!user.admin && !member.permissions.has(PermissionFlagsBits.ManageChannels)) {
             this.data.Reply({ content: "You don't have permission to use this command." })
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         switch (this.data.args.Type) {

@@ -59,20 +59,20 @@ class PrefixAlias extends CommandBase implements CommandAbstract {
             case "server": {
                 if (!this.data.IsInGuild()) {
                     this.data.Reply({ content: "Server prefix is only modifiable in server" })
-                    return CommandResponseCodes.OK
+                    return CommandResponseCodes.USER_ERROR
                 }
 
                 const member = this.data.GetMember()
                 if (!member.permissions.any("ManageMessages", true)) {
                     this.data.Reply({ content: "Server prefix is only modifiable by admin" })
-                    return CommandResponseCodes.OK
+                    return CommandResponseCodes.USER_ERROR
                 }
 
                 const guild = await GuildFactory.GetGuild(member.guild.id)
 
                 if (!guild) {
                     this.data.Reply({ content: "Unknown error occured" })
-                    return CommandResponseCodes.UnknownError
+                    return CommandResponseCodes.ERROR
                 }
 
                 ret = await this.HandleEntity(guild)
@@ -81,7 +81,7 @@ class PrefixAlias extends CommandBase implements CommandAbstract {
 
             default: {
                 this.data.Reply({ content: `Unknown type "${Type}", valid types: server, user` })
-                return CommandResponseCodes.OK
+                return CommandResponseCodes.USER_ERROR
             }
         }
 

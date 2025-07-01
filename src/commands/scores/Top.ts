@@ -147,7 +147,7 @@ class Top extends CommandBase implements CommandAbstract {
 
         if (!Username && !Id) {
             await this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
@@ -161,7 +161,7 @@ class Top extends CommandBase implements CommandAbstract {
         if (error) {
             await this.data.Reply(this.RenderApiError())
             Logger.Error(error)
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         let scores = [..._scores[0], ..._scores[1]]
@@ -176,7 +176,7 @@ class Top extends CommandBase implements CommandAbstract {
             if (!Recent && !Random && !Reversed) {
                 const embed = this.RenderGreaterThan({ user: username, total: scores.length, pp: GreaterThan })
                 this.data.Reply({ embeds: [embed] })
-                return CommandResponseCodes.OK
+                return CommandResponseCodes.USER_ERROR
             }
         }
 

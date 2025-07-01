@@ -41,6 +41,14 @@ export class MessageCreateData implements EventData, MessageEventData {
         return this.message.channel
     }
 
+    public GetChannelId(): string {
+        return this.message.channel.id;
+    }
+
+    public GetMessageId(): string {
+        return this.message.id;
+    }
+
     constructor(
         private message: Message
     ) {

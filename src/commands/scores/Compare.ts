@@ -98,7 +98,7 @@ class Compare extends CommandBase implements CommandAbstract {
 
         if (!Username && !Id) {
             this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const Beatmap = _Beatmap || await this.data.GetBeatmapFromConversation()
@@ -114,7 +114,7 @@ class Compare extends CommandBase implements CommandAbstract {
         if (!Beatmap) {
             const embed = this.BeatmapNotFoundInConversation()
             this.data.Reply({ embeds: [embed] })
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
@@ -122,7 +122,7 @@ class Compare extends CommandBase implements CommandAbstract {
         if (!scores.length) {
             const embed = this.NoScoresFound(Username ?? Id.toString())
             this.data.Reply({ embeds: [embed] })
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
         const pickedScoreIds = scores.slice(this.args.Page * 3, this.args.Page * 3 + 3).map((el: Score.BaseScore) => el.Id)
         const pickedScores = await Promise.all(pickedScoreIds.map((el: number) => fetcher.GetScoreById({ id: el, Gamemode: scores[0].RulesetId })))

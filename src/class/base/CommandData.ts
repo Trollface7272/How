@@ -59,4 +59,12 @@ export class CommandData {
     public GetMember() {
         return this.data.GetMember()
     }
+
+    public GetChannelId(): string {
+        return this.data.GetChannelId();
+    }
+
+    public GetMessageId(): string {
+        return this.data.GetMessageId();
+    }
 }

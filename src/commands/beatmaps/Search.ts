@@ -70,12 +70,12 @@ class Search extends CommandBase implements CommandAbstract {
         if (beatmapsErr) {
             Logger.Error(beatmapsErr)
             this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         if (!beatmaps.total) {
             this.data.Reply(this.RenderNoBeatmapsFound())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const sets = beatmaps.beatmapsets.slice(0, 10).filter(set => set)

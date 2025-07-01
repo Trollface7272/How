@@ -49,7 +49,7 @@ class RequiredScore extends CommandBase implements CommandAbstract {
 
         if (!Username) {
             this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
@@ -62,13 +62,13 @@ class RequiredScore extends CommandBase implements CommandAbstract {
         if (profileErr) {
             const embed = this.HandleProfileError(profileErr, Username)
             await this.data.Reply(embed)
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         if (rankError) {
             const embed = this.HandleProfileError(rankError, Username)
             await this.data.Reply(embed)
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
 

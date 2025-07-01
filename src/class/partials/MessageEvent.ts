@@ -107,4 +107,12 @@ export abstract class MessageEventData {
     public GetMember(): GuildMember {
         throw Event.ReturnCode.Unimplemented
     }
+
+    public GetChannelId(): string {
+        throw Event.ReturnCode.Unimplemented
+    }
+
+    public GetMessageId(): string {
+        throw Event.ReturnCode.Unimplemented
+    }
 }

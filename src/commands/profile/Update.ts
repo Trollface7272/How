@@ -48,7 +48,7 @@ class Update extends CommandBase implements CommandAbstract {
 
         if (!Username) {
             this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
@@ -56,13 +56,13 @@ class Update extends CommandBase implements CommandAbstract {
         const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
         if (profileError) {
             Logger.Error(profileError)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const [updated, updateError] = await HandleAsync(fetcher.AmeoTrackUpdate({ id: profile.id, mode: 0 }))
         if (updateError) {
             Logger.Error(updateError)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const text = TextRenderer.render("profile/update", {

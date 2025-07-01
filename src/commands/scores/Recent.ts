@@ -49,6 +49,10 @@ class RecentData extends CommandData implements CommandDataAbstract {
     }
 
     public GetComandArgs(): args {
+        const command = this.data.GetCommand()
+
+
+        
         const Gamemode = this.data.GetGamemode()
         const Specific = this.data.GetSpecific()
         const Page = 0
@@ -74,7 +78,7 @@ class RecentData extends CommandData implements CommandDataAbstract {
 }
 
 class Recent extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["recent", "r", "rs", "recents", "recentscores", "recentscore"]
+    public static readonly names: string[] = ["recent", "r", "rs", "recents", "recentscores", "recentscore", "mymostrecentsubmittedscore"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
     private data: RecentData
     private args: args
@@ -102,7 +106,7 @@ class Recent extends CommandBase implements CommandAbstract {
 
         if (!Username && !Id) {
             await this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const listPageSize = 5
@@ -150,7 +154,7 @@ class Recent extends CommandBase implements CommandAbstract {
                 await Promise.all(performanceLoading)
 
                 this.data.Reply(this.renderMultipleBestScores({ scores, page: Page, maxPages: Math.ceil(allScores.length / listPageSize) }))
-                return CommandResponseCodes.OK
+                return CommandResponseCodes.USER_ERROR
             }
 
             const score = allScores[Page]
@@ -158,7 +162,7 @@ class Recent extends CommandBase implements CommandAbstract {
             const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)])
             await loading
             this.data.Reply(await this.renderSingleBestScore({ score, page: Page, maxPages: allScores.length }))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
         const allScores = await fetcher.GetUserScores({ Username: Username ?? Id.toString(), Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails, Id: Id })
         this.args.Scores = allScores
@@ -174,7 +178,7 @@ class Recent extends CommandBase implements CommandAbstract {
             const performanceLoading = scores.map(score => Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)]))
             await Promise.all(performanceLoading)
             this.data.Reply(this.renderMultipleScores({ scores, page: Page, maxPages: Math.ceil(allScores.length / listPageSize) }))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const score = allScores[Page]
@@ -191,7 +195,7 @@ class Recent extends CommandBase implements CommandAbstract {
         await loading
 
         this.data.Reply(await this.renderSingleScore({ score, page: Page, maxPages: allScores.length, tries }))
-        return CommandResponseCodes.OK
+        return CommandResponseCodes.USER_ERROR
     }
 
     private renderCount({ fails, passes, total }: { passes: number, fails: number, total: number }) {
@@ -205,7 +209,7 @@ class Recent extends CommandBase implements CommandAbstract {
     private async noScoresFound(username: string, resp: InteractionReplyOptions | MessageReplyOptions) {
         resp.content = `${username} has no recent scores.`
         await this.data.Reply(resp)
-        return CommandResponseCodes.OK
+        return CommandResponseCodes.USER_ERROR
     }
 
     private async renderMap({ beatmap, beatmapset }: { beatmap: Beatmap.Base, beatmapset: BeatmapSet.Compact }) {

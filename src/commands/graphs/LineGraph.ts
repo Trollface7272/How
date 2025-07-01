@@ -96,14 +96,14 @@ class Playcount extends CommandBase implements CommandAbstract {
 
         if (!Username) {
             this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
         const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: Gamemode }))
         if (profileError) {
             Logger.Error(profileError)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         let data: [number[], string[]]

@@ -126,7 +126,7 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
 
             if (!this.args.Id) {
                 this.data.Reply(this.RenderNoUserError())
-                return CommandResponseCodes.OK
+                return CommandResponseCodes.USER_ERROR
             }
         }
 
@@ -173,14 +173,14 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         if (err) {
             Logger.Error(err)
             await this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
         const { scores, total, randomOffset } = score
         const profileQuery = HandleAsync(fetcher.GetProfile({ Username: Anyone ? scores[0].userId : Username ?? Id, Gamemode: Gamemode }))
 
         if (total == 0) {
             await this.data.Reply(this.RenderNoImportedScoresError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const description = scores.map((score, i) => {

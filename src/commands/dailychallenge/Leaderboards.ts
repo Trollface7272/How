@@ -85,7 +85,7 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
 
         if (!challenge) {
             await this.data.Reply({ content: "No daily challenge is currently active." })
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const query = {
@@ -98,7 +98,7 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
         if (Friends) {
             if (!user.osu.scopes.includes("friends.read")) {
                 await this.data.Reply({ content: "Relink with friends flag." })
-                return CommandResponseCodes.OK
+                return CommandResponseCodes.USER_ERROR
             }
             const friends = await fetcher.GetUserFriends()
             const friendIds = friends.map(el => el.id)
@@ -109,14 +109,14 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
         const allScores = await DailyChallengeScoreFactory.GetDailyChallengeScores(query, true)
         if (!allScores || !allScores.length) {
             await this.data.Reply(this.RenderNoScores())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const [map, mapError] = await HandleAsync(fetcher.GetBeatmap({ id: challenge.current_playlist_item.beatmap_id, Gamemode: GamemodeNumToStr[challenge.current_playlist_item.ruleset_id] }))
         if (mapError) {
             await this.data.Reply(this.RenderApiError())
             Logger.Error(mapError)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const user_score = allScores.find(score => score.UserId === user?.osu?.userId)

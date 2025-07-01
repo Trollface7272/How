@@ -44,19 +44,19 @@ class DailyChallengeProfile extends CommandBase implements CommandAbstract {
         const Username = username || user?.osu?.username
         if (!Username) {
             this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
         const fetcher = await Fetcher.Create(user.id)
         const [profile, err] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
         if (err) {
             this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const dcProfile = await DailyChallengeProfileFactory.GetDailyChallengeProfile(profile.id)
         if (!dcProfile) {
             this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const grades = {

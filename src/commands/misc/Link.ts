@@ -42,7 +42,7 @@ class Link extends CommandBase implements CommandAbstract {
                 embeds: [embed],
                 ephemeral: true
             })
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
         const user = this.data.GetUser()
 

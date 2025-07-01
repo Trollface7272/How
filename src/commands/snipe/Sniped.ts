@@ -101,7 +101,7 @@ class Sniped extends CommandBase implements CommandAbstract {
         const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
         if (profileError) {
             this.data.Reply(this.HandleProfileError(profileError, Username))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const from = moment()
@@ -115,13 +115,13 @@ class Sniped extends CommandBase implements CommandAbstract {
         const [gainsScores, gainsError] = await gainPromise
         if (gainsError) {
             this.data.Reply(this.HandleProfileError(gainsError, Username))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const [lossesScores, lossesError] = await lossesPromise
         if (lossesError) {
             this.data.Reply(this.HandleProfileError(lossesError, Username))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const gains: SnipeData = {

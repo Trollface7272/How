@@ -65,7 +65,7 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
 
         if (!Username) {
             this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
@@ -74,14 +74,14 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
         if (profileErr) {
             this.data.Reply(this.HandleProfileError(profileErr, Username))
             Logger.Error("profileErr", profileErr)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const [snipeProfile, snipeProfileErr] = await HandleAsync(fetcher.SnipeProfile({ name: profile.id, country: profile.country_code }))
         if (snipeProfileErr) {
             this.data.Reply(this.RenderApiError())
             Logger.Error("snipeProfileErr", snipeProfileErr)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const sphReq = HandleAsync(fetcher.SnipeHistory({ name: profile.id, country: profile.country_code }))
@@ -92,19 +92,19 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
         if (snipeProfileHistoryErr) {
             this.data.Reply(this.RenderApiError())
             Logger.Error("snipeProfileHistoryErr", snipeProfileHistoryErr)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
         const [{ score: oldestScore, position: rank }, oldestScoreErr] = await oldestScoreReq
         if (oldestScoreErr) {
             this.data.Reply(this.RenderApiError())
             Logger.Error("oldestScoreErr", oldestScoreErr)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
         const [oldestMap, oldestMapErr] = await oldestMapReq
         if (oldestMapErr) {
             this.data.Reply(this.RenderApiError())
             Logger.Error("oldestMapErr", oldestMapErr)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         await oldestScore.fetchPerformance()

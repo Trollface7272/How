@@ -98,7 +98,7 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
         if (fetchedProfilesError) {
             Logger.Error(fetchedProfilesError)
             this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
 
@@ -167,7 +167,7 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
             if (err) {
                 Logger.Error(err)
                 this.data.Reply(this.RenderApiError())
-                return CommandResponseCodes.UnknownError
+                return CommandResponseCodes.ERROR
             }
             profiles.push(...batch)
             fetchedProfiles.push(...fetched)

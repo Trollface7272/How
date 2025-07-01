@@ -41,6 +41,14 @@ export class InteractionCreateData implements EventData, MessageEventData {
         return this.interaction.member as GuildMember
     }
 
+    public GetChannelId(): string {
+        return this.interaction.channel.id;
+    }
+
+    public GetMessageId(): string {
+        return this.interaction.id;
+    }
+
     public IsInGuild(): boolean {
         return this.interaction.inGuild()
     }

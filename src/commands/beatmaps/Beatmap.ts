@@ -94,10 +94,10 @@ class Beatmap extends CommandBase implements CommandAbstract {
     if (err) {
       if (err instanceof AxiosError) {
         this.BeatmapError(err)
-        return CommandResponseCodes.OK
+        return CommandResponseCodes.USER_ERROR
       }
       Logger.Error("Fetch beatmap error ->", err)
-      return CommandResponseCodes.UnknownError
+      return CommandResponseCodes.ERROR
     }
 
     if (Background) {
@@ -126,7 +126,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
     const [beatmapset, err2] = await loadingSet
     if (err2) {
       Logger.Error("Fetch beatmapset error ->", err2)
-      return CommandResponseCodes.UnknownError
+      return CommandResponseCodes.ERROR
     }
 
     const difficultyOptions = []

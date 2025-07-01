@@ -15,7 +15,7 @@ test("User by userid", async () => {
     const user = await UserFactory.GetUser(testUserId)
 
     expect(user).toBeTruthy()
-    expect(user).toHaveProperty("username", "Trollface")
+    expect(user).toHaveProperty("username", "_trollface")
     expect(user).toBeInstanceOf(User)
 })
 

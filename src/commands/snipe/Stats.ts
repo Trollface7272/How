@@ -48,7 +48,7 @@ class SnipeStats extends CommandBase implements CommandAbstract {
         const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
         if (profileError) {
             this.data.Reply(this.HandleProfileError(profileError, Username))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
         
         const from = new Date()
@@ -63,12 +63,12 @@ class SnipeStats extends CommandBase implements CommandAbstract {
         if (gainsError) {
             console.log(gainsError)
             this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
         if (lossesError) {
             console.log(gainsError)
             this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const total = (gains.length - losses.length).toString()

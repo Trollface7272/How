@@ -43,21 +43,21 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
 
         if (!challenge) {
             this.data.Reply({ content: "No active challenge" })
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const [userScore, userScoreError] = user.osu ? await HandleAsync(DailyChallengeScoreFactory.GetDailyChallengeScoreByUser(user?.osu?.userId, challenge.id)) : [null, null]
         if (userScoreError) {
             this.data.Reply(this.RenderApiError())
             Logger.Error(userScoreError)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
         const fetcher = await Fetcher.Create(user.id)
         const [beatmap, beatmapErr] = await HandleAsync(fetcher.GetBeatmap({ id: challenge.current_playlist_item.beatmap_id, Gamemode: GamemodeNumToStr[challenge.current_playlist_item.ruleset_id] }))
         if (beatmapErr) {
             this.data.Reply(this.RenderApiError())
             Logger.Error(beatmapErr)
-            return CommandResponseCodes.UnknownError
+            return CommandResponseCodes.ERROR
         }
 
         const user_score = userScore ? { score: userScore.TotalScore.toLocaleString(), rank: userScore.position.toLocaleString() } : null
