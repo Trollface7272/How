@@ -10,6 +10,7 @@ import moment from "moment";
 import { ObjectId } from "mongodb";
 import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
+
 interface args {
     duration: string;
     message: string;

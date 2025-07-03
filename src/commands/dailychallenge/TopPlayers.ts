@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { PageArg } from "@src/utils/discord/help";
 import { DailyChallengeProfile, DailyChallengeProfileFactory } from "@src/class/database/DailyChallengeProfile";
 import { DailyChallenge, DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { Profile } from "@src/class/api/osu/class/Profile";
@@ -15,6 +17,7 @@ import { randomBytes } from "crypto";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { Filter } from "mongodb";
 import { DailyChallengeScore, DailyChallengeScoreFactory } from "@src/class/database/DailyChallengeScore";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
     Raw: boolean
@@ -48,6 +51,7 @@ class DailyChallengeTopPlayersData extends CommandData implements CommandDataAbs
 
 class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["dctp", "dctopplayers", "dailychallengetopplayers", "daily-challenge-top-players"]
+    public static readonly helpData = new CommandHelp()
     private data: DailyChallengeTopPlayersData
     private args: args
     private componentId: string
@@ -187,3 +191,18 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(DailyChallengeTopPlayers, DailyChallengeTopPlayers.names)
+
+DailyChallengeTopPlayers.helpData
+    .setCommand(DailyChallengeTopPlayers.name)
+    .setDescription("Display top daily challenge players")
+    .setUsage("dctp [page] [country] [today]")
+    .setAliases(DailyChallengeTopPlayers.names)
+    .addArg(PageArg)
+    .addArg(new CommandHelpArg()
+        .setName("country")
+        .setDescription("Filter by country code (e.g., US)")
+        .setUsage("US"))
+    .addArg(new CommandHelpArg()
+        .setName("today")
+        .setDescription("Show today's scores")
+        .setUsage("-today"));

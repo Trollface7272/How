@@ -8,6 +8,8 @@ import { Logger } from "@src/class/Logger";
 import { SlashCommandBuilder } from "discord.js";
 import { CONTEXT_FULL, CountryStringOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { PageArg } from "@src/utils/discord/help";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 import { CommandHelp } from "@src/class/help/CommandHelp";
 
 interface args {
@@ -82,6 +84,19 @@ class DailyChallenge extends CommandBase implements CommandAbstract {
 }
 
 DailyChallenge.helpData
+    .setCommand(DailyChallenge.name)
+    .setDescription("Display daily challenge information.")
+    .setUsage("daily-challenge [list] [page] [search]")
+    .setAliases(DailyChallenge.names)
+    .addArg(new CommandHelpArg()
+        .setName("list")
+        .setDescription("List all daily challenges")
+        .setUsage("-list"))
+    .addArg(PageArg)
+    .addArg(new CommandHelpArg()
+        .setName("search")
+        .setDescription("Search for a specific daily challenge")
+        .setUsage("challenge name"));
 
 DailyChallenge.interactionData
     .setName("daily-challenge")

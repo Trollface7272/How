@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
@@ -31,6 +33,7 @@ class AvatarData extends CommandData implements CommandDataAbstract {
 class Avatar extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["avatar", "pfp"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: AvatarData
 
 
@@ -76,3 +79,10 @@ Avatar.interactionData
 
 CommandEmitterInstance.AddCommand(Avatar, Avatar.names)
 InteractionRegistrerInstance.AddInteraction(Avatar.interactionData)
+
+Avatar.helpData
+    .setCommand(Avatar.name)
+    .setDescription("Display osu user avatar")
+    .setUsage("avatar [username]")
+    .setAliases(Avatar.names)
+    .addArg(UsernameArg);

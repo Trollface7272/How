@@ -3,6 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { UsernameArg } from "@src/utils/discord/help";
 import { SlashCommandBuilder } from "discord.js";
 import { CommandHelp } from "@src/class/help/CommandHelp";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
@@ -319,3 +320,10 @@ Sniped.interactionData
 
 InteractionRegistrerInstance.AddInteraction(Sniped.interactionData)
 CommandEmitterInstance.AddCommand(Sniped, Sniped.names)
+
+Sniped.helpData
+    .setCommand(Sniped.name)
+    .setDescription("Display snipe statistics for a user.")
+    .setUsage("sniped [username]")
+    .setAliases(Sniped.names)
+    .addArg(UsernameArg);

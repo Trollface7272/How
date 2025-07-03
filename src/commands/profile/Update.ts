@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { UsernameArg } from "@src/utils/discord/help";
 import { GetFlag, HandleAsync, formatAsGain } from "@src/Utils";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Logger } from "@src/class/Logger";
@@ -33,6 +35,7 @@ class UpdateData extends CommandData implements CommandDataAbstract {
 class Update extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["update", "u"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: UpdateData
 
 
@@ -108,3 +111,10 @@ Update.interactionData
 
 CommandEmitterInstance.AddCommand(Update, Update.names)
 InteractionRegistrerInstance.AddInteraction(Update.interactionData)
+
+Update.helpData
+    .setCommand(Update.name)
+    .setDescription("Display profile changes since last update")
+    .setUsage("update [username]")
+    .setAliases(Update.names)
+    .addArg(UsernameArg);

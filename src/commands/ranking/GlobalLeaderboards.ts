@@ -3,11 +3,14 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, FriendsArg } from "@src/utils/discord/help";
 import { SlashCommandBuilder } from "discord.js";
 import { Gamemode, RankingType } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetCountryFlag, GetFlag, HandleAsync } from "@src/Utils";
 import { TextRenderer } from "@src/class/renderer/Text";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
     Country: string
@@ -44,6 +47,7 @@ class GlobalLeaderboards extends CommandBase implements CommandAbstract {
     public static readonly score: string[] = ["slb", "sr", "scoreleaderboards", "scoreranking", "score-leaderboards", "score-ranking"]
     public static readonly names: string[] = [...this.score, "glb", "gr", "globalleaderboards", "globalranking", "global-leaderboards", "global-ranking"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: GlobalLeaderboardsData
 
 
@@ -138,3 +142,19 @@ class GlobalLeaderboards extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(GlobalLeaderboards, GlobalLeaderboards.names)
+
+GlobalLeaderboards.helpData
+    .setCommand(GlobalLeaderboards.name)
+    .setDescription("Display global leaderboards.")
+    .setUsage("glb [country] [me] [gamemode] [friends]")
+    .setAliases(GlobalLeaderboards.names)
+    .addArg(new CommandHelpArg()
+        .setName("country")
+        .setDescription("Filter by country code (e.g., US)")
+        .setUsage("US"))
+    .addArg(new CommandHelpArg()
+        .setName("me")
+        .setDescription("Show your position in the leaderboards")
+        .setUsage("-me"))
+    .addArg(GamemodeArg)
+    .addArg(FriendsArg);

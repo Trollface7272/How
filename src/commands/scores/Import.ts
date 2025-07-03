@@ -3,6 +3,9 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
+import { UsernameArg } from "@src/utils/discord/help";
 import { importScores } from "@src/sockets/Importer";
 import { SlashCommandBuilder } from "discord.js";
 
@@ -26,6 +29,7 @@ class ImportData extends CommandData implements CommandDataAbstract {
 
 class Import extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["import"]
+    public static readonly helpData = new CommandHelp()
     private data: ImportData
 
 
@@ -55,3 +59,10 @@ class Import extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(Import, Import.names)
+
+Import.helpData
+    .setCommand(Import.name)
+    .setDescription("Import user scores.")
+    .setUsage("import [username]")
+    .setAliases(Import.names)
+    .addArg(UsernameArg);

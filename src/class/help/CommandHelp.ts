@@ -25,10 +25,11 @@ export class CommandHelp {
 
     public renderEmbed(embed: EmbedBuilder) {
         const argsTxt = this.args.map(arg => {
+            if (arg.hidden) return null
             const aliases = arg.aliases.length > 0 ? `\nAliases: ${arg.aliases.join(", ")}` : ""
             const usage = arg.usage ? `\nUsage: ${arg.usage}` : ""
             return `${arg.name} - ${arg.description}${usage}${aliases}`
-        }).join("\n\n")
+        }).filter(el => el !== null).join("\n\n")
 
         const aliasesTxt = this.aliases.length > 0 ? `Aliases: \`${this.aliases.join(", ")}\`\n` : ""
         const description = `${this.description}\n` + aliasesTxt + `\`\`\`` + argsTxt + `\`\`\``

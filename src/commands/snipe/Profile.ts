@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { FormatCombo, FormatHits, GetFlag, HandleAsync } from "@src/Utils";
 import { TextRenderer } from "@src/class/renderer/Text";
@@ -49,7 +51,9 @@ class SnipeProfileData extends CommandData implements CommandDataAbstract {
 }
 
 class SnipeProfile extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["profilesnipestats", "pss"]
+    public static readonly name: string = "profilesnipestats"
+    public static readonly names: string[] = [this.name, "pss"]
+    public static readonly helpData = new CommandHelp()
     private data: SnipeProfileData
 
 
@@ -241,3 +245,10 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(SnipeProfile, SnipeProfile.names)
+
+SnipeProfile.helpData
+    .setCommand(SnipeProfile.name)
+    .setDescription("Display user snipe profile")
+    .setUsage("profilesnipestats [username]")
+    .setAliases(SnipeProfile.names)
+    .addArg(UsernameArg);

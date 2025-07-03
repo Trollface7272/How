@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+
 import { Client } from "@src/class/Client";
 import { OAuth2Scopes, SlashCommandBuilder } from "discord.js";
 import { CONTEXT_FULL } from "@src/utils/discord/interaction";
@@ -29,6 +31,7 @@ class InviteData extends CommandData implements CommandDataAbstract {
 class Invite extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["invite", "inv"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: InviteData
 
 
@@ -55,3 +58,9 @@ Invite.interactionData
 
 CommandEmitterInstance.AddCommand(Invite, Invite.names)
 InteractionRegistrerInstance.AddInteraction(Invite.interactionData)
+
+Invite.helpData
+    .setCommand(Invite.name)
+    .setDescription("Get invite link for the bot")
+    .setUsage("invite")
+    .setAliases(Invite.names);

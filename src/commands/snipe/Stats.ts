@@ -5,6 +5,8 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { SlashCommandBuilder } from "discord.js";
 import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
+import { UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { HandleAsync } from "@src/Utils";
 import { TextRenderer } from "@src/class/renderer/Text";
@@ -93,3 +95,10 @@ class SnipeStats extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(SnipeStats, SnipeStats.names)
+
+SnipeStats.helpData
+    .setCommand(SnipeStats.name)
+    .setDescription("Display daily snipe statistics for a user.")
+    .setUsage("dss [username]")
+    .setAliases(SnipeStats.names)
+    .addArg(UsernameArg);

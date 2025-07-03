@@ -18,7 +18,7 @@ export class InteractionRegistrer {
             Logger.Info(`Registering ${this.interactions.length} interactions`)
             const resp = await rest.put(
                 Routes.applicationCommands(process.env.APPLICATION_ID),
-                { body: this.interactions.map(int => int.toJSON()) }
+                { body: this.interactions.filter(el => el !== null).map(int => int.toJSON()) }
             ) as any
             Logger.Info(`Registered ${resp.length} interactions`)
         } catch (err) {

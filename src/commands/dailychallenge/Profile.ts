@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
 import { DailyChallengeProfileFactory } from "@src/class/database/DailyChallengeProfile";
@@ -30,6 +32,7 @@ class DailyChallengeProfileData extends CommandData implements CommandDataAbstra
 
 class DailyChallengeProfile extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["dcp", "dcprofile", "dailychallengeprofile", "daily-challenge-profile"]
+    public static readonly helpData = new CommandHelp()
     private data: DailyChallengeProfileData
 
 
@@ -102,3 +105,10 @@ class DailyChallengeProfile extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(DailyChallengeProfile, DailyChallengeProfile.names)
+
+DailyChallengeProfile.helpData
+    .setCommand(DailyChallengeProfile.name)
+    .setDescription("Display daily challenge profile")
+    .setUsage("dcp [username]")
+    .setAliases(DailyChallengeProfile.names)
+    .addArg(UsernameArg);

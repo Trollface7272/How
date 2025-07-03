@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { HandleAsync } from "@src/Utils";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
@@ -11,6 +13,7 @@ import { LineChart, ChartOptions, ChartPlugins } from "@src/class/graphs/Line";
 import { Profile } from "@src/class/api/osu/class/Profile";
 import { DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { ChartDataset } from "chart.js";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 enum Types {
     Playcount,

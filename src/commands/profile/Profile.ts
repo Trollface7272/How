@@ -5,6 +5,8 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Profile as OsuProfile } from "@src/class/api/osu/class/Profile";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionReplyOptions, MessageReplyOptions, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, UsernameArg } from "@src/utils/discord/help";
 import { EmojiFactory } from "@src/class/Emojis";
 import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts";
 import { ButtonEmojis, GetFlag, HandleAsync } from "@src/Utils";
@@ -17,6 +19,7 @@ import { FetcherError, FetcherErrors } from "@src/class/api/osu/class/FetcherErr
 import { CONTEXT_FULL, GamemodeStringOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { RespektiveScoreAPI } from "@src/class/api/osu/class/respektive/Score";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
   username: string
@@ -57,6 +60,7 @@ class ProfileData extends CommandData implements CommandDataAbstract {
 class Profile extends CommandBase implements CommandAbstract {
   public static readonly names: string[] = ["osu", "std", "mania", "ctb", "fruits", "profile"]
   public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+  public static readonly helpData = new CommandHelp()
   private data: ProfileData
 
   constructor(data: MessageEventData) {
@@ -415,6 +419,18 @@ Profile.interactionData
       .setRequired(false)
   )
 
+
+Profile.helpData
+  .setCommand(Profile.name)
+  .setDescription("Display user osu profile")
+  .setUsage("profile [username] [mode]")
+  .setAliases(Profile.names)
+  .addArg(UsernameArg)
+  .addArg(GamemodeArg)
+  .addArg(new CommandHelpArg()
+    .setName("events")
+    .setDescription("Show profile events")
+    .setUsage("-events"));
 
 CommandEmitterInstance.AddCommand(Profile, Profile.names)
 InteractionRegistrerInstance.AddInteraction(Profile.interactionData)

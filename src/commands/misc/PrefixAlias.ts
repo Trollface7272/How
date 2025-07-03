@@ -3,7 +3,6 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { SlashCommandBuilder } from "discord.js";
 import { Guild, GuildFactory } from "@src/class/database/Guild";
 import { User } from "@src/class/database/User";
 
@@ -34,8 +33,8 @@ class PrefixAliasData extends CommandData implements CommandDataAbstract {
 }
 
 class PrefixAlias extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["prefixalias"]
-    public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly name: string = "prefixalias"
+    public static readonly names: string[] = [this.name]
     private data: PrefixAliasData
 
 

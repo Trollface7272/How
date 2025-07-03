@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { UsernameArg } from "@src/utils/discord/help";
 import { SlashCommandBuilder } from "discord.js";
 import { CONTEXT_FULL, UsernameStringOption } from "@src/utils/discord/interaction";
 import { TextRenderer } from "@src/class/renderer/Text";
@@ -10,6 +12,7 @@ import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
     Rank: number
@@ -34,6 +37,7 @@ class RequiredScoreData extends CommandData implements CommandDataAbstract {
 class RequiredScore extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["rrs", "required-score", "requiredscore", "requiredrankedscore", "rrankedscore", "rrscore", "rrankeds", "requiredrankeds", "requiredrscore"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: RequiredScoreData
 
 
@@ -110,3 +114,14 @@ RequiredScore.interactionData
 
 CommandEmitterInstance.AddCommand(RequiredScore, RequiredScore.names)
 InteractionRegistrerInstance.AddInteraction(RequiredScore.interactionData)
+
+RequiredScore.helpData
+    .setCommand(RequiredScore.name)
+    .setDescription("Display required score for rank")
+    .setUsage("rrs <rank> [username]")
+    .setAliases(RequiredScore.names)
+    .addArg(new CommandHelpArg()
+        .setName("rank")
+        .setDescription("Rank to get requirements for")
+        .setUsage("1"))
+    .addArg(UsernameArg);

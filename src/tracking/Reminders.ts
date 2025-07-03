@@ -1,4 +1,4 @@
-import { DBReminder } from "@class/database/Reminder";
+import { DBReminder } from "../class/database/Reminder";
 import { Logger } from "@src/class/Logger";
 import { HandleAsync } from "@src/Utils";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Client, TextChannel } from "discord.js";
@@ -63,15 +63,17 @@ async function sendReminder(client: Client, reminder: DBReminder) {
         components.push(row);
     }
 
-    await channel.send({
-        content: `<@${reminder.userId}> Reminder: "${reminder.message}"`,
-        allowedMentions: {
-            users: [reminder.userId]
-        },
-        components: components
-    }).catch(err => {
+    try {
+        await channel.send({
+            content: `<@${reminder.userId}> Reminder: "${reminder.message}"`,
+            allowedMentions: {
+                users: [reminder.userId]
+            },
+            components: components
+        });
+    } catch (err) {
         Logger.Error(err);
-    });
+    }
 
     if (reminder.isLooping && reminder.loopInterval) {
         reminder.remindAt = moment(reminder.remindAt).add(reminder.loopInterval, 'milliseconds').toDate();

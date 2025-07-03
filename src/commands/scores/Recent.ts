@@ -16,9 +16,12 @@ import { CalculateProgress } from "@src/class/api/osu/Utils"
 import { Beatmap } from "@src/class/api/osu/class/Beatmap"
 import { BeatmapSet } from "@src/class/api/osu/class/BeatmapSet"
 import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
-import { CommandBase } from "@src/class/base/Command"
+import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, PageArg, UsernameArg } from "@src/utils/discord/help";
 import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, IndexStringOption, ListBooleanOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction"
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer"
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg"
 
 interface args {
     Gamemode?: Gamemode
@@ -80,6 +83,7 @@ class RecentData extends CommandData implements CommandDataAbstract {
 class Recent extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["recent", "r", "rs", "recents", "recentscores", "recentscore", "mymostrecentsubmittedscore"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: RecentData
     private args: args
     private componentId: string
@@ -401,3 +405,32 @@ Recent.interactionData
 
 CommandEmitterInstance.AddCommand(Recent, Recent.names)
 InteractionRegistrerInstance.AddInteraction(Recent.interactionData)
+
+Recent.helpData
+    .setCommand(Recent.name)
+    .setDescription("Display recent scores for a user.")
+    .setUsage("recent [username] [gamemode] [page] [best] [exclude-fails] [list] [count] [map] [od]")
+    .setAliases(Recent.names)
+    .addArg(UsernameArg)
+    .addArg(GamemodeArg)
+    .addArg(PageArg)
+    .addArg(new CommandHelpArg()
+        .setName("best")
+        .setDescription("Get recent top plays")
+        .setUsage("-best"))
+    .addArg(new CommandHelpArg()
+        .setName("exclude-fails")
+        .setDescription("Only get passes")
+        .setUsage("-exclude-fails"))
+    .addArg(new CommandHelpArg()
+        .setName("list")
+        .setDescription("List all recent scores")
+        .setUsage("-list"))
+    .addArg(new CommandHelpArg()
+        .setName("count")
+        .setDescription("Count recent passes and fails")
+        .setUsage("-count"))
+    .addArg(new CommandHelpArg()
+        .setName("map")
+        .setDescription("Display beatmap info")
+        .setUsage("-map"))

@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, PageArg, UsernameArg, ModsArg } from "@src/utils/discord/help";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import NodeCache from "node-cache";
@@ -107,6 +109,7 @@ class TopData extends CommandData implements CommandDataAbstract {
 class Top extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["top", "osutop", "maniatop", "taikotop", "ctbtop", "fruitstop", "pinned", "firsts"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: TopData
     private componentId: string
     private oldComponentId: string
@@ -376,3 +379,13 @@ Top.interactionData
 
 CommandEmitterInstance.AddCommand(Top, Top.names)
 InteractionRegistrerInstance.AddInteraction(Top.interactionData)
+
+Top.helpData
+    .setCommand(Top.name)
+    .setDescription("Display current user top 100 scores")
+    .setUsage("top [username] [gamemode] [page] [best] [exclude-fails] [list] [count] [map] [od]")
+    .setAliases(Top.names)
+    .addArg(UsernameArg)
+    .addArg(GamemodeArg)
+    .addArg(PageArg)
+    .addArg(ModsArg)

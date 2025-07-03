@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, UsernameArg } from "@src/utils/discord/help";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
@@ -37,6 +39,7 @@ class CountModsData extends CommandData implements CommandDataAbstract {
 class CountMods extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["countmods", "cm", "count-mods"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: CountModsData
 
 
@@ -112,3 +115,11 @@ CountMods.interactionData
 
 CommandEmitterInstance.AddCommand(CountMods, CountMods.names)
 InteractionRegistrerInstance.AddInteraction(CountMods.interactionData)
+
+CountMods.helpData
+    .setCommand(CountMods.name)
+    .setDescription("Display user mod distribution in top 100")
+    .setUsage("countmods [username] [gamemode]")
+    .setAliases(CountMods.names)
+    .addArg(UsernameArg)
+    .addArg(GamemodeArg);

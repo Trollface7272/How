@@ -3,12 +3,13 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { CommandHelp } from "@src/class/help/CommandHelp";
-import context from "node-execution-context";
+import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { Context } from "@src/types/Context";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { CONTEXT_FULL } from "@src/utils/discord/interaction";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
+import context from "node-execution-context";
 
 interface args {
     Type: "user" | "server"
@@ -131,3 +132,25 @@ Settings.interactionData
 
 CommandEmitterInstance.AddCommand(Settings, Settings.names)
 InteractionRegistrerInstance.AddInteraction(Settings.interactionData)
+
+Settings.helpData
+    .setCommand(Settings.name)
+    .setDescription("Set server settings")
+    .setUsage("settings <type> <setting> [enable/disable]")
+    .setAliases(Settings.names)
+    .addArg(new CommandHelpArg()
+        .setName("type")
+        .setDescription("Type of settings (user, server)")
+        .setUsage("server"))
+    .addArg(new CommandHelpArg()
+        .setName("setting")
+        .setDescription("Setting to change (e.g., autoreply.neverKillYourself)")
+        .setUsage("autoreply.neverKillYourself"))
+    .addArg(new CommandHelpArg()
+        .setName("enable")
+        .setDescription("Enable setting")
+        .setUsage("-enable"))
+    .addArg(new CommandHelpArg()
+        .setName("disable")
+        .setDescription("Disable setting")
+        .setUsage("-disable"));

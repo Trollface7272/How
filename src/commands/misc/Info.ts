@@ -5,6 +5,8 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { version } from "discord.js";
 import { totalmem } from "os";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+
 
 interface args {
 
@@ -20,6 +22,7 @@ class InfoData extends CommandData implements CommandDataAbstract {
 
 class Info extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["info"]
+    public static readonly helpData = new CommandHelp()
     private data: InfoData
 
     constructor(data: MessageEventData) {
@@ -50,3 +53,9 @@ class Info extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(Info, Info.names)
+
+Info.helpData
+    .setCommand(Info.name)
+    .setDescription("Display bot information.")
+    .setUsage("info")
+    .setAliases(Info.names);

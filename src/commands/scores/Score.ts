@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandWithComponentsBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, ModsArg, PageArg, UsernameArg } from "@src/utils/discord/help";
 import { Gamemode, ParsedMods } from "@src/class/api/osu/types/MiscTypes";
 import { ButtonEmojis, FormatCombo, FormatHits, GetFlag, HandleAsync, lookupScoresColumn, merge } from "@src/Utils";
 import { Logger } from "@src/class/Logger";
@@ -97,8 +99,10 @@ class ScoreData extends CommandData implements CommandDataAbstract {
 }
 
 class Score extends CommandWithComponentsBase implements CommandAbstract {
-    public static readonly names: string[] = ["sc", "score", "scores"]
+    public static readonly name: string = "score"
+    public static readonly names: string[] = [this.name, "sc", "scores"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     declare protected data: ScoreData
     protected args: args
 
@@ -340,3 +344,13 @@ Score.interactionData
 
 CommandEmitterInstance.AddCommand(Score, Score.names)
 InteractionRegistrerInstance.AddInteraction(Score.interactionData)
+
+Score.helpData
+    .setCommand(Score.name)
+    .setDescription("Display imported user scores")
+    .setUsage("score [username] [gamemode] [page] [sort] [filter] [mods] [anyone] [ppver]")
+    .setAliases(Score.names)
+    .addArg(UsernameArg)
+    .addArg(GamemodeArg)
+    .addArg(PageArg)
+    .addArg(ModsArg)

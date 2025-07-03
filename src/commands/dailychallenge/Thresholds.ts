@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+
 import { DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { DailyChallengeScoreFactory } from "@src/class/database/DailyChallengeScore";
@@ -29,6 +31,7 @@ class DailyChallengeThresholdData extends CommandData implements CommandDataAbst
 
 class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["dcth", "daily-challenge-thresholds"]
+    public static readonly helpData = new CommandHelp()
     private data: DailyChallengeThresholdData
 
 
@@ -97,3 +100,9 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(DailyChallengeThreshold, DailyChallengeThreshold.names)
+
+DailyChallengeThreshold.helpData
+    .setCommand(DailyChallengeThreshold.name)
+    .setDescription("Display daily challenge thresholds.")
+    .setUsage("dcth")
+    .setAliases(DailyChallengeThreshold.names);

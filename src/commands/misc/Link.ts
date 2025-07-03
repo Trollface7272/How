@@ -6,6 +6,8 @@ import { SlashCommandBuilder } from "discord.js";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { randomBytes } from "crypto";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { FriendsArg } from "@src/utils/discord/help";
 import { CONTEXT_FULL } from "@src/utils/discord/interaction";
 
 interface args {
@@ -26,6 +28,7 @@ class Link extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["link"]
     public static readonly doNotDefer: boolean = true
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: LinkData
     private args: args
 
@@ -77,3 +80,10 @@ Link.interactionData
 
 CommandEmitterInstance.AddCommand(Link, Link.names)
 InteractionRegistrerInstance.AddInteraction(Link.interactionData)
+
+Link.helpData
+    .setCommand(Link.name)
+    .setDescription("Link your osu! account")
+    .setUsage("link [friends]")
+    .setAliases(Link.names)
+    .addArg(FriendsArg);

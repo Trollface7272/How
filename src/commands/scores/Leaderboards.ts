@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, ModsArg } from "@src/utils/discord/help";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { ButtonEmojis, GetFlag, HandleAsync } from "@src/Utils";
 import { Fetcher, LeaderboardsType } from "@src/class/api/osu/Fetcher";
@@ -17,6 +19,7 @@ import { Score } from "@src/class/api/osu/class/Score";
 import { Mods } from "@src/class/api/osu/class/Mods";
 import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, ModsStringOption, PageNumberOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
     Type: LeaderboardsType
@@ -81,8 +84,10 @@ class LeaderboardsData extends CommandData implements CommandDataAbstract {
 }
 
 class Leaderboards extends CommandBase implements CommandAbstract {
+    public static readonly name: string = "leaderboards"
     public static readonly names: string[] = Object.values(lbAliases).reduce((prev, cur) => { prev.push(...cur); return prev }, [])
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: LeaderboardsData
     private args: args
     private componentId: string
@@ -261,3 +266,19 @@ Leaderboards.interactionData
 
 CommandEmitterInstance.AddCommand(Leaderboards, Leaderboards.names)
 InteractionRegistrerInstance.AddInteraction(Leaderboards.interactionData)
+
+Leaderboards.helpData
+    .setCommand(Leaderboards.name)
+    .setDescription("Display map leaderboards")
+    .setUsage("leaderboards [map] [type] [gamemode] [mods]")
+    .setAliases(Leaderboards.names)
+    .addArg(new CommandHelpArg()
+        .setName("map")
+        .setDescription("The beatmap ID or URL")
+        .setUsage("1234567"))
+    .addArg(new CommandHelpArg()
+        .setName("type")
+        .setDescription("Leaderboards type to get (global, country, friend)")
+        .setUsage("global"))
+    .addArg(GamemodeArg)
+    .addArg(ModsArg);

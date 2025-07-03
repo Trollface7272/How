@@ -5,7 +5,7 @@ export class CommandHelpArg {
     public aliases: string[]
     public description: string
     public usage: string
-
+    public hidden: boolean = false
 
     public constructor() { }
 
@@ -27,6 +27,11 @@ export class CommandHelpArg {
 
     public setUsage(usage: string) {
         this.usage = usage
+        return this
+    }
+
+    public setHidden(hidden: boolean) {
+        this.hidden = hidden
         return this
     }
 }

@@ -3,11 +3,14 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg } from "@src/utils/discord/help";
 import { SlashCommandBuilder } from "discord.js";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { convertSeconds, HandleAsync } from "@src/Utils";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { BeatmapSetFactory } from "@src/class/database/BeatmapSet";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
     Month: number
@@ -36,6 +39,7 @@ class RankedInfoData extends CommandData implements CommandDataAbstract {
 class RankedInfo extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["rankedinfo", "ri"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: RankedInfoData
 
 
@@ -91,3 +95,22 @@ class RankedInfo extends CommandBase implements CommandAbstract {
 }
 
 CommandEmitterInstance.AddCommand(RankedInfo, RankedInfo.names)
+
+RankedInfo.helpData
+    .setCommand(RankedInfo.name)
+    .setDescription("Display ranked beatmap information for a given month/day.")
+    .setUsage("ri [year] [month] [day] [gamemode]")
+    .setAliases(RankedInfo.names)
+    .addArg(new CommandHelpArg()
+        .setName("year")
+        .setDescription("The year (e.g., 2023)")
+        .setUsage("2023"))
+    .addArg(new CommandHelpArg()
+        .setName("month")
+        .setDescription("The month (1-12)")
+        .setUsage("7"))
+    .addArg(new CommandHelpArg()
+        .setName("day")
+        .setDescription("The day (1-31)")
+        .setUsage("15"))
+    .addArg(GamemodeArg);

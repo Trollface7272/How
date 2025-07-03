@@ -3,6 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
+import { CommandHelp } from "@src/class/help/CommandHelp";
+import { GamemodeArg, PageArg, UsernameArg } from "@src/utils/discord/help";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { TextRenderer } from "@src/class/renderer/Text";
@@ -14,6 +16,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } fro
 import { matchForId } from "@src/class/api/osu/Utils";
 import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
     Gamemode: Gamemode
@@ -71,6 +74,7 @@ class CompareData extends CommandData implements CommandDataAbstract {
 class Compare extends CommandBase implements CommandAbstract {
     public static readonly names: string[] = ["compare", "c", "comparison", "comparescore", "cs", "comparescoresonbeatmap", "myscoresonthisbeatmap", "scorecomparison"]
     public static readonly interactionData: SlashCommandBuilder = new SlashCommandBuilder()
+    public static readonly helpData = new CommandHelp()
     private data: CompareData
     private args: args
     private componentId: string
@@ -220,3 +224,16 @@ Compare.interactionData
 
 CommandEmitterInstance.AddCommand(Compare, Compare.names)
 InteractionRegistrerInstance.AddInteraction(Compare.interactionData)
+
+Compare.helpData
+    .setCommand(Compare.name)
+    .setDescription("Display your score on a map")
+    .setUsage("compare [beatmap] [username] [gamemode] [page]")
+    .setAliases(Compare.names)
+    .addArg(new CommandHelpArg()
+        .setName("beatmap")
+        .setDescription("The beatmap ID or URL")
+        .setUsage("1234567"))
+    .addArg(UsernameArg)
+    .addArg(GamemodeArg)
+    .addArg(PageArg);

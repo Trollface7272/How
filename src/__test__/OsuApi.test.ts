@@ -8,7 +8,7 @@ const testUserId = "552546198918004757"
 
 beforeAll(async () => {
     await Connect()
-}, 30000)
+})
 
 test("Get own profile", async () => {
     const fetcher = await Fetcher.Create(testUserId)
