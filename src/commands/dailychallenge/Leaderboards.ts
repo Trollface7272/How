@@ -44,7 +44,7 @@ class DailyChallengeLeaderboardsData extends CommandData implements CommandDataA
     public GetComandArgs(): args {
         return {
             Country: this.data.GetString(argsConfig.Country.name, argsConfig.Country.aliases) || null,
-            Friends: this.data.GetCommand() === "dcflb" || this.data.GetBoolean(argsConfig.Friends.name, argsConfig.Friends.aliases),
+            Friends: this.data.GetCommand() === "dcflb" || this.data.GetCommand() === "dailychallengefriendleaderboard" || this.data.GetBoolean(argsConfig.Friends.name, argsConfig.Friends.aliases),
             Page: 1
         }
     }
@@ -52,7 +52,7 @@ class DailyChallengeLeaderboardsData extends CommandData implements CommandDataA
 
 class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract {
     public static readonly name: string = "daily-challenge-leaderboards"
-    public static readonly names: string[] = [this.name, "dclb", "dcflb", "dailychallengeleaderboards"]
+    public static readonly names: string[] = [this.name, "dclb", "dcflb", "dailychallengeleaderboards", "dailychallengefriendleaderboard"]
     public static readonly helpData = new CommandHelp()
     private data: DailyChallengeLeaderboardsData
     private args: args
