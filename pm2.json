@@ -1,0 +1,9 @@
+{
+    "apps": [
+        {
+            "name": "how-bot",
+            "script": "pnpm",
+            "args": "dev"
+        }
+    ]
+}
