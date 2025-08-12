@@ -189,7 +189,7 @@ export class InteractionCreateData implements EventData, MessageEventData {
         const embeds = msg.embeds! as EmbedBuilder[] ?? []
         for (const embed of embeds) {
             const id = searchEmbed(embed.data)
-            if (id) channelBeatmapCache.set(this.interaction.channel.id, id)
+            if (id) channelBeatmapCache.set(this.interaction.channel?.id ?? this.interaction.channelId ?? null, id)
         }
         if (this.interaction.isAnySelectMenu() || this.interaction.isButton()) {
             if ((msg as InteractionReplyOptions).ephemeral) {
