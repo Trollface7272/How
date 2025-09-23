@@ -325,7 +325,7 @@ class Recent extends CommandBase implements CommandAbstract {
             let rank: string = ""
             if (score.RankGlobal) {
                 if (score.HasReplay) {
-                    rank = `▸ [#${score.RankGlobal}](https://osu.ppy.sh/scores/osu/${score.Id}/download)`
+                    rank = `▸ [#${score.RankGlobal}](https://osu.ppy.sh/scores/${score.Id}/download)`
                 } else {
                     rank = `▸ #${score.RankGlobal}`
                 }
