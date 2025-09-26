@@ -29,7 +29,10 @@ export async function BeatmapTrackingLoop(client: Client) {
         RunBeatmapType(events.find(e => e.name === EventType.RankedBeatmaps), "ranked", client)
     ]
 
-    await Promise.all(threads)
+    const [__, e] = await HandleAsync(Promise.all(threads))
+    if (e) {
+        Logger.Error(e)
+    }
 
 
 }
