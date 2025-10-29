@@ -27,6 +27,45 @@ const cachePath = process.env.BEATMAP_CACHE ?? "cache/beatmaps/osu"
 if (!existsSync(cachePath))
     mkdirSync(cachePath, { recursive: true })
 
+
+class PerformanceUtils {
+
+    protected convertMods(mods: Mods.ModList) {
+        return mods.Mods.map(el =>
+            ` -m ${el.acronym} ` +
+            Object.keys(el.settings || {}).map(key =>
+                ` -o ${el.acronym}_${key}=${el.settings[key]} `
+            ).join(" ")
+        ).join(" ")
+    }
+
+    protected IsFullCombo(score: Score.BaseScore, maxCombo: number) {
+        if (!score.Mods.Has(Mods.ModAcronyms.Classic)) {
+            return score.Statistics.miss == 0 && score.MaxCombo >= (maxCombo * 0.95)
+        }
+        const countSliderTickMiss = score.MaximumStatistics.large_tick_hit - score.Statistics.large_tick_hit
+        return score.Statistics.miss == 0 && countSliderTickMiss === 0
+    }
+
+    protected async EnsureBeatmapExists(beatmap: Beatmap.Base) {
+        const path = `${cachePath}/${beatmap.id}.osu`
+
+        if (!existsSync(path))
+            await this.DownloadFile(path, beatmap.id)
+
+
+        const { birthtime } = await stat(`${cachePath}/${beatmap.id}.osu`)
+
+        if (birthtime < beatmap.lastUpdated)
+            await this.DownloadFile(path, beatmap.id)
+    }
+
+    protected DownloadFile(path: string, id: number) {
+        return DownloadFile(`https://osu.ppy.sh/osu/${id}`, path)
+    }
+
+}
+
 export class PerformanceCalculator {
     private attributes: Beatmap.DifficultyAttributes
 
@@ -38,31 +77,31 @@ export class PerformanceCalculator {
     }
 
     public async Calculate(score: Score.BaseScore): Promise<performance> {
-        if (cache.get<cached>(`${score.Id}-${score.RulesetId}`)) {
-            const cached = cache.get<cached>(`${score.Id}-${score.RulesetId}`)
-            this.beatmap.difficulty_rating = cached.difficulty.stars
-            this.beatmap.max_combo = cached.difficulty.maxCombo
-            return cached.performance
-        }
+        //if (cache.get<cached>(`${score.Id}-${score.RulesetId}`)) {
+        //    const cached = cache.get<cached>(`${score.Id}-${score.RulesetId}`)
+        //    this.beatmap.difficulty_rating = cached.difficulty.stars
+        //    this.beatmap.max_combo = cached.difficulty.maxCombo
+        //    return cached.performance
+        //}
         if (!this.attributes) await this.FetchAttributes()
-        if (!this.attributes) return null
+        //if (!this.attributes) return null
         const { mode } = this.beatmap
         let resp: { normal: PerformanceContainer, improved?: PerformanceContainer }
         switch (mode) {
             case "osu": {
-                resp = this.CalculateStd(score)
+                resp = await this.CalculateStd(score)
                 break
             }
             case "fruits": {
-                resp = this.CalculateCtb(score)
+                resp = await this.CalculateCtb(score)
                 break
             }
             case "taiko": {
-                resp = this.CalculateTaiko(score)
+                resp = await this.CalculateTaiko(score)
                 break
             }
             case "mania": {
-                resp = this.CalculateMania(score)
+                resp = await this.CalculateMania(score)
                 break
             }
         }
@@ -151,7 +190,7 @@ export class PerformanceCalculator {
         switch (mode) {
             case "osu": {
                 const attributes = this.attributes as Beatmap.StdAttributes
-                resp = new StdPerformance(this.fabricateScore(this.beatmap, acc), this.beatmap, attributes)
+                resp = await (new StdPerformance(this.fabricateScore(this.beatmap, acc), this.beatmap)).calculate()
                 break
             }
             case "fruits": {
@@ -175,25 +214,25 @@ export class PerformanceCalculator {
         return resp
     }
 
-    private CalculateStd(score: Score.BaseScore) {
+    private async CalculateStd(score: Score.BaseScore) {
         const attributes = this.attributes as Beatmap.StdAttributes
-        return new StdPerformance(score, this.beatmap, attributes)
+        return await (new StdPerformance(score, this.beatmap)).calculate()
     }
 
-    private CalculateCtb(score: Score.BaseScore) {
+    private async CalculateCtb(score: Score.BaseScore) {
         const attributes = this.attributes as Beatmap.StdAttributes//Beatmap.CtbAttributes
-        return new StdPerformance(score, this.beatmap, attributes)
+        return await (new StdPerformance(score, this.beatmap)).calculate()
 
     }
 
-    private CalculateTaiko(score: Score.BaseScore) {
+    private async CalculateTaiko(score: Score.BaseScore) {
         const attributes = this.attributes as Beatmap.StdAttributes//Beatmap.TaikoAttributes
-        return new StdPerformance(score, this.beatmap, attributes)
+        return await (new StdPerformance(score, this.beatmap)).calculate()
     }
 
-    private CalculateMania(score: Score.BaseScore) {
+    private async CalculateMania(score: Score.BaseScore) {
         const attributes = this.attributes as Beatmap.StdAttributes//Beatmap.ManiaAttributes
-        return new StdPerformance(score, this.beatmap, attributes)
+        return await (new StdPerformance(score, this.beatmap)).calculate()
     }
 
     public async FetchAttributes() {
@@ -260,6 +299,47 @@ export class PerformanceCalculator {
 
 //pp calculators
 
+interface CalculatorResponse {
+    score: {
+      ruleset_id: number;
+      beatmap_id: number;
+      beatmap: string;
+      mods: Mods.ModList;
+      total_score: number;
+      legacy_total_score: number;
+      accuracy: number;
+      combo: number;
+      statistics: {
+        ok: number;
+        great: number;
+        ignore_hit: number;
+        large_tick_hit: number;
+        slider_tail_hit: number;
+      }
+    },
+    performance_attributes: {
+    aim: number;
+      speed: number;
+      accuracy: number;
+      flashlight: number;
+    effective_miss_count: number;
+      speed_deviation: number;
+      pp: number;
+    },
+    difficulty_attributes: {
+      star_rating: number;
+      max_combo: number;
+      aim_difficulty: number;
+      aim_difficult_slider_count: number;
+      speed_difficulty: number;
+      speed_note_count: number;
+      slider_factor: number;
+      aim_difficult_strain_count: number;
+      speed_difficult_strain_count: number;
+    }
+  }
+
+
 export class PerformanceContainer {
     public total: number
 }
@@ -272,15 +352,126 @@ export class StdPerformanceContainer extends PerformanceContainer {
     public effectiveMissCount: number
 }
 
-export class StdPerformance {
+export class StdPerformance extends PerformanceUtils {
+    public normal: StdPerformanceContainer
+    public fc: StdPerformanceContainer
+    public ss: StdPerformanceContainer
+    public improved?: StdPerformanceContainer
+
+    private beatmap: Beatmap.Base
+    private score: Score.BaseScore
+    private statistics: Score.Statistics
+    private scoreCombo: number
+
+    constructor (score: Score.BaseScore, beatmap: Beatmap.Base) {
+        super()
+        this.score = score
+        this.beatmap = beatmap
+        this.statistics = score.Statistics
+        this.scoreCombo = score.MaxCombo
+    }
+
+
+    public async calculate() {
+        await this.EnsureBeatmapExists(this.beatmap)
+        const normal = await (this.score.Id ? this.calculateId() : this.calculateSimulation())
+        if (!normal) return
+        this.normal = {
+            aim: normal.performance_attributes.aim,
+            speed: normal.performance_attributes.speed,
+            accuracy: normal.performance_attributes.accuracy,
+            flashlight: normal.performance_attributes.flashlight,
+            effectiveMissCount: normal.performance_attributes.effective_miss_count,
+            total: normal.performance_attributes.pp,
+        }
+
+
+
+        if (this.IsFullCombo(this.score, this.beatmap.max_combo)) {
+            this.statistics.miss = 0
+            this.statistics.great = this.beatmap.count_circles + this.beatmap.count_sliders + this.beatmap.count_spinners
+            this.statistics.ok = 0
+            this.statistics.meh = 0
+            this.scoreCombo = this.beatmap.max_combo
+        } else {
+            this.statistics.great += this.statistics.miss
+            this.statistics.miss = 0
+            this.scoreCombo = this.score.MaxCombo
+        }
+
+        const improved = await this.calculateSimulation()
+
+        this.improved = {
+            aim: improved.performance_attributes.aim,
+            speed: improved.performance_attributes.speed,
+            accuracy: improved.performance_attributes.accuracy,
+            flashlight: improved.performance_attributes.flashlight,
+            effectiveMissCount: improved.performance_attributes.effective_miss_count,
+            total: improved.performance_attributes.pp,
+        }
+        return this
+    }
+
+    private async calculateId() {
+        const command = `${process.env.PERFORMANCE_CALCULATOR} performance score
+        -j
+
+        ${this.score.Id}
+        ${process.env.OSU_ID}
+        ${process.env.OSU_CLIENT_SECRET}
+        `.replace(/\n/g, " ")
+        console.log(command)
+
+        const [response, err] = await HandleAsync(RunProcess(command))
+        if (err) {
+            Logger.Error("Performance Calculator - calculateId - Calculation", err)
+            return null
+        }
+        const [parsed, errJson] = await ParseJson<CalculatorResponse>(response)
+        if (errJson) {
+            Logger.Error("Performance Calculator - calculateId - JSON Parse", errJson, "raw ->", response, "command ->", command)
+            return null
+        }
+        return parsed
+    }
+
+    private async calculateSimulation() {
+        const path = `${cachePath}/${this.beatmap.id}.osu`
+        const command = `${process.env.PERFORMANCE_CALCULATOR} simulate osu
+            -M ${this.statistics.meh} 
+            -G ${this.statistics.great} 
+            -X ${this.statistics.miss} 
+            -C ${this.scoreCombo}
+            -j
+            ${this.convertMods(this.score.Mods)}
+            "${resolve(path)}"
+        `.replace(/\n/g, " ")
+        console.log(command)
+        const [response, err] = await HandleAsync(RunProcess(command))
+        if (err) {
+            Logger.Error("Performance Calculator - calculateSimulation - Calculation", err)
+            return null
+        }
+        const [parsed, errJson] = await ParseJson<CalculatorResponse>(response)
+        if (errJson) {
+            Logger.Error("Performance Calculator - calculateSimulation - JSON Parse", errJson, "raw ->", response, "command ->", command)
+            return null
+        }
+        return parsed
+    }
+}
+
+/*export class StdPerformance {
     public normal: StdPerformanceContainer
     public fc: StdPerformanceContainer
     public ss: StdPerformanceContainer
     public improved?: StdPerformanceContainer
 
 
-    private PERFORMANCE_BASE_MULTIPLIER = 1.15
+    private PERFORMANCE_BASE_MULTIPLIER = 1.14
     private usingClassicSliderAccuracy: boolean
+    private usingSV2: boolean
+
 
 
     private accuracy: number
@@ -289,6 +480,7 @@ export class StdPerformance {
     private countOk: number
     private countMeh: number
     private countMiss: number
+    private comboBasedEstimatedMissCount: number
 
     /// <summary>
     /// Missed slider ticks that includes missed reverse arrows. Will only be correct on non-classic scores
@@ -307,6 +499,7 @@ export class StdPerformance {
 
     constructor(score: Score.BaseScore, beatmap: Beatmap.Base, attributes: Beatmap.StdAttributes) {
         this.usingClassicSliderAccuracy = score.Mods.Has(Mods.ModAcronyms.Classic, Mods.Classic.flags.no_slider_head_accuracy)
+        this.usingSV2 = score.Mods.Has(Mods.ModAcronyms.ScoreV2)
 
         this.normal = this.PerformanceAttributes(score, beatmap, attributes, "normal")
         this.fc = this.PerformanceAttributes(score, beatmap, attributes, "fc")
@@ -333,6 +526,102 @@ export class StdPerformance {
         return score.Statistics.miss == 0 && countSliderTickMiss === 0
     }
 
+    private calculateComboBasedEstimatedMissCount(beatmap: Beatmap.Base, attributes: Beatmap.StdAttributes) {
+        if (beatmap.count_sliders <= 0)
+            return this.countMiss
+
+        let missCount = this.countMiss
+
+        if (this.usingClassicSliderAccuracy) {
+            // Consider that full combo is maximum combo minus dropped slider tails since they don't contribute to combo but also don't break it
+            // In classic scores we can't know the amount of dropped sliders so we estimate to 10% of all sliders on the map
+            let  fullComboThreshold = attributes.max_combo - 0.1 * beatmap.count_sliders
+
+            if (this.scoreMaxCombo < fullComboThreshold)
+                missCount = fullComboThreshold / Math.max(1.0, this.scoreMaxCombo)
+
+            // In classic scores there can't be more misses than a sum of all non-perfect judgements
+            missCount = Math.min(missCount, this.totalImperfectHits)
+
+            // Every slider has *at least* 2 combo attributed in classic mechanics.
+            // If they broke on a slider with a tick, then this still works since they would have lost at least 2 combo (the tick and the end)
+            // Using this as a max means a score that loses 1 combo on a map can't possibly have been a slider break.
+            // It must have been a slider end.
+            let maxPossibleSliderBreaks = Math.min(beatmap.count_sliders, (attributes.max_combo - this.scoreMaxCombo) / 2)
+
+            let sliderBreaks = missCount - this.countMiss
+
+            if (sliderBreaks > maxPossibleSliderBreaks)
+                missCount = this.countMiss + maxPossibleSliderBreaks
+        } else {
+            let fullComboThreshold = attributes.max_combo - this.countSliderEndsDropped
+
+            if (this.scoreMaxCombo < fullComboThreshold)
+                missCount = fullComboThreshold / Math.max(1.0, this.scoreMaxCombo)
+
+            // Combine regular misses with tick misses since tick misses break combo as well
+            missCount = Math.min(missCount, this.countSliderTickMiss + this.countMiss)
+        }
+
+        return missCount
+    }
+
+    private calculateDeviation(relevantCountGreat: number, relevantCountOk: number, relevantCountMeh: number, attributes: Beatmap.StdAttributes) {
+        if (relevantCountGreat + relevantCountOk + relevantCountMeh <= 0)
+            return null;
+
+        // The sample proportion of successful hits.
+        let n = Math.max(1, relevantCountGreat + relevantCountOk);
+        let p = relevantCountGreat / n;
+
+        // 99% critical value for the normal distribution (one-tailed).
+        const z = 2.32634787404;
+
+        // We can be 99% confident that the population proportion is at least this value.
+        let pLowerBound = Math.min(p, (n * p + z * z / 2) / (n + z * z) - z / (n + z * z) * Math.sqrt(n * p * (1 - p) + z * z / 4));
+
+        let deviation: number;
+
+        // Tested max precision for the deviation calculation.
+        if (pLowerBound > 0.01) {
+            // Compute deviation assuming greats and oks are normally distributed.
+            deviation = greatHitWindow / (Math.sqrt(2) * DifficultyCalculationUtils.ErfInv(pLowerBound));
+
+            // Subtract the deviation provided by tails that land outside the ok hit window from the deviation computed above.
+            // This is equivalent to calculating the deviation of a normal distribution truncated at +-okHitWindow.
+            let okHitWindowTailAmount = Math.sqrt(2 / Math.PI) * okHitWindow * Math.exp(-0.5 * Math.pow(okHitWindow / deviation, 2)) / (deviation * DifficultyCalculationUtils.Erf(okHitWindow / (Math.sqrt(2) * deviation)));
+
+            deviation *= Math.sqrt(1 - okHitWindowTailAmount);
+        } else {
+            // A tested limit value for the case of a score only containing oks.
+            deviation = okHitWindow / Math.sqrt(3);
+        }
+
+        // Compute and add the variance for mehs, assuming that they are uniformly distributed.
+        let mehVariance = (mehHitWindow * mehHitWindow + okHitWindow * mehHitWindow + okHitWindow * okHitWindow) / 3;
+
+        deviation = Math.sqrt(((relevantCountGreat + relevantCountOk) * Math.Pow(deviation, 2) + relevantCountMeh * mehVariance) / (relevantCountGreat + relevantCountOk + relevantCountMeh));
+
+        return deviation;
+    }
+
+    private calculateSpeedDeviation(beatmap: Beatmap.Base, attributes: Beatmap.StdAttributes) {
+        if (this.totalHits == 0)
+            return null;
+
+        // Calculate accuracy assuming the worst case scenario
+        let speedNoteCount = attributes.speed_note_count;
+        speedNoteCount += (this.totalHits - attributes.speed_note_count) * 0.1;
+
+        // Assume worst case: all mistakes were on speed notes
+        let relevantCountMiss = Math.min(this.countMiss, speedNoteCount);
+        let relevantCountMeh = Math.min(this.countMeh, speedNoteCount - relevantCountMiss);
+        let relevantCountOk = Math.min(this.countOk, speedNoteCount - relevantCountMiss - relevantCountMeh);
+        let relevantCountGreat = Math.max(0, speedNoteCount - relevantCountMiss - relevantCountMeh - relevantCountOk);
+
+        return this.calculateDeviation(relevantCountGreat, relevantCountOk, relevantCountMeh);
+    }
+
     private PerformanceAttributes(score: Score.BaseScore, beatmap: Beatmap.Base, attributes: Beatmap.StdAttributes, type: "normal" | "ss" | "fc") {
         this.accuracy = score.Accuracy
         this.scoreMaxCombo = score.MaxCombo
@@ -342,7 +631,8 @@ export class StdPerformance {
         this.countMiss = score.Statistics.miss
         this.countSliderEndsDropped = beatmap.count_sliders - score.Statistics.slider_tail_hit
         this.countSliderTickMiss = score.MaximumStatistics.large_tick_hit - score.Statistics.large_tick_hit
-        this.effectiveMissCount = 0
+        this.effectiveMissCount = score.Statistics.miss
+
 
         switch (type) {
             case "normal":
@@ -368,26 +658,20 @@ export class StdPerformance {
                 break
             }
         }
+        this.comboBasedEstimatedMissCount = this.calculateComboBasedEstimatedMissCount(beatmap, attributes)
+        let scoreBasedEstimatedMissCount: number | null = null
 
-        if (beatmap.count_sliders > 0) {
-            if (this.usingClassicSliderAccuracy) {
-                const fullComboThreshold = attributes.max_combo - 0.1 * beatmap.count_sliders
-
-                if (this.scoreMaxCombo < fullComboThreshold)
-                    this.effectiveMissCount = fullComboThreshold / Math.max(1.0, this.scoreMaxCombo)
-
-                this.effectiveMissCount = Math.min(this.effectiveMissCount, this.totalImperfectHits)
-            } else {
-                const fullComboThreshold = attributes.max_combo - this.countSliderEndsDropped
-
-                if (this.scoreMaxCombo < fullComboThreshold)
-                    this.effectiveMissCount = fullComboThreshold / Math.max(1.0, this.scoreMaxCombo)
-
-                this.effectiveMissCount = Math.min(this.effectiveMissCount, this.countSliderTickMiss + this.countMiss)
-            }
+        if (this.usingClassicSliderAccuracy && score.LegacyTotalScore != null) {
+            let legacyScoreMissCalculator = new OsuLegacyScoreMissCalculator(score, attributes)
+            scoreBasedEstimatedMissCount = legacyScoreMissCalculator.Calculate()
+            this.effectiveMissCount = scoreBasedEstimatedMissCount
+        } else {
+            this.effectiveMissCount = this.comboBasedEstimatedMissCount
         }
 
-        this.effectiveMissCount = Math.max(this.countMiss, this.effectiveMissCount)
+        this.effectiveMissCount = Math.max(this.countMiss, this.effectiveMissCount);
+        this.effectiveMissCount = Math.min(this.totalHits, this.effectiveMissCount);
+
         let multiplier = this.PERFORMANCE_BASE_MULTIPLIER
 
         if (score.Mods.Has(Mods.ModAcronyms.NoFail))
@@ -397,11 +681,17 @@ export class StdPerformance {
             multiplier *= 1.0 - Math.pow(beatmap.count_spinners / this.totalHits, 0.85)
 
         if (score.Mods.Has(Mods.ModAcronyms.Relax)) {
-            const okMultiplier = Math.max(0.0, attributes.overall_difficulty > 0.0 ? 1 - Math.pow(attributes.overall_difficulty / 13.33, 1.8) : 1.0)
+            // https://www.desmos.com/calculator/vspzsop6td
+            // we use OD13.3 as maximum since it's the value at which great hitwidow becomes 0
+            // this is well beyond currently maximum achievable OD which is 12.17 (DTx2 + DA with OD11)
+            const okMultiplier = 0.75 * Math.max(0.0, attributes.overall_difficulty > 0.0 ? 1 - attributes.overall_difficulty / 13.33 : 1.0)
             const mehMultiplier = Math.max(0.0, attributes.overall_difficulty > 0.0 ? 1 - Math.pow(attributes.overall_difficulty / 13.33, 5) : 1.0)
 
+            // As we're adding Oks and Mehs to an approximated number of combo breaks the result can be higher than total hits in specific scenarios (which breaks some calculations) so we need to clamp it.
             this.effectiveMissCount = Math.min(this.effectiveMissCount + this.countOk * okMultiplier + this.countMeh * mehMultiplier, this.totalHits)
         }
+
+        const speedDeviation = calculateSpeedDeviation(osuAttributes)
 
 
         const aimValue = this.computeAimValue(score, beatmap, attributes);
@@ -585,3 +875,190 @@ export class StdPerformance {
     private FlDifficultyToPerformance = (difficulty: number) => 25 * Math.pow(difficulty, 2)
     private GetComboScalingFactor = (attributes: Beatmap.StdAttributes) => attributes.max_combo <= 0 ? 1.0 : Math.min(Math.pow(this.scoreMaxCombo, 0.8) / Math.pow(attributes.max_combo, 0.8), 1.0)
 }
+
+
+
+
+
+// export class OsuLegacyScoreMissCalculator {
+//         private score: Score.BaseScore;
+//         private attributes: Beatmap.StdAttributes;
+
+//         public constructor(score: Score.BaseScore, attributes: Beatmap.StdAttributes) {
+//             this.score = score;
+//             this.attributes = attributes;
+//         }
+
+//         public Calculate() {
+//             if (this.attributes.max_combo == 0 || this.score.LegacyTotalScore == null)
+//                 return 0;
+
+//             let scoreV1Multiplier = 0.96
+//             let relevantComboPerObject = calculateRelevantScoreComboPerObject();
+
+//             double maximumMissCount = calculateMaximumComboBasedMissCount();
+
+//             double scoreObtainedDuringMaxCombo = calculateScoreAtCombo(score.MaxCombo, relevantComboPerObject, scoreV1Multiplier);
+//             double remainingScore = score.LegacyTotalScore.Value - scoreObtainedDuringMaxCombo;
+
+//             if (remainingScore <= 0)
+//                 return maximumMissCount;
+
+//             double remainingCombo = attributes.MaxCombo - score.MaxCombo;
+//             double expectedRemainingScore = calculateScoreAtCombo(remainingCombo, relevantComboPerObject, scoreV1Multiplier);
+
+//             double scoreBasedMissCount = expectedRemainingScore / remainingScore;
+
+//             // If there's less then one miss detected - let combo-based miss count decide if this is FC or not
+//             scoreBasedMissCount = Math.Max(scoreBasedMissCount, 1);
+
+//             // Cap result by very harsh version of combo-based miss count
+//             return Math.Min(scoreBasedMissCount, maximumMissCount);
+//         }
+
+//         /// <summary>
+//         /// Calculates the amount of score that would be achieved at a given combo.
+//         /// </summary>
+//         private double calculateScoreAtCombo(double combo, double relevantComboPerObject, double scoreV1Multiplier)
+//         {
+//             int countGreat = score.Statistics.GetValueOrDefault(HitResult.Great);
+//             int countOk = score.Statistics.GetValueOrDefault(HitResult.Ok);
+//             int countMeh = score.Statistics.GetValueOrDefault(HitResult.Meh);
+//             int countMiss = score.Statistics.GetValueOrDefault(HitResult.Miss);
+
+//             int totalHits = countGreat + countOk + countMeh + countMiss;
+
+//             double estimatedObjects = combo / relevantComboPerObject - 1;
+
+//             // The combo portion of ScoreV1 follows arithmetic progression
+//             // Therefore, we calculate the combo portion of score using the combo per object and our current combo.
+//             double comboScore = relevantComboPerObject > 0 ? (2 * (relevantComboPerObject - 1) + (estimatedObjects - 1) * relevantComboPerObject) * estimatedObjects / 2 : 0;
+
+//             // We then apply the accuracy and ScoreV1 multipliers to the resulting score.
+//             comboScore *= score.Accuracy * 300 / 25 * scoreV1Multiplier;
+
+//             double objectsHit = (totalHits - countMiss) * combo / attributes.MaxCombo;
+
+//             // Score also has a non-combo portion we need to create the final score value.
+//             double nonComboScore = (300 + attributes.NestedScorePerObject) * score.Accuracy * objectsHit;
+
+//             return comboScore + nonComboScore;
+//         }
+
+//         /// <summary>
+//         /// Calculates the relevant combo per object for legacy score.
+//         /// This assumes a uniform distribution for circles and sliders.
+//         /// This handles cases where objects (such as buzz sliders) do not fit a normal arithmetic progression model.
+//         /// </summary>
+//         private calculateRelevantScoreComboPerObject() {
+//             let comboScore = this.attributes.MaximumLegacyComboScore;
+
+//             // We then reverse apply the ScoreV1 multipliers to get the raw value.
+//             comboScore /= 300.0 / 25.0 * attributes.LegacyScoreBaseMultiplier;
+
+//             // Reverse the arithmetic progression to work out the amount of combo per object based on the score.
+//             double result = (attributes.MaxCombo - 2) * attributes.MaxCombo;
+//             result /= Math.Max(attributes.MaxCombo + 2 * (comboScore - 1), 1);
+
+//             return result;
+//         }
+
+//         /// <summary>
+//         /// This function is a harsher version of current combo-based miss count, used to provide reasonable value for cases where score-based miss count can't do this.
+//         /// </summary>
+//         private double calculateMaximumComboBasedMissCount()
+//         {
+//             int countMiss = score.Statistics.GetValueOrDefault(HitResult.Miss);
+
+//             if (attributes.SliderCount <= 0)
+//                 return countMiss;
+
+//             int countOk = score.Statistics.GetValueOrDefault(HitResult.Ok);
+//             int countMeh = score.Statistics.GetValueOrDefault(HitResult.Meh);
+
+//             int totalImperfectHits = countOk + countMeh + countMiss;
+
+//             double missCount = 0;
+
+//             // Consider that full combo is maximum combo minus dropped slider tails since they don't contribute to combo but also don't break it
+//             // In classic scores we can't know the amount of dropped sliders so we estimate to 10% of all sliders on the map
+//             double fullComboThreshold = attributes.MaxCombo - 0.1 * attributes.SliderCount;
+
+//             if (score.MaxCombo < fullComboThreshold)
+//                 missCount = Math.Pow(fullComboThreshold / Math.Max(1.0, score.MaxCombo), 2.5);
+
+//             // In classic scores there can't be more misses than a sum of all non-perfect judgements
+//             missCount = Math.Min(missCount, totalImperfectHits);
+
+//             // Every slider has *at least* 2 combo attributed in classic mechanics.
+//             // If they broke on a slider with a tick, then this still works since they would have lost at least 2 combo (the tick and the end)
+//             // Using this as a max means a score that loses 1 combo on a map can't possibly have been a slider break.
+//             // It must have been a slider end.
+//             int maxPossibleSliderBreaks = Math.Min(attributes.SliderCount, (attributes.MaxCombo - score.MaxCombo) / 2);
+
+//             int scoreMissCount = score.Statistics.GetValueOrDefault(HitResult.Miss);
+
+//             double sliderBreaks = missCount - scoreMissCount;
+
+//             if (sliderBreaks > maxPossibleSliderBreaks)
+//                 missCount = scoreMissCount + maxPossibleSliderBreaks;
+
+//             return missCount;
+//         }
+
+//         /// <remarks>
+//         /// Logic copied from <see cref="OsuLegacyScoreSimulator.GetLegacyScoreMultiplier"/>.
+//         /// </remarks>
+//         private double getLegacyScoreMultiplier()
+//         {
+//             bool scoreV2 = score.Mods.Any(m => m is ModScoreV2);
+
+//             double multiplier = 1.0;
+
+//             foreach (var mod in score.Mods)
+//             {
+//                 switch (mod)
+//                 {
+//                     case OsuModNoFail:
+//                         multiplier *= scoreV2 ? 1.0 : 0.5;
+//                         break;
+
+//                     case OsuModEasy:
+//                         multiplier *= 0.5;
+//                         break;
+
+//                     case OsuModHalfTime:
+//                     case OsuModDaycore:
+//                         multiplier *= 0.3;
+//                         break;
+
+//                     case OsuModHidden:
+//                         multiplier *= 1.06;
+//                         break;
+
+//                     case OsuModHardRock:
+//                         multiplier *= scoreV2 ? 1.10 : 1.06;
+//                         break;
+
+//                     case OsuModDoubleTime:
+//                     case OsuModNightcore:
+//                         multiplier *= scoreV2 ? 1.20 : 1.12;
+//                         break;
+
+//                     case OsuModFlashlight:
+//                         multiplier *= 1.12;
+//                         break;
+
+//                     case OsuModSpunOut:
+//                         multiplier *= 0.9;
+//                         break;
+
+//                     case OsuModRelax:
+//                     case OsuModAutopilot:
+//                         return 0;
+//                 }
+//             }
+
+//             return multiplier;
+//         }
+//     }*/

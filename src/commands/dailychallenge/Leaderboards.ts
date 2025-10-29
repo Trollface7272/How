@@ -155,22 +155,22 @@ class DailyChallengeLeaderboards extends CommandBase implements CommandAbstract 
         const row = new ActionRowBuilder<ButtonBuilder>()
         row.addComponents(
             new ButtonBuilder()
-                .setCustomId(`dclb;${this.componentId};0;${randomBytes(4)}`)
+                .setCustomId(`dclb;${this.componentId};0;${randomBytes(8)}`)
                 .setLabel(ButtonEmojis.Start)
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(curentPage == 0),
             new ButtonBuilder()
-                .setCustomId(`dclb;${this.componentId};${curentPage - 1};${randomBytes(4)}`)
+                .setCustomId(`dclb;${this.componentId};${curentPage - 1};${randomBytes(8)}`)
                 .setLabel(ButtonEmojis.Left)
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(curentPage == 0),
             new ButtonBuilder()
-                .setCustomId(`dclb;${this.componentId};${curentPage + 1};${randomBytes(4)}`)
+                .setCustomId(`dclb;${this.componentId};${curentPage + 1};${randomBytes(8)}`)
                 .setLabel(ButtonEmojis.Right)
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(curentPage == maxPage),
             new ButtonBuilder()
-                .setCustomId(`dclb;${this.componentId};${maxPage - 1};${randomBytes(4)}`)
+                .setCustomId(`dclb;${this.componentId};${maxPage - 1};${randomBytes(8)}`)
                 .setLabel(ButtonEmojis.End)
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(curentPage == maxPage)
