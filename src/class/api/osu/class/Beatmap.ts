@@ -14,17 +14,20 @@ export namespace Beatmap {
     }
 
     export interface StdAttributes extends DifficultyAttributes {
-        star_rating: number,
-        max_combo: number,
-        aim_difficulty: number,
-        speed_difficulty: number,
-        speed_note_count: number,
-        slider_factor: number,
-        aim_difficult_strain_count: number,
-        speed_difficult_strain_count: number,
-        approach_rate: number,
-        overall_difficulty: number,
-        flashlight_difficulty: number
+        star_rating: number
+        max_combo: number
+        aim_difficulty: number
+        aim_difficult_slider_count: number
+        speed_difficulty: number
+        speed_note_count: number
+        slider_factor: number
+        aim_top_weighted_slider_factor: number
+        speed_top_weighted_slider_factor: number
+        aim_difficult_strain_count: number
+        speed_difficult_strain_count: number
+        nested_score_per_object: number
+        legacy_score_base_multiplier: number
+        maximum_legacy_combo_score: number
     }
 
     export interface TaikoAttributes extends DifficultyAttributes {
