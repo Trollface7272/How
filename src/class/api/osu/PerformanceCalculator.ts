@@ -422,11 +422,12 @@ export class StdPerformance extends PerformanceUtils {
         `.replace(/\n/g, " ")
         console.log(command)
 
-        const [response, err] = await HandleAsync(RunProcess(command))
+        let [response, err] = await HandleAsync(RunProcess(command))
         if (err) {
             Logger.Error("Performance Calculator - calculateId - Calculation", err)
             return null
         }
+        if (response.startsWith("Downloading")) response = response.split("\n")[1]
         const [parsed, errJson] = await ParseJson<CalculatorResponse>(response)
         if (errJson) {
             Logger.Error("Performance Calculator - calculateId - JSON Parse", errJson, "raw ->", response, "command ->", command)
@@ -447,11 +448,12 @@ export class StdPerformance extends PerformanceUtils {
             "${resolve(path)}"
         `.replace(/\n/g, " ")
         console.log(command)
-        const [response, err] = await HandleAsync(RunProcess(command))
+        let [response, err] = await HandleAsync(RunProcess(command))
         if (err) {
             Logger.Error("Performance Calculator - calculateSimulation - Calculation", err)
             return null
         }
+        if (response.startsWith("Downloading")) response = response.split("\n")[1]
         const [parsed, errJson] = await ParseJson<CalculatorResponse>(response)
         if (errJson) {
             Logger.Error("Performance Calculator - calculateSimulation - JSON Parse", errJson, "raw ->", response, "command ->", command)
