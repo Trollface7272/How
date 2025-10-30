@@ -102,7 +102,7 @@ class Beatmap extends CommandBase implements CommandAbstract {
 
     if (Background) {
       this.data.Reply({
-        content: `https://assets.ppy.sh/beatmaps/${beatmap.beatmapset.id}/covers/raw.jpg`
+        content: `https://assets.ppy.sh/beatmaps/${beatmap.beatmapset.id}/covers/fullsize.jpg`
       })
       return
     }
