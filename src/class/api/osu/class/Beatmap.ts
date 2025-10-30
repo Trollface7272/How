@@ -195,7 +195,7 @@ export namespace Beatmap {
         beatmapset: BeatmapSet.Beatmap.FromId
         failtimes: { fail: number[], exit: number[] }
         public get FullBackground() {
-            return `https://assets.ppy.sh/beatmaps/${this.beatmapset_id}/covers/raw.jpg`
+            return `https://assets.ppy.sh/beatmaps/${this.beatmapset_id}/covers/fullsize.jpg`
         }
         constructor(map: FromId, mods: Mods.ModList) {
             super(map, mods)
