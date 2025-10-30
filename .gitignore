@@ -7,3 +7,5 @@ node_modules
 PerformanceCalculator.lnk
 
 cache
+dotnet/obj
+dotnet/bin
