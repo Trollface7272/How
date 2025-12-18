@@ -2,7 +2,7 @@
 const difficulty_mods = [
     "EZ", "HT", "DC", "TD",
     "HR", "DT", "NC", "FL",
-    "RX", "TP", "CL",
+    "RX", "TP", "CL", "HD",
     "RD", "WU", "WD",
     "4K", "5K", "6K", "7K",
     "8K", "FI", "RD", "1K",
@@ -161,10 +161,34 @@ export namespace Mods {
 
     }
 
+    export class Hidden extends BaseMod {
+        public static defaultSettings = {
+            only_fade_approach_circles: false,
+        }
+        public static flags = {
+            only_fade_approach_circles: "only_fade_approach_circles",
+        }
+        declare public settings: {
+            only_fade_approach_circles: boolean
+        }
+        constructor(mod: string | BaseMod, settings?: { [key: string]: string | number | boolean }) {
+            super(mod, settings)
+            this.settings = {
+                only_fade_approach_circles: Boolean(settings?.only_fade_approach_circles ?? Hidden.defaultSettings.only_fade_approach_circles),
+            }
+        }
+    }
+
+    export class Traceble extends BaseMod {
+        constructor(mod: string | BaseMod, settings?: { [key: string]: string | number | boolean }) {
+            super(mod, settings)
+        }
+    }
     //TODO: more mod defs
     const modMap = {
         [ModAcronyms.Classic]: Classic,
         [ModAcronyms.DifficultyAdjust]: DifficultyAdjust,
+        [ModAcronyms.Hidden]: Hidden,
         // [ModAcronyms.DoubleTime]: SpeedAdjustMod,
         // [ModAcronyms.Nightcore]: SpeedAdjustMod,
         // [ModAcronyms.HalfTime]: SpeedAdjustMod,

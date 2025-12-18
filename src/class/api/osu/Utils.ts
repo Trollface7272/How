@@ -8,6 +8,18 @@ export const Clamp = (num: number, min: number, max: number) => {
   return Math.min(Math.max(num, min), max)
 }
 
+export const Smoothstep = (x: number, start: number, end: number) => {
+    x = Clamp((x - start) / (end - start), 0.0, 1.0);
+
+    return x * x * (3.0 - 2.0 * x);
+}
+
+export const Logistic = (x: number, midpointOffset: number, multiplier: number, maxValue: number = 1) => maxValue / (1 + Math.exp(multiplier * (midpointOffset - x)));
+
+export const ReverseLerp = (x: number, start: number, end: number) => Clamp((x - start) / (end - start), 0.0, 1.0)
+
+export const Lerp = (x: number, y: number, t: number) => x + t * (y - x)
+
 const downloading: { url: string, hasFinished: Promise<unknown> }[] = []
 export const DownloadFile = async (url: string, path: string) => {
   const progress = downloading.find(el => el?.url === url)
