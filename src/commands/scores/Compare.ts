@@ -9,7 +9,7 @@ import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { Score } from "@src/class/api/osu/class/Score";
-import { ButtonEmojis, FormatCombo, FormatHits } from "@src/Utils";
+import { ButtonEmojis, FormatCombo, FormatHits, HandleAsync } from "@src/Utils";
 import NodeCache from "node-cache";
 import { randomBytes } from "crypto";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } from "discord.js";
@@ -122,7 +122,15 @@ class Compare extends CommandBase implements CommandAbstract {
         }
 
         const fetcher = await Fetcher.Create(user.id)
-        const scores = await fetcher.GetBeatmapUserScores({ Beatmap: Beatmap, Username: Username, Id: Id, Gamemode: Gamemode })
+        const [_scores, error] = await HandleAsync(fetcher.GetBeatmapUserScores({ Beatmap: Beatmap, Username: Username, Id: Id, Gamemode: Gamemode }))
+        if (error) {
+            const errorReply = this.HandleScoreError(error)
+            if (errorReply) {
+                this.data.Reply(errorReply)
+                return CommandResponseCodes.USER_ERROR
+            }
+        }
+        const scores = _scores as Score.BaseScore[]
         if (!scores.length) {
             const embed = this.NoScoresFound(Username ?? Id.toString())
             this.data.Reply({ embeds: [embed] })

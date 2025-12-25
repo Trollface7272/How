@@ -23,6 +23,10 @@ export class ErrorHandler extends ErrorRenderer {
 
     }
 
+    protected HandleScoreError(err: AxiosError | FetcherError | unknown) {
+        return this.HandlegenericErrors(err)
+    }
+
 
 
 
@@ -33,6 +37,12 @@ export class ErrorHandler extends ErrorRenderer {
             }
             if (err instanceof FetcherRequiredSupporterError) {
                 return this.RenderRequiredSupporterError()
+            }
+        }
+
+        if (err instanceof AxiosError) {
+            if (err.response.status === 401) {
+                return this.RenderNoUserError()
             }
         }
 
