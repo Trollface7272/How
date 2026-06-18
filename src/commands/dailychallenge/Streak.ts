@@ -98,9 +98,7 @@ class StreakLeaderboards extends CommandBase implements CommandAbstract {
         const text = TextRenderer.render("dailychallenge/streak", {
             profiles: templateData
         })
-
-        console.log(text, templateData, users, filter)
-
+        
         const embed = this.GetBaseEmbed()
             .setDescription(text)
             .setAuthor({
