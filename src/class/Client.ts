@@ -20,7 +20,7 @@ export class Client extends DiscordClient {
             allowedMentions: { repliedUser: false },
             partials: [Partials.Message, Partials.Channel]
         })
-        this.once("ready", this.OnStart)
+        this.once("clientReady", this.OnStart)
         new CommandLoader()
         new TriggerLoader()
     }

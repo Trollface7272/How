@@ -1,0 +1,4 @@
+<%_ let prev = null; for(const profile of profiles) { _%>
+<% if (prev?.streak !== profile.streak) {%>**Streak <%- profile.streak %>:**
+<%} %>**<%- profile.index %>.** **[<%- profile.username %>](<%- profile.url %>)** **#<%- profile.rank %>** Top **<%- profile.placementPercent %>%** (#<%- profile.placement %>)
+<%_ prev = profile; } _%>

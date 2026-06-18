@@ -140,6 +140,25 @@ DailyChallenge.interactionData
             )
             .addNumberOption(PageNumberOption)
     )
+    .addSubcommand(sub =>
+        sub
+            .setName("streaks")
+            .setDescription("Display daily challenge streaks leaderboards")
+            .addStringOption(CountryStringOption)
+            .addBooleanOption(opt =>
+                opt
+                    .setName("current")
+                    .setDescription("Show current streaks")
+                    .setRequired(false)
+            )
+            .addNumberOption(PageNumberOption)
+            .addBooleanOption(opt =>
+                opt
+                    .setName("friends")
+                    .setDescription("Only show scores by friends")
+                    .setRequired(false)
+            )
+    )
 
 CommandEmitterInstance.AddCommand(DailyChallenge, DailyChallenge.names)
 InteractionRegistrerInstance.AddInteraction(DailyChallenge.interactionData)

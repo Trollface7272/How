@@ -36,6 +36,15 @@ export class DailyChallengeProfile {
         count: number
     }
     public scoreData: ScoreData[]
+    public streakData: {
+        currentStreak: number
+        longestStreak: number
+        streakHistory: {
+            date: Date
+            streak: number
+        }[]
+        updatedForChallenge: number
+    }
 
     constructor(data: DailyChallengeProfile, id?: number) {
         if (data) {
@@ -60,6 +69,12 @@ export class DailyChallengeProfile {
             this.scoreData = []
             this.averagePlacement = 0
             this.averagePlacementPercent = 0
+            this.streakData = {
+                currentStreak: 0,
+                longestStreak: 0,
+                streakHistory: [],
+                updatedForChallenge: 0
+            }
         }
     }
 
