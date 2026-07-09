@@ -18,14 +18,22 @@ export class Difficulty {
 
     //std
     public aim_difficulty?: number
+    public aim_difficult_slider_count?: number
+    public speed_difficulty?: number
+    public speed_note_count?: number
+    public reading_difficulty?: number
+    public slider_factor?: number
+    public aim_top_weighted_slider_factor?: number
+    public speed_top_weighted_slider_factor?: number
+    public aim_difficult_strain_count?: number
+    public speed_difficult_strain_count?: number
+    public reading_difficult_note_count?: number
+    public nested_score_per_object?: number
+    public legacy_score_base_multiplier?: number
+    public maximum_legacy_combo_score?: number
     public approach_rate?: number
     public flashlight_difficulty?: number
     public overall_difficulty?: number
-    public slider_factor?: number
-    public speed_difficulty?: number
-    public speed_note_count?: number
-    public speed_difficult_strain_count: number
-    public aim_difficult_strain_count: number
 
     //taiko
     public stamina_difficulty?: number
@@ -75,7 +83,14 @@ export class Difficulty {
                 score_multiplier: this.score_multiplier,
                 calculated_at: this.calculated_at,
                 speed_difficult_strain_count: this.speed_difficult_strain_count,
-                aim_difficult_strain_count: this.aim_difficult_strain_count
+                aim_difficult_strain_count: this.aim_difficult_strain_count,
+                reading_difficult_note_count: this.reading_difficult_note_count,
+                nested_score_per_object: this.nested_score_per_object,
+                legacy_score_base_multiplier: this.legacy_score_base_multiplier,
+                maximum_legacy_combo_score: this.maximum_legacy_combo_score,
+                aim_top_weighted_slider_factor: this.aim_top_weighted_slider_factor,
+                speed_top_weighted_slider_factor: this.speed_top_weighted_slider_factor,
+                reading_difficulty: this.reading_difficulty,
 
             }
         }, { upsert: true })

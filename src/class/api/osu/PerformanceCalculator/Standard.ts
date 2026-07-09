@@ -90,7 +90,7 @@ export class StdPerformance implements BasePerformanceCalculator {
         this.clockRate = score.Mods.GetSpeedChange()
 
         const hitwindows = new HitWindows()
-        hitwindows.SetDifficulty(beatmap.OD)
+        hitwindows.SetDifficulty(this.getModAdjustedOverallDifficulty(beatmap))
 
         this.greatHitWindow = hitwindows.WindowFor(HitResult.Great) / this.clockRate
         this.okHitWindow = hitwindows.WindowFor(HitResult.Ok) / this.clockRate
@@ -99,6 +99,18 @@ export class StdPerformance implements BasePerformanceCalculator {
         this.approachRate = this.calculateRateAdjustedApproachRate(this.getModAdjustedApproachRate(beatmap), this.clockRate)
         this.overallDifficulty = (79.5 - this.greatHitWindow) / 6
         this.drainRate = beatmap.HP
+    }
+
+    private getModAdjustedOverallDifficulty(beatmap: Beatmap.Base) {
+        let od = beatmap.accuracy
+
+        if (beatmap.mods.Has(Mods.ModAcronyms.HardRock))
+            od = Math.min(10, od * 1.4)
+
+        if (beatmap.mods.Has(Mods.ModAcronyms.Easy))
+            od = Math.max(0, od * 0.5)
+
+        return od
     }
 
     private getModAdjustedApproachRate(beatmap: Beatmap.Base) {
