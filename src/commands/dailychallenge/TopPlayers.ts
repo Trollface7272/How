@@ -116,7 +116,7 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
                     username: fetched.username,
                     rank: fetched.statistics_rulesets.osu.global_rank,
                     url: fetched.url, placementPercent: profile.averagePlacementPercent.roundFixed(2), placement: profile.averagePlacement.round(0),
-                    top10Percent: profile.top10Percent.count,
+                    top10Percent: profile.placements.top10.count,
                     currPerc: position?.roundFixed(2),
                 }
             })

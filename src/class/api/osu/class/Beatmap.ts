@@ -30,6 +30,11 @@ export namespace Beatmap {
         maximum_legacy_combo_score: number
 
         flashlight_difficulty?: number
+        reading_difficulty?: number
+        reading_difficult_note_count?: number
+        hit_circle_count?: number
+        slider_count?: number
+        spinner_count?: number
     }
 
     export interface TaikoAttributes extends DifficultyAttributes {

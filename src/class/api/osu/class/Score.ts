@@ -49,6 +49,7 @@ export namespace Score {
         large_bonus: number
         small_bonus: number
         large_tick_hit: number
+        large_tick_miss?: number
         slider_tail_hit: number
     }
     export interface MaximumStatistics {

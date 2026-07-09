@@ -20,6 +20,43 @@ export const ReverseLerp = (x: number, start: number, end: number) => Clamp((x -
 
 export const Lerp = (x: number, y: number, t: number) => x + t * (y - x)
 
+export const Norm = (exponent: number, ...values: number[]) =>
+    Math.pow(values.reduce((sum, value) => sum + Math.pow(value, exponent), 0), 1.0 / exponent)
+
+export const Erf = (x: number) => {
+    const sign = x >= 0 ? 1 : -1
+    x = Math.abs(x)
+
+    const a1 = 0.254829592
+    const a2 = -0.284496736
+    const a3 = 1.421413741
+    const a4 = -1.453152027
+    const a5 = 1.061405429
+    const p = 0.3275911
+    const t = 1.0 / (1.0 + p * x)
+    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x)
+
+    return sign * y
+}
+
+export const ErfInv = (x: number) => {
+    const sign = x >= 0 ? 1 : -1
+    x = Math.abs(x)
+
+    if (x >= 1)
+        return sign * Infinity
+
+    if (x === 0)
+        return 0
+
+    const a = 0.147
+    const ln = Math.log(1 - x * x)
+    const part1 = 2 / (Math.PI * a) + ln / 2
+    const part2 = ln / a
+
+    return sign * Math.sqrt(Math.sqrt(part1 * part1 - part2) - part1)
+}
+
 const downloading: { url: string, hasFinished: Promise<unknown> }[] = []
 export const DownloadFile = async (url: string, path: string) => {
   const progress = downloading.find(el => el?.url === url)

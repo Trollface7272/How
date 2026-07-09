@@ -80,11 +80,14 @@ class DailyChallengeProfile extends CommandBase implements CommandAbstract {
         const description = TextRenderer.render("dailychallenge/profile", {
             avgRank: Math.round(dcProfile.scoreData.reduce((v, p) => v + p.position, 0) / dcProfile.scoreData.length),
             avgRankPerc: (dcProfile.scoreData.reduce((v, p) => v + p.positionPercent, 0) / dcProfile.scoreData.length).toFixed(3),
-            perc10Placements: dcProfile.top10Percent.count,
-            perc50Placements: dcProfile.top50Percent.count,
-            played: dcProfile.played.count,
+            perc10Placements: dcProfile.placements.top10.count,
+            perc50Placements: dcProfile.placements.top50.count,
+            played: dcProfile.placements.total,
             avgScore: Math.round(dcProfile.scoreData.reduce((v, p) => v + p.score, 0) / dcProfile.scoreData.length),
-            grades: Object.entries(grades).filter(([k, v]) => v > 0).map(([key, value]) => EmojiFactory.GetEmoji(`Ranking${key}`) + `${value} `).join("")
+            grades: Object.entries(grades).filter(([k, v]) => v > 0).map(([key, value]) => EmojiFactory.GetEmoji(`Ranking${key}`) + `${value} `).join(""),
+            streak: dcProfile.streakData.currentStreak,
+            longestStreak: dcProfile.streakData.longestStreak,
+            detailedView: `https://howbot.net/daily-challenge/user/${profile.id}`
         })
 
         const embed = this.GetBaseEmbed()

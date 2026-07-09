@@ -55,4 +55,10 @@ export class HitWindows {
 
         return mid;
     }
+
+    public static InverseDifficultyRange(difficultyValue: number, min: number, mid: number, max: number) {
+        return Math.sign(difficultyValue - mid) === Math.sign(max - mid)
+            ? (difficultyValue - mid) / (max - mid) * 5 + 5
+            : (difficultyValue - mid) / (mid - min) * 5 + 5
+    }
 }

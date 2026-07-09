@@ -2,6 +2,21 @@ import { Filter, ObjectId, Sort } from "mongodb"
 import { db } from "./Main"
 import { Mods } from "../api/osu/class/Mods"
 
+export interface Placement {
+    rooms: number[]
+    count: number
+}
+export interface UserPlacements {
+    rank1: Placement
+    top1: Placement
+    top5: Placement
+    top10: Placement
+    top25: Placement
+    top50: Placement
+    top75: Placement
+    top100: Placement
+    total: number
+}
 interface ScoreData {
     room_id: number
     score_id: number
@@ -23,14 +38,19 @@ export class DailyChallengeProfile {
     public averagePlacement: number
     public averagePlacementPercent: number
     public dataIncludesChallenges: number[]
+    public placements: UserPlacements
+
+    /** @deprecated moved to placements */
     public top10Percent: {
         rooms: number[]
         count: number
     }
+    /** @deprecated moved to placements */
     public top50Percent: {
         rooms: number[]
         count: number
     }
+    /** @deprecated moved to placements */
     public played: {
         rooms: number[]
         count: number
