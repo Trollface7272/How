@@ -5,7 +5,7 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { HandleAsync } from "@src/Utils";
-import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator";
+import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator/PerformanceCalculator";
 import { Logger } from "@src/class/Logger";
 import { AxiosError } from "axios";
 import { TextRenderer } from "@src/class/renderer/Text";
@@ -110,16 +110,19 @@ class Beatmap extends CommandBase implements CommandAbstract {
     beatmap.setMods(Mods)
     const loadingSet = HandleAsync(fetcher.GetBeatmapSet({ id: beatmap.beatmapset.id }))
 
-    const calc = new PerformanceCalculator(beatmap, Mods)
+    const calc = new PerformanceCalculator()
 
-    await calc.FetchAttributes()
-
-    const { Drain: drain, AR: ar, HP: hp, OD: od, CS: cs, id: mapid, version, max_combo, Length: length, BPM: bpm, difficulty_rating, beatmapset: { id: setid, artist, creator, title, status: _status, ranked_date, favourite_count, submitted_date } } = beatmap
+    const { Drain: drain, AR: ar, HP: hp, OD: od, CS: cs, id: mapid, version, Length: length, BPM: bpm, difficulty_rating, beatmapset: { id: setid, artist, creator, title, status: _status, ranked_date, favourite_count, submitted_date } } = beatmap
     const status = _status.charAt(0).toUpperCase() + _status.slice(1)
     let accs = [100, 99, 98, Acc ?? 95]
     const pps = await Promise.all([
-      calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(Acc ?? 95)
+      calc.SimulateScore({accuracy: 1, beatmap: beatmap, mods: Mods}),
+      calc.SimulateScore({accuracy: 0.99, beatmap: beatmap, mods: Mods}),
+      calc.SimulateScore({accuracy: 0.98, beatmap: beatmap, mods: Mods}),
+      calc.SimulateScore({accuracy: (Acc ?? 95) / 100, beatmap: beatmap, mods: Mods})
     ])
+
+    const max_combo = pps[0].difficulty.max_combo
 
     let pp = this.RenderBeatmapPP(pps, accs)
 

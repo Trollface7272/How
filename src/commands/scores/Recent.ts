@@ -15,7 +15,7 @@ import { randomBytes } from "crypto"
 import { CalculateProgress } from "@src/class/api/osu/Utils"
 import { Beatmap } from "@src/class/api/osu/class/Beatmap"
 import { BeatmapSet } from "@src/class/api/osu/class/BeatmapSet"
-import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator"
+import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator/PerformanceCalculator"
 import { CommandBase } from "@src/class/base/Command";
 import { CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, PageArg, UsernameArg } from "@src/utils/discord/help";
@@ -217,12 +217,14 @@ class Recent extends CommandBase implements CommandAbstract {
     }
 
     private async renderMap({ beatmap, beatmapset }: { beatmap: Beatmap.Base, beatmapset: BeatmapSet.Compact }) {
-        const calc = new PerformanceCalculator(beatmap, beatmap.mods)
-        await calc.FetchAttributes()
+        const calc = new PerformanceCalculator()
 
         const embed = this.GetBaseEmbed()
         const pps = await Promise.all([
-            calc.CalculateByAcc(100), calc.CalculateByAcc(99), calc.CalculateByAcc(98), calc.CalculateByAcc(95)
+            calc.SimulateScore({accuracy: 1, beatmap: beatmap, mods: beatmap.mods}),
+            calc.SimulateScore({accuracy: 0.99, beatmap: beatmap, mods: beatmap.mods}),
+            calc.SimulateScore({accuracy: 0.98, beatmap: beatmap, mods: beatmap.mods}),
+            calc.SimulateScore({accuracy: 0.95, beatmap: beatmap, mods: beatmap.mods})
         ])
 
         const status = beatmap.status.charAt(0).toUpperCase() + beatmap.status.slice(1)
@@ -232,7 +234,7 @@ class Recent extends CommandBase implements CommandAbstract {
             length: beatmap.total_length.asTime(), drain: beatmap.total_length != beatmap.drain ? ` (${beatmap.drain.asTime()})` : "", bpm: beatmap.bpm, mods: beatmap.mods.Formatted,
             setid: beatmapset.id, id: beatmap.id,
             difficulty: EmojiFactory.GetDifficultyEmoji(beatmap.difficulty_rating, beatmap.mode), version: beatmap.version,
-            stars: beatmap.difficulty_rating.roundFixed(2), maxCombo: beatmap.max_combo,
+            stars: pps[0].difficulty.star_rating.roundFixed(2), maxCombo: pps[0].difficulty.max_combo,
             ar: beatmap.AR.roundDynamicFixed(1, 2), od: beatmap.OD.roundDynamicFixed(1, 2), hp: beatmap.HP.roundDynamicFixed(1, 2), cs: beatmap.CS.roundDynamicFixed(1, 2),
             pp: pp
         })
@@ -279,13 +281,13 @@ class Recent extends CommandBase implements CommandAbstract {
             }
         }
 
-        let fcpp = score.performance.improved ? `/${score.performance.improved.total.roundFixed(3)}pp` : ""
+        let fcpp = score.performance.improved ? `/${score.performance.improved.performance.pp.roundFixed(3)}pp` : ""
 
         if (score.Accuracy === 1) fcpp = ""
 
         const description = TextRenderer.render(`recent/single`, {
-            grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp, accuracy: (score.Accuracy * 100).roundFixed(2), rank,
-            score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+            grade: score.Grade, pp: score.performance.normal.performance.pp.roundFixed(3), fcpp, accuracy: (score.Accuracy * 100).roundFixed(2), rank,
+            score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.performance.normal.difficulty.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
             timestamp: score.EndedAt.toDiscordToolTip(),
             completion: !score.Passed ? `\n▸ **Map Completion:** ${CalculateProgress(score.Statistics, { circles: score.Beatmap.count_circles, sliders: score.Beatmap.count_sliders, spinners: score.Beatmap.count_spinners }, score.RulesetId)}%` : ""
         })
@@ -332,8 +334,8 @@ class Recent extends CommandBase implements CommandAbstract {
             }
             return TextRenderer.render(`recent/score`, {
                 index: score.index + 1, title: escapeMarkdown(score.Beatmapset.title), difficulty: escapeMarkdown(score.Beatmap.version), beatmapUrl: score.Beatmap.url, mods: score.Mods.Formatted, starRating: score.Beatmap.difficulty_rating.roundFixed(2),
-                grade: score.Grade, pp: score.performance.normal.total.roundFixed(3), fcpp: score.performance.improved?.total ? `/${score.performance.improved.total.roundFixed(3)}pp` : "", accuracy: (score.Accuracy * 100).roundFixed(2), rank: rank,
-                score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.Beatmap.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+                grade: score.Grade, pp: score.performance.normal.performance.pp.roundFixed(3), fcpp: score.performance.improved?.performance?.pp ? `/${score.performance.improved.performance.pp.roundFixed(3)}pp` : "", accuracy: (score.Accuracy * 100).roundFixed(2), rank: rank,
+                score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.performance.normal.difficulty.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
                 timestamp: score.EndedAt.toDiscordToolTip()
             })
         }).join("\n")

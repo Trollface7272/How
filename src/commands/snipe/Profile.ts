@@ -118,8 +118,8 @@ class SnipeProfile extends CommandBase implements CommandAbstract {
         })
         const oldestScoreText = TextRenderer.render("snipe/oldestscore", {
             title: `${oldestMap.beatmapset.artist} - ${oldestMap.beatmapset.title}`, difficulty: oldestScore.Beatmap.version, beatmapUrl: oldestScore.Beatmap.url, mods: oldestScore.Mods.Formatted, starRating: oldestScore.Beatmap.difficulty_rating.roundFixed(2),
-            grade: EmojiFactory.GetEmoji(`Ranking${oldestScore.Rank}`), pp: oldestScore.PP.roundFixed(2), fcpp: oldestScore.performance.improved.total.roundFixed(2), accuracy: (oldestScore.Accuracy * 100).roundFixed(2), rank: `▸ [#${rank}](${oldestScore.Url})`,
-            score: oldestScore.ScoreFormatted, combo: FormatCombo(oldestScore.MaxCombo, oldestScore.Beatmap.max_combo, "osu"), hits: FormatHits(oldestScore.Statistics, 0), timestamp: oldestScore.EndedAt.toDiscordToolTip()
+            grade: EmojiFactory.GetEmoji(`Ranking${oldestScore.Rank}`), pp: oldestScore.PP.roundFixed(2), fcpp: oldestScore.performance.improved.performance.pp.roundFixed(2), accuracy: (oldestScore.Accuracy * 100).roundFixed(2), rank: `▸ [#${rank}](${oldestScore.Url})`,
+            score: oldestScore.ScoreFormatted, combo: FormatCombo(oldestScore.MaxCombo, oldestScore.performance.normal.difficulty.max_combo, "osu"), hits: FormatHits(oldestScore.Statistics, 0), timestamp: oldestScore.EndedAt.toDiscordToolTip()
         })
 
 

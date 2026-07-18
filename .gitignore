@@ -7,3 +7,8 @@ node_modules
 PerformanceCalculator.lnk
 
 cache
+
+# .NET
+dotnet/**/bin/
+dotnet/**/obj/
+dotnet/**/publish/

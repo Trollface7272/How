@@ -2,14 +2,14 @@ import { HandleAsync } from "@src/Utils"
 import { Beatmap } from "./Beatmap"
 import { BeatmapSet } from "./BeatmapSet"
 import { Fetcher } from "../Fetcher"
-import { PerformanceCalculator } from "../PerformanceCalculator"
+import { PerformanceCalculator } from "../PerformanceCalculator/PerformanceCalculator"
 import { Profile } from "./Profile"
 import { Logger } from "@src/class/Logger"
 import { EmojiFactory } from "@src/class/Emojis"
 import { RulesetIds } from "../types/MiscTypes"
 import { Mods } from "./Mods"
 import NodeCache from "node-cache"
-import { PerformanceContainer } from "../PerformanceCalculator/Base"
+import { PerformanceContainer } from "../types/PerformanceContainer"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
 
@@ -189,10 +189,7 @@ export namespace Score {
         declare protected type: "solo_score"
 
 
-        public performance?: {
-            normal: PerformanceContainer
-            improved?: PerformanceContainer
-        }
+        public performance: PerformanceContainer
         public get RankCountry() {
             return this.rank_country
         }
@@ -256,21 +253,11 @@ export namespace Score {
         }
 
         public async fetchPerformance() {
-            if (cache.has(this.id)) {
-                const cached = cache.get<any>(this.id)
-                this.performance = cached.performance
-                this.beatmap.difficulty_rating = cached.difficulty_rating
-                this.beatmap.max_combo = cached.max_combo
-                cache.set(this.Id, cached)
-                return
-            }
-            const calc = new PerformanceCalculator(this.beatmap, this.mods)
-            this.performance = await calc.Calculate(this)
-            cache.set(this.id, {
-                performance: this.performance,
-                difficulty_rating: this.beatmap.difficulty_rating,
-                max_combo: this.beatmap.max_combo
-            })
+            const calc = new PerformanceCalculator()
+            const result = await calc.CalculateScore(this)
+
+            this.performance = result
+
         }
 
         public async fetchPosition(discordUserId: string) {
@@ -281,6 +268,15 @@ export namespace Score {
                 return
             }
             this.rank_global = resp
+        }
+
+        public IsFullCombo(mapMaxCombo: number) {
+            if (this.mods.Has(Mods.ModAcronyms.Classic)) {
+                if (this.statistics.miss > 0) return false
+                if (this.max_combo < mapMaxCombo * 0.95) return false
+                return true
+            } 
+            return this.statistics.miss === 0 && this.statistics.large_tick_miss === 0
         }
     }
 
@@ -395,10 +391,7 @@ export namespace Score {
         }
     }
     export class FromId extends BaseScore {
-        performance?: {
-            normal: PerformanceContainer
-            improved?: PerformanceContainer
-        }
+        performance?: PerformanceContainer
 
         public get CurrentUserAttributes() {
             return this.current_user_attributes
@@ -447,8 +440,17 @@ export namespace Score {
         }
 
         public async fetchPerformance() {
-            const calc = new PerformanceCalculator(this.beatmap, this.mods)
-            this.performance = await calc.Calculate(this)
+            const calc = new PerformanceCalculator()
+            this.performance = await calc.CalculateScore(this)
+        }
+
+        public IsFullCombo(mapMaxCombo: number) {
+            if (this.mods.Has(Mods.ModAcronyms.Classic)) {
+                if (this.statistics.miss > 0) return false
+                if (this.max_combo < mapMaxCombo * 0.95) return false
+                return true
+            } 
+            return this.statistics.miss === 0 && this.statistics.large_tick_miss === 0
         }
     }
 }

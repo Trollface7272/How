@@ -3,15 +3,16 @@ import { CommandData } from "./CommandData"
 import { MessageEventData } from "../partials/MessageEvent"
 import { ErrorHandler } from "./ErrorHandler"
 import { SlashCommandBuilder } from "discord.js"
+import { PerformanceCalculatorEdgeSuccess } from "../api/osu/types/PerformanceCalculator-Edge"
 
 export class CommandBase extends ErrorHandler {
     public constructor() { super() }
     
 
-    protected RenderBeatmapPP(pps: { normal: { total: number } }[], accs: number[]) {
+    protected RenderBeatmapPP(pps: PerformanceCalculatorEdgeSuccess[], accs: number[]) {
         return pps.map((el, idx) => {
             const acc = accs[idx]
-            const perf = el.normal.total
+            const perf = el.performance.pp
             return `○ **${Math.round(acc * 100) / 100}%-**${perf.roundFixed(2)}`
         }).reverse().join(" ")
     }

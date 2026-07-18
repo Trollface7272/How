@@ -1,3 +1,5 @@
 allowBuilds:
   canvas: true
+  edge-js: true
   sharp: true
+  unrs-resolver: true

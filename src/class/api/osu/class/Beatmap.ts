@@ -190,7 +190,6 @@ export namespace Beatmap {
         playcount: string
         ranked: string
         url: string
-        max_combo?: number
         constructor(map: Base, mods: Mods.ModList) {
             super(map)
             Object.assign(this, map)
@@ -204,6 +203,7 @@ export namespace Beatmap {
     export class FromId extends Base {
         beatmapset: BeatmapSet.Beatmap.FromId
         failtimes: { fail: number[], exit: number[] }
+        max_combo: number
         public get FullBackground() {
             return `https://assets.ppy.sh/beatmaps/${this.beatmapset_id}/covers/fullsize.jpg`
         }

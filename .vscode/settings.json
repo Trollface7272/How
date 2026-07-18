@@ -1,4 +1,6 @@
 {
     "typescript.tsdk": "node_modules\\typescript\\lib",
-    "files.autoSave": "afterDelay"
+    "files.autoSave": "afterDelay",
+    "typescript.tsserver.experimental.enableProjectDiagnostics": true
+
 }
