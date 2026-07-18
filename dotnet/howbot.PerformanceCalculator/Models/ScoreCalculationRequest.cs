@@ -55,4 +55,11 @@ public class ScoreCalculationRequest
 
     [JsonProperty("maximumStatistics")]
     public Dictionary<string, int>? MaximumStatistics { get; set; }
+
+    /// <summary>
+    /// Also calculate improved score(s): <c>none</c>, <c>fc</c>, <c>ss</c>, <c>auto</c>
+    /// (FC→SS, else FC; skip if already SS), or <c>all</c> (normal + FC + SS). Default <c>none</c>.
+    /// </summary>
+    [JsonProperty("improvement")]
+    public string? Improvement { get; set; }
 }

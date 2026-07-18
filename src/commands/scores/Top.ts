@@ -18,6 +18,7 @@ import { GamemodeNames } from "@src/class/api/osu/Consts";
 import { Mods } from "@src/class/api/osu/class/Mods";
 import { CONTEXT_FULL, GamemodeStringOption, IndexStringOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
+import { EmojiFactory } from "@src/class/Emojis";
 
 interface args {
     Gamemode: Gamemode
@@ -32,7 +33,7 @@ interface args {
     Type: "best" | "firsts" | "pinned"
     Sort: string
     Mods: Mods.ModList
-    Recalculate: boolean
+    FullCombo: boolean
 }
 
 const componentCache = new NodeCache({
@@ -64,7 +65,7 @@ class TopData extends CommandData implements CommandDataAbstract {
             Specific: this.data.GetSpecific(),
             Type: this.GetTypeFromCommand(),
             Mods: this.data.GetMods(),
-            Recalculate: this.data.GetBoolean("recalculate", []),
+            FullCombo: this.data.GetBoolean("fullcombo", ["-fullcombo", "fc", "-fc"]),
             Username: this.data.GetRemaining()
         }
     }
@@ -127,7 +128,7 @@ class Top extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        const { GreaterThan, Gamemode, Id: _id, Mods, Page: _Page, Random, Recent, Reversed, Sort, Specific, Type, Username, Recalculate } = this.args
+        const { GreaterThan, Gamemode, Id: _id, Mods, Page: _Page, Random, Recent, Reversed, Sort, Specific, Type, Username, FullCombo } = this.args
         const Id = !Username && !_id ? user?.osu?.userId : _id
 
         this.args.Id = Id
@@ -168,6 +169,15 @@ class Top extends CommandBase implements CommandAbstract {
         }
 
         let scores = [..._scores[0], ..._scores[1]]
+
+        if (FullCombo) {
+            const toFix = scores.map(el => el.fetchPerformance("all"))
+            await Promise.all(toFix)
+            scores.sort((a, b) => b.performance.fc.performance.pp - a.performance.fc.performance.pp)
+            scores.forEach(el => {
+                el.performance.normal = el.performance.fc
+            })
+        }
 
 
         if (GreaterThan) {
@@ -215,7 +225,7 @@ class Top extends CommandBase implements CommandAbstract {
 
         if (pickedScores.length > 5) pickedScores = pickedScores.slice(0, 5)
 
-        await Promise.all(pickedScores.map(el => Promise.all([el.fetchPosition(user.id), el.fetchPerformance()])))
+        await Promise.all(pickedScores.map(el => Promise.all([el.fetchPosition(user.id), FullCombo ? null : el.fetchPerformance()])))
         const embed = this.RenderScores({ scores: pickedScores, totalScores: scores.length })
         const buttonsRow =
             Random ?
@@ -301,8 +311,8 @@ class Top extends CommandBase implements CommandAbstract {
 
             return TextRenderer.render("top/scores", {
                 index: score.index + 1, title: escapeMarkdown(score.Beatmapset.title), version: escapeMarkdown(score.Beatmap.version), url: score.Beatmap.url, mods: score.Mods.Formatted, stars: score.performance.normal.difficulty.star_rating.toFixed(2),
-                grade: score.Grade, pp: score.performance.normal.performance.pp.roundFixed(3), fcpp: improved ? `/${score.performance.improved.performance.pp.roundFixed(3)}pp` : "", acc: (score.Accuracy * 100).roundFixed(2), rank: rank,
-                score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.performance.normal.difficulty.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
+                grade: EmojiFactory.GetEmoji(`Ranking${score.performance.normal.grade}`), pp: score.performance.normal.performance.pp.roundFixed(3), fcpp: improved ? `/${score.performance.improved.performance.pp.roundFixed(3)}pp` : "", acc: (score.Accuracy * 100).roundFixed(2), rank: rank,
+                score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.performance.normal.difficulty.max_combo, score.RulesetId), hits: FormatHits(score.performance.normal.statistics, score.RulesetId),
                 setTime: new Date(score.EndedAt).toDiscordToolTip()
             })
         }).join("\n")

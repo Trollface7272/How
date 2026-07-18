@@ -66,7 +66,49 @@ public static class PerformanceCalculatorService
         // Omitted maxCombo → assume full combo for the map (+ mods).
         scoreInfo.MaxCombo = request.MaxCombo ?? difficultyAttributes.MaxCombo;
 
-        return BuildResult(ruleset, scoreInfo, difficultyAttributes, rulesetId);
+        var requestedImprovement = ScoreImprovement.Parse(request.Improvement);
+        // Auto collapses to none/fc/ss; All stays All.
+        var resolvedImprovement = ScoreImprovement.Resolve(requestedImprovement, scoreInfo, difficultyAttributes.MaxCombo, mods);
+
+        var normal = BuildResultBody(ruleset, scoreInfo, difficultyAttributes, rulesetId, scoreProcessor);
+        Dictionary<string, object?>? fc = null;
+        Dictionary<string, object?>? ss = null;
+
+        bool wantFc = resolvedImprovement is ImprovementMode.Fc or ImprovementMode.All;
+        bool wantSs = resolvedImprovement is ImprovementMode.Ss or ImprovementMode.All;
+
+        if (wantFc)
+        {
+            var fcScore = CreateImprovedScoreInfo(
+                scoreInfo, maximumStatistics, difficultyAttributes.MaxCombo, scoreProcessor, ImprovementMode.Fc);
+            fc = BuildResultBody(ruleset, fcScore, difficultyAttributes, rulesetId, scoreProcessor);
+        }
+
+        if (wantSs)
+        {
+            var ssScore = CreateImprovedScoreInfo(
+                scoreInfo, maximumStatistics, difficultyAttributes.MaxCombo, scoreProcessor, ImprovementMode.Ss);
+            ss = BuildResultBody(ruleset, ssScore, difficultyAttributes, rulesetId, scoreProcessor);
+        }
+
+        // `improved` keeps prior single-pick behaviour (auto/fc/ss); for `all` prefer SS if present else FC.
+        Dictionary<string, object?>? improved = resolvedImprovement switch
+        {
+            ImprovementMode.Fc => fc,
+            ImprovementMode.Ss => ss,
+            ImprovementMode.All => ss ?? fc,
+            _ => null
+        };
+
+        return EdgeMarshal.ToEdgeObject(new Dictionary<string, object?>
+        {
+            ["ok"] = true,
+            ["improvement"] = ScoreImprovement.ToApi(resolvedImprovement),
+            ["normal"] = normal,
+            ["fc"] = fc,
+            ["ss"] = ss,
+            ["improved"] = improved
+        });
     }
 
     /// <summary>
@@ -132,7 +174,7 @@ public static class PerformanceCalculatorService
         var difficultyAttributes = difficultyCalculator.Calculate(mods);
         scoreInfo.MaxCombo = request.MaxCombo ?? difficultyAttributes.MaxCombo;
 
-        return BuildResult(ruleset, scoreInfo, difficultyAttributes, rulesetId);
+        return BuildResult(ruleset, scoreInfo, difficultyAttributes, rulesetId, scoreProcessor);
     }
 
     private static ScoreProcessor CreateScoreProcessor(Ruleset ruleset, IBeatmap playableBeatmap, Mod[] mods)
@@ -178,23 +220,71 @@ public static class PerformanceCalculatorService
         }
     }
 
-    private static object BuildResult(Ruleset ruleset, ScoreInfo scoreInfo, osu.Game.Rulesets.Difficulty.DifficultyAttributes difficultyAttributes, int rulesetId)
+    private static ScoreInfo CreateImprovedScoreInfo(
+        ScoreInfo original,
+        Dictionary<HitResult, int> maximumStatistics,
+        int mapMaxCombo,
+        ScoreProcessor scoreProcessor,
+        ImprovementMode mode)
+    {
+        var statistics = mode == ImprovementMode.Ss
+            ? ScoreImprovement.BuildSsStatistics(maximumStatistics)
+            : ScoreImprovement.BuildFcStatistics(original.Statistics, maximumStatistics);
+
+        var improved = new ScoreInfo(original.BeatmapInfo, original.Ruleset)
+        {
+            Statistics = statistics,
+            MaximumStatistics = maximumStatistics,
+            MaxCombo = mapMaxCombo,
+            Mods = original.Mods.ToArray(),
+            LegacyTotalScore = null,
+            TotalScore = 0,
+            Passed = true
+        };
+
+        improved.Accuracy = StandardisedScoreMigrationTools.ComputeAccuracy(improved, scoreProcessor);
+        improved.Rank = StandardisedScoreMigrationTools.ComputeRank(improved, scoreProcessor);
+        return improved;
+    }
+
+    private static Dictionary<string, object?> BuildResultBody(
+        Ruleset ruleset,
+        ScoreInfo scoreInfo,
+        osu.Game.Rulesets.Difficulty.DifficultyAttributes difficultyAttributes,
+        int rulesetId,
+        ScoreProcessor scoreProcessor)
     {
         var performanceCalculator = ruleset.CreatePerformanceCalculator()
             ?? throw new InvalidOperationException($"No performance calculator for ruleset {rulesetId}.");
 
         var performanceAttributes = performanceCalculator.Calculate(scoreInfo, difficultyAttributes);
 
-        return EdgeMarshal.ToEdgeObject(new Dictionary<string, object?>
+        // Ruleset RankFromScore + mod AdjustRank (HD/FL → SH/XH).
+        var grade = StandardisedScoreMigrationTools.ComputeRank(scoreInfo, scoreProcessor);
+        scoreInfo.Rank = grade;
+
+        return new Dictionary<string, object?>
         {
-            ["ok"] = true,
             ["rulesetId"] = rulesetId,
             ["accuracy"] = scoreInfo.Accuracy,
             ["maxCombo"] = scoreInfo.MaxCombo,
+            ["grade"] = grade.ToString(),
             ["statistics"] = StatisticsConverter.ToApi(scoreInfo.Statistics),
             ["performance"] = performanceAttributes,
             ["difficulty"] = difficultyAttributes
-        });
+        };
+    }
+
+    private static object BuildResult(
+        Ruleset ruleset,
+        ScoreInfo scoreInfo,
+        osu.Game.Rulesets.Difficulty.DifficultyAttributes difficultyAttributes,
+        int rulesetId,
+        ScoreProcessor scoreProcessor)
+    {
+        var body = BuildResultBody(ruleset, scoreInfo, difficultyAttributes, rulesetId, scoreProcessor);
+        body["ok"] = true;
+        return EdgeMarshal.ToEdgeObject(body);
     }
 
     private static double NormalizeAccuracy(double accuracy)

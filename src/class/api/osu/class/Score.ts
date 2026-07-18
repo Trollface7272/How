@@ -10,6 +10,7 @@ import { RulesetIds } from "../types/MiscTypes"
 import { Mods } from "./Mods"
 import NodeCache from "node-cache"
 import { PerformanceContainer } from "../types/PerformanceContainer"
+import { ImprovementMode } from "../types/PerformanceCalculator-Edge"
 
 type Grade = "X" | "XH" | "SH" | "S" | "A" | "B" | "C" | "D" | "F"
 
@@ -70,6 +71,9 @@ export namespace Score {
         }
         public get Accuracy() {
             return this.accuracy
+        }
+        public set Accuracy(accuracy: number) {
+            this.accuracy = accuracy
         }
         public get BeatmapId() {
             return this.beatmap_id
@@ -139,6 +143,9 @@ export namespace Score {
                 large_tick_hit: this.statistics.large_tick_hit ?? 0,
                 slider_tail_hit: this.statistics.slider_tail_hit ?? 0
             }
+        }
+        public set Statistics(statistics: Statistics) {
+            this.statistics = statistics
         }
         public get TotalScore() {
             return this.total_score
@@ -252,9 +259,9 @@ export namespace Score {
             this.mods = new Mods.ModList(score.mods)
         }
 
-        public async fetchPerformance() {
+        public async fetchPerformance(mode: ImprovementMode="auto") {
             const calc = new PerformanceCalculator()
-            const result = await calc.CalculateScore(this)
+            const result = await calc.CalculateScore(this, { improvement: mode })
 
             this.performance = result
 

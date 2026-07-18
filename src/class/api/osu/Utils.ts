@@ -3,6 +3,7 @@ import axios from "axios"
 import { Logger } from "@src/class/Logger"
 import { Score } from "./class/Score"
 import { APIEmbed, Embed, Message } from "discord.js"
+import PQueue from "p-queue"
 
 export const Clamp = (num: number, min: number, max: number) => {
   return Math.min(Math.max(num, min), max)
@@ -58,32 +59,48 @@ export const ErfInv = (x: number) => {
 }
 
 const downloading: { url: string, hasFinished: Promise<unknown> }[] = []
-export const DownloadFile = async (url: string, path: string) => {
-  const progress = downloading.find(el => el?.url === url)
+
+const clearDownloading = (url: string) => {
+  const index = downloading.findIndex(el => el.url === url)
+  if (index !== -1) downloading.splice(index, 1)
+}
+
+export const DownloadFile = (url: string, path: string) => {
+  const progress = downloading.find(el => el.url === url)
   if (progress) return progress.hasFinished
+
   console.log(`Downloading -> ${url} -> ${path}`)
   const promise = new Promise(async (resolve, reject) => {
     try {
       const writer = createWriteStream(path)
       const resp = await axios.get(url, { responseType: "stream" })
-      console.log(resp.headers)
       writer.on("finish", () => {
-        delete downloading[downloading.findIndex(el => el?.url === url)]
-        return resolve(true)
+        clearDownloading(url)
+        resolve(true)
       })
       writer.on("error", (err) => {
-        delete downloading[downloading.findIndex(el => el?.url === url)]
+        clearDownloading(url)
         Logger.Error(`Downloading file -> writer on error`)
         reject(err)
       })
       resp.data.pipe(writer)
     } catch (err) {
+      clearDownloading(url)
       Logger.Error(`Downloading file -> catch at bottom`)
-      resolve(err)
+      reject(err)
     }
   })
   downloading.push({ url, hasFinished: promise })
   return promise
+}
+
+const queue = new PQueue({ concurrency: 1, autoStart: true })
+
+export const DownloadWithQueue = (url: string, path: string) => {
+  const alreadyDownloading = downloading.find(el => el.url === url)
+  if (alreadyDownloading) return alreadyDownloading.hasFinished
+
+  return queue.add(() => DownloadFile(url, path))
 }
 
 export const DisplayCombo = (combo: number, maxCombo: number, mode: number | string): string => {

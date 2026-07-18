@@ -68,6 +68,7 @@ export namespace Mods {
         Bubbles = "BB",
         Synesthesia = "SY",
         Depth = "DP",
+        FadeIn = "FI",
     }
 
     export enum DefaultSpeedChange {
@@ -257,6 +258,10 @@ export namespace Mods {
                 if (difficultyMod.IsDifficulty()) mods.push(difficultyMod.GetDifficultyVariant())
             }
             return mods
+        }
+
+        public HasVisionMods() {
+            return this.mods.some(mod => mod.acronym == ModAcronyms.Hidden || mod.acronym == ModAcronyms.Flashlight || mod.acronym == ModAcronyms.FadeIn)
         }
     }
 

@@ -29,13 +29,13 @@ export const FormatHits = ({ great, ignore_hit, ignore_miss, large_bonus, large_
         case "osu":
         case 1:
         case "taiko":
-            return `[${great}/${ok}/${meh}/${miss}]`
+            return `[${great}/${ok ?? 0}/${meh ?? 0}/${miss ?? 0}]`
         case 2:
         case "fruits":
-            return `[${great}/${ok}/${meh}/${large_tick_hit}/${miss}]`
+            return `[${great}/${ok ?? 0}/${meh ?? 0}/${large_tick_hit ?? 0}/${miss ?? 0}]`
         case 3:
         case "mania":
-            return `[${large_bonus}/${great}/${small_bonus}/${ok}/${meh}/${miss}]`
+            return `[${large_bonus ?? 0}/${great ?? 0}/${small_bonus ?? 0}/${ok ?? 0}/${meh ?? 0}/${miss ?? 0}]`
         default:
             Logger.Error(`Unknown gamemode: ${gamemode}`)
             return "[Error]"

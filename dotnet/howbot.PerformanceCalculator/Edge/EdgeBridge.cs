@@ -120,6 +120,9 @@ public class EdgeBridge
 
         if (request.Mods is null && token["mods"] is not null)
             request.Mods = token["mods"];
+
+        if (string.IsNullOrWhiteSpace(request.Improvement) && token["improvement"] is not null)
+            request.Improvement = token.Value<string>("improvement");
     }
 
     private static void ApplyCommonAliases(JToken token, SimulateRequest request)

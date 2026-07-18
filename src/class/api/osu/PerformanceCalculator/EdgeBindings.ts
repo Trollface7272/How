@@ -1,15 +1,15 @@
 import { func } from "edge-js"
-import { PerformanceCalculatorEdgeRequest, PerformanceCalculatorEdgeResponse, PerformanceCalculatorSimulateRequest } from "../types/PerformanceCalculator-Edge"
+import { PerformanceCalculatorEdgeRequest, PerformanceCalculatorEdgeResponse, PerformanceCalculatorScoreResponse, PerformanceCalculatorSimulateRequest } from "../types/PerformanceCalculator-Edge"
 import { promisify } from "util"
 
 type PromisifiedFunc<T, R> = (request: T) => Promise<R>
 
 export class EdgeBindings {
-    public calculate: PromisifiedFunc<PerformanceCalculatorEdgeRequest, PerformanceCalculatorEdgeResponse>
+    public calculate: PromisifiedFunc<PerformanceCalculatorEdgeRequest, PerformanceCalculatorScoreResponse>
     public simulate: PromisifiedFunc<PerformanceCalculatorSimulateRequest, PerformanceCalculatorEdgeResponse>
 
     public constructor(assembly: string) {
-        this.calculate = promisify(func<PerformanceCalculatorEdgeRequest, PerformanceCalculatorEdgeResponse>({
+        this.calculate = promisify(func<PerformanceCalculatorEdgeRequest, PerformanceCalculatorScoreResponse>({
             assemblyFile: assembly,
             typeName: 'howbot.PerformanceCalculator.Edge.EdgeBridge',
             methodName: 'CalculatePerformance'
@@ -20,5 +20,4 @@ export class EdgeBindings {
             methodName: 'SimulatePerformance'
         }))
     }
-
 }

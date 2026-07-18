@@ -10,20 +10,31 @@ export type EdgeMod =
         settings?: EdgeModSettings
     }
 
-export type EdgeStatistics = {
+export interface EdgeStatistics {
     great?: number
     ok?: number
     meh?: number
     miss?: number
     perfect?: number
     good?: number
+    ignore_hit?: number
+    ignore_miss?: number
+    large_bonus?: number
+    small_bonus?: number
     large_tick_hit?: number
     large_tick_miss?: number
     slider_tail_hit?: number
     small_tick_hit?: number
     small_tick_miss?: number
-    [key: string]: number | undefined
 }
+
+/**
+ * none = only normal;
+ * fc / ss = that improved calc;
+ * auto = FC→SS else FC (skip if already SS);
+ * all = normal + fc + ss.
+ */
+export type ImprovementMode = "none" | "fc" | "ss" | "auto" | "all"
 
 export interface PerformanceCalculatorEdgeRequest {
     beatmapPath: string
@@ -38,6 +49,8 @@ export interface PerformanceCalculatorEdgeRequest {
     legacyTotalScore?: number
     statistics: EdgeStatistics
     maximumStatistics?: EdgeStatistics
+    /** Default `none`. Use `auto` for prior CalculateScore improved behaviour, `all` for normal+fc+ss. */
+    improvement?: ImprovementMode
 }
 
 /**
@@ -143,19 +156,41 @@ export type EdgeDifficultyAttributes =
     | CatchDifficultyAttributes
     | ManiaDifficultyAttributes
 
-export interface PerformanceCalculatorEdgeSuccess {
-    ok: true
+/** osu! letter rank, including silver SH/XH when HD/FL apply. */
+export type ScoreGrade = "F" | "D" | "C" | "B" | "A" | "S" | "SH" | "X" | "XH"
+
+/** Single calc body (simulate, or nested under score calculate). */
+export interface PerformanceCalculatorEdgeSuccessBody {
     rulesetId: RulesetId
-    /** Accuracy used for the calc (provided or computed). */
     accuracy: number
-    /** Max combo used for the calc (provided or full FC). */
     maxCombo: number
-    /** Hit statistics used (provided, generated from accuracy, or max/SS). */
+    /** Letter grade for this (normal/fc/ss) result; HD/FL → SH/XH. */
+    grade: ScoreGrade
     statistics: EdgeStatistics
     performance: EdgePerformanceAttributes
     difficulty: EdgeDifficultyAttributes
 }
 
+export interface PerformanceCalculatorEdgeSuccess extends PerformanceCalculatorEdgeSuccessBody {
+    ok: true
+}
+
+/** CalculatePerformance response (always includes normal + optional fc/ss/improved). */
+export interface PerformanceCalculatorScoreSuccess {
+    ok: true
+    /** Resolved mode (`auto` collapses to none/fc/ss; `all` stays all). */
+    improvement: "none" | "fc" | "ss" | "all"
+    normal: PerformanceCalculatorEdgeSuccessBody
+    fc: PerformanceCalculatorEdgeSuccessBody | null
+    ss: PerformanceCalculatorEdgeSuccessBody | null
+    /** Single-pick convenience: auto/fc/ss target; for `all` prefers ss then fc. */
+    improved: PerformanceCalculatorEdgeSuccessBody | null
+}
+
 export type PerformanceCalculatorEdgeResponse =
     | PerformanceCalculatorEdgeSuccess
+    | PerformanceCalculatorEdgeError
+
+export type PerformanceCalculatorScoreResponse =
+    | PerformanceCalculatorScoreSuccess
     | PerformanceCalculatorEdgeError
