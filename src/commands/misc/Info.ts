@@ -5,7 +5,7 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { version } from "discord.js";
 import { totalmem } from "os";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 
 
 interface args {
@@ -56,6 +56,7 @@ CommandEmitterInstance.AddCommand(Info, Info.names)
 
 Info.helpData
     .setCommand(Info.name)
+    .setGroup(CommandGroup.Misc)
     .setDescription("Display bot information.")
     .setUsage("info")
     .setAliases(Info.names);

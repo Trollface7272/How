@@ -19,7 +19,6 @@ import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 import { CommandArg } from "@src/class/partials/CommandArg";
 import { GamemodeArg, ModsArg } from "@src/utils/discord/help";
-import { CommandHelpDataInstance } from "@src/class/help/CommandHelpData";
 
 interface args {
   Gamemode: Gamemode
@@ -254,7 +253,5 @@ Beatmap.interactionData
       .setDescription("Returns beatmap background")
       .setRequired(false)
   )
-
-CommandHelpDataInstance.addHelp(Beatmap.helpData)
 CommandEmitterInstance.AddCommand(Beatmap, Beatmap.names)
 InteractionRegistrerInstance.AddInteraction(Beatmap.interactionData)

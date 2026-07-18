@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 import { UsernameArg } from "@src/utils/discord/help";
 import { importScores } from "@src/sockets/Importer";
@@ -62,6 +62,7 @@ CommandEmitterInstance.AddCommand(Import, Import.names)
 
 Import.helpData
     .setCommand(Import.name)
+    .setGroup(CommandGroup.Scores)
     .setDescription("Import user scores.")
     .setUsage("import [username]")
     .setAliases(Import.names)

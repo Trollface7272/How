@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, PageArg, UsernameArg, ModsArg } from "@src/utils/discord/help";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
@@ -19,6 +19,7 @@ import { Mods } from "@src/class/api/osu/class/Mods";
 import { CONTEXT_FULL, GamemodeStringOption, IndexStringOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { EmojiFactory } from "@src/class/Emojis";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
     Gamemode: Gamemode
@@ -383,12 +384,19 @@ Top.interactionData
             .setDescription("Show most recent top plays")
             .setRequired(false)
     )
+    .addBooleanOption(opt => 
+        opt
+            .setName("fullcombo")
+            .setDescription("Show full combo scores")
+            .setRequired(false)
+    )
 
 CommandEmitterInstance.AddCommand(Top, Top.names)
 InteractionRegistrerInstance.AddInteraction(Top.interactionData)
 
 Top.helpData
     .setCommand(Top.name)
+    .setGroup(CommandGroup.Scores)
     .setDescription("Display current user top 100 scores")
     .setUsage("top [username] [gamemode] [page] [best] [exclude-fails] [list] [count] [map] [od]")
     .setAliases(Top.names)
@@ -396,3 +404,28 @@ Top.helpData
     .addArg(GamemodeArg)
     .addArg(PageArg)
     .addArg(ModsArg)
+    .addArg(new CommandHelpArg()
+        .setName("greater-than")
+        .setDescription("Get scores that are more than x pp")
+        .setUsage("greater-than [pp]")
+    )
+    .addArg(new CommandHelpArg()
+        .setName("fullcombo")
+        .setDescription("Show full combo scores")
+        .setUsage("fullcombo")
+    )
+    .addArg(new CommandHelpArg()
+        .setName("recent")
+        .setDescription("Show most recent top plays")
+        .setUsage("recent")
+    )
+    .addArg(new CommandHelpArg()
+        .setName("reversed")
+        .setDescription("Reverse the order of the scores")
+        .setUsage("reversed")
+    )
+    .addArg(new CommandHelpArg()
+        .setName("random")
+        .setDescription("Show random scores")
+        .setUsage("random")
+    )

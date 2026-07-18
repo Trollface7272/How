@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, UsernameArg } from "@src/utils/discord/help";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
@@ -118,6 +118,7 @@ InteractionRegistrerInstance.AddInteraction(CountMods.interactionData)
 
 CountMods.helpData
     .setCommand(CountMods.name)
+    .setGroup(CommandGroup.Profile)
     .setDescription("Display user mod distribution in top 100")
     .setUsage("countmods [username] [gamemode]")
     .setAliases(CountMods.names)

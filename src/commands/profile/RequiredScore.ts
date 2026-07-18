@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { UsernameArg } from "@src/utils/discord/help";
 import { SlashCommandBuilder } from "discord.js";
 import { CONTEXT_FULL, UsernameStringOption } from "@src/utils/discord/interaction";
@@ -117,6 +117,7 @@ InteractionRegistrerInstance.AddInteraction(RequiredScore.interactionData)
 
 RequiredScore.helpData
     .setCommand(RequiredScore.name)
+    .setGroup(CommandGroup.Profile)
     .setDescription("Display required score for rank")
     .setUsage("rrs <rank> [username]")
     .setAliases(RequiredScore.names)

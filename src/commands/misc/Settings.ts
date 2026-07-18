@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { Context } from "@src/types/Context";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
@@ -135,6 +135,7 @@ InteractionRegistrerInstance.AddInteraction(Settings.interactionData)
 
 Settings.helpData
     .setCommand(Settings.name)
+    .setGroup(CommandGroup.Misc)
     .setDescription("Set server settings")
     .setUsage("settings <type> <setting> [enable/disable]")
     .setAliases(Settings.names)

@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { HandleAsync } from "@src/Utils";
@@ -83,7 +83,9 @@ class LineGraphData extends CommandData implements CommandDataAbstract {
 }
 
 class Playcount extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["playcount", "pc", "wr", "watchedreplays", "rank", "graph", "dctg"]
+    public static readonly name: string = "graph"
+    public static readonly names: string[] = [this.name, "playcount", "pc", "wr", "watchedreplays", "rank", "dctg"]
+    public static readonly helpData = new CommandHelp()
     private data: LineGraphData
 
 
@@ -231,5 +233,29 @@ class Playcount extends CommandBase implements CommandAbstract {
 
 
 }
+
+Playcount.helpData
+    .setCommand(Playcount.name)
+    .setAliases(Playcount.names.filter(el => el !== Playcount.name))
+    .setDescription("Render line graphs for playcount, rank, watched replays, or daily challenge thresholds.")
+    .setUsage("graph|playcount|rank|wr|dctg [options] [username]")
+    .setGroup(CommandGroup.Graphs)
+    .addArg(UsernameArg)
+    .addArg(GamemodeArg)
+    .addArg(new CommandHelpArg()
+        .setName("type")
+        .setAliases(["-type", "-t", "t"])
+        .setDescription("Graph type when using the graph alias (or use playcount/rank/wr/dctg)")
+        .setUsage("type 0"))
+    .addArg(new CommandHelpArg()
+        .setName("ranks")
+        .setAliases(["-ranks", "-rank", "ranks", "rank"])
+        .setDescription("For dctg: show rank lines instead of score thresholds")
+        .setUsage("-ranks"))
+    .addArg(new CommandHelpArg()
+        .setName("top")
+        .setAliases(["-top10", "-t10", "-top50", "-t50", "-first", "-f"])
+        .setDescription("For dctg: limit which threshold lines are drawn")
+        .setUsage("-top10"))
 
 CommandEmitterInstance.AddCommand(Playcount, Playcount.names)

@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
@@ -111,6 +111,7 @@ CommandEmitterInstance.AddCommand(DailyChallengeProfile, DailyChallengeProfile.n
 
 DailyChallengeProfile.helpData
     .setCommand(DailyChallengeProfile.name)
+    .setGroup(CommandGroup.DailyChallenge)
     .setDescription("Display daily challenge profile")
     .setUsage("dcp [username]")
     .setAliases(DailyChallengeProfile.names)

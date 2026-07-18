@@ -4,7 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { SlashCommandBuilder } from "discord.js";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { DBReminder } from "@class/database/Reminder";
 import moment from "moment";
 import { ObjectId } from "mongodb";
@@ -43,8 +43,8 @@ class RemindMeData extends CommandData implements CommandDataAbstract {
 }
 
 class RemindMe extends CommandBase implements CommandAbstract {
-    public static readonly name: string = "remindme"
-    public static readonly names: string[] = [this.name, "remind"]
+    public static readonly name: string = "remind-me"
+    public static readonly names: string[] = [this.name, "remindme", "remind"]
     public static readonly interactionData = new SlashCommandBuilder()
     public static readonly helpData = new CommandHelp()
 
@@ -121,6 +121,7 @@ class RemindMe extends CommandBase implements CommandAbstract {
 
 RemindMe.helpData
     .setCommand(RemindMe.name)
+    .setGroup(CommandGroup.Misc)
     .setDescription("Sets a reminder for the user.")
     .setUsage("remindme <duration> <message>")
     .setAliases(["remindme", "remind"])

@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 
 import { DailyChallengeFactory } from "@src/class/database/DailyChallenge";
 import { TextRenderer } from "@src/class/renderer/Text";
@@ -103,6 +103,7 @@ CommandEmitterInstance.AddCommand(DailyChallengeThreshold, DailyChallengeThresho
 
 DailyChallengeThreshold.helpData
     .setCommand(DailyChallengeThreshold.name)
+    .setGroup(CommandGroup.DailyChallenge)
     .setDescription("Display daily challenge thresholds.")
     .setUsage("dcth")
     .setAliases(DailyChallengeThreshold.names);

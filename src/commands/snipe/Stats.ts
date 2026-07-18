@@ -4,7 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { SlashCommandBuilder } from "discord.js";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 import { UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
@@ -98,6 +98,7 @@ CommandEmitterInstance.AddCommand(SnipeStats, SnipeStats.names)
 
 SnipeStats.helpData
     .setCommand(SnipeStats.name)
+    .setGroup(CommandGroup.Snipe)
     .setDescription("Display daily snipe statistics for a user.")
     .setUsage("dss [username]")
     .setAliases(SnipeStats.names)

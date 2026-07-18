@@ -5,7 +5,7 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { UsernameArg } from "@src/utils/discord/help";
 import { SlashCommandBuilder } from "discord.js";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
 import moment from "moment";
@@ -323,6 +323,7 @@ CommandEmitterInstance.AddCommand(Sniped, Sniped.names)
 
 Sniped.helpData
     .setCommand(Sniped.name)
+    .setGroup(CommandGroup.Snipe)
     .setDescription("Display snipe statistics for a user.")
     .setUsage("sniped [username]")
     .setAliases(Sniped.names)

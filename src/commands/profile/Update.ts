@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { UsernameArg } from "@src/utils/discord/help";
 import { GetFlag, HandleAsync, formatAsGain } from "@src/Utils";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
@@ -115,6 +115,7 @@ InteractionRegistrerInstance.AddInteraction(Update.interactionData)
 
 Update.helpData
     .setCommand(Update.name)
+    .setGroup(CommandGroup.Profile)
     .setDescription("Display profile changes since last update")
     .setUsage("update [username]")
     .setAliases(Update.names)

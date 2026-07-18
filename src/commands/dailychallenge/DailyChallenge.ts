@@ -10,7 +10,7 @@ import { CONTEXT_FULL, CountryStringOption, PageNumberOption, UsernameStringOpti
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { PageArg } from "@src/utils/discord/help";
 import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 
 interface args {
     List: boolean
@@ -85,6 +85,7 @@ class DailyChallenge extends CommandBase implements CommandAbstract {
 
 DailyChallenge.helpData
     .setCommand(DailyChallenge.name)
+    .setGroup(CommandGroup.DailyChallenge)
     .setDescription("Display daily challenge information.")
     .setUsage("daily-challenge [list] [page] [search]")
     .setAliases(DailyChallenge.names)

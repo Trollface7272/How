@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, ModsArg } from "@src/utils/discord/help";
 import { Gamemode } from "@src/class/api/osu/types/MiscTypes";
 import { ButtonEmojis, GetFlag, HandleAsync } from "@src/Utils";
@@ -269,6 +269,7 @@ InteractionRegistrerInstance.AddInteraction(Leaderboards.interactionData)
 
 Leaderboards.helpData
     .setCommand(Leaderboards.name)
+    .setGroup(CommandGroup.Scores)
     .setDescription("Display map leaderboards")
     .setUsage("leaderboards [map] [type] [gamemode] [mods]")
     .setAliases(Leaderboards.names)

@@ -17,7 +17,6 @@ import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg } from "@src/utils/discord/help";
 import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 import { CommandArg } from "@src/class/partials/CommandArg";
-import { CommandHelpDataInstance } from "@src/class/help/CommandHelpData";
 
 
 const typeRegex = /-(any|ranked|qualified|loved|favourites|pending|wip|graveyard|mine)/
@@ -180,7 +179,5 @@ Search.interactionData
                 value: "mine"
             })
     )
-
-CommandHelpDataInstance.addHelp(Search.helpData)
 CommandEmitterInstance.AddCommand(Search, Search.names)
 InteractionRegistrerInstance.AddInteraction(Search.interactionData)

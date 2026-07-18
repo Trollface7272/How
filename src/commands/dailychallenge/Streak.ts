@@ -3,7 +3,8 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 import { DailyChallengeProfile, DailyChallengeProfileFactory } from "@src/class/database/DailyChallengeProfile";
 import { Filter, Sort } from "mongodb";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
@@ -13,6 +14,7 @@ import { TextRenderer } from "@src/class/renderer/Text";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import { randomBytes } from "crypto";
 import NodeCache from "node-cache";
+import { PageArg } from "@src/utils/discord/help";
 
 interface args {
     Country: string
@@ -45,7 +47,8 @@ class StreakLeaderboardsData extends CommandData implements CommandDataAbstract 
 }
 
 class StreakLeaderboards extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["dcsl", "dcslb", "dailychallengestreakleaderboards", "daily-challenge-streak-leaderboards"]
+    public static readonly name: string = "daily-challenge-streak-leaderboards"
+    public static readonly names: string[] = [this.name, "dcsl", "dcslb", "dailychallengestreakleaderboards"]
     public static readonly helpData = new CommandHelp()
     private data: StreakLeaderboardsData
     private args: args
@@ -194,5 +197,28 @@ class StreakLeaderboards extends CommandBase implements CommandAbstract {
     }
 
 }
+
+StreakLeaderboards.helpData
+    .setCommand(StreakLeaderboards.name)
+    .setAliases(StreakLeaderboards.names.filter(el => el !== StreakLeaderboards.name))
+    .setDescription("Display daily challenge streak leaderboards")
+    .setUsage("daily-challenge-streak-leaderboards [options]")
+    .setGroup(CommandGroup.DailyChallenge)
+    .addArg(new CommandHelpArg()
+        .setName("country")
+        .setAliases(["-c", "-country", "c"])
+        .setDescription("Filter by country code")
+        .setUsage("country PL"))
+    .addArg(new CommandHelpArg()
+        .setName("friends")
+        .setAliases(["-f", "-friends", "f"])
+        .setDescription("Only show friends")
+        .setUsage("-friends"))
+    .addArg(PageArg)
+    .addArg(new CommandHelpArg()
+        .setName("current")
+        .setAliases(["-current"])
+        .setDescription("Show current streak instead of best")
+        .setUsage("-current"))
 
 CommandEmitterInstance.AddCommand(StreakLeaderboards, StreakLeaderboards.names)

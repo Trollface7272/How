@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { GetFlag, HandleAsync } from "@src/Utils";
@@ -82,6 +82,7 @@ InteractionRegistrerInstance.AddInteraction(Avatar.interactionData)
 
 Avatar.helpData
     .setCommand(Avatar.name)
+    .setGroup(CommandGroup.Profile)
     .setDescription("Display osu user avatar")
     .setUsage("avatar [username]")
     .setAliases(Avatar.names)

@@ -49,6 +49,13 @@ export class Client extends DiscordClient {
             this.BeatmapTrackingLoop = setInterval(() => BeatmapTrackingLoop(this), 1000 * 60 * 5)
             BeatmapTrackingLoop(this)
         }
+
+        this.user.setPresence({
+            activities: [{
+                name: "https://howbot.net",
+                url: "https://howbot.net"
+            }]
+        })
     }
 
     private async LoadInteractions() {

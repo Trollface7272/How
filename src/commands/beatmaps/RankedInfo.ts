@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg } from "@src/utils/discord/help";
 import { SlashCommandBuilder } from "discord.js";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
@@ -98,6 +98,7 @@ CommandEmitterInstance.AddCommand(RankedInfo, RankedInfo.names)
 
 RankedInfo.helpData
     .setCommand(RankedInfo.name)
+    .setGroup(CommandGroup.Beatmaps)
     .setDescription("Display ranked beatmap information for a given month/day.")
     .setUsage("ri [year] [month] [day] [gamemode]")
     .setAliases(RankedInfo.names)
@@ -113,4 +114,5 @@ RankedInfo.helpData
         .setName("day")
         .setDescription("The day (1-31)")
         .setUsage("15"))
-    .addArg(GamemodeArg);
+    .addArg(GamemodeArg)
+    .setEnabled(false)

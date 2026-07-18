@@ -5,6 +5,8 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { Guild, GuildFactory } from "@src/class/database/Guild";
 import { User } from "@src/class/database/User";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
 
 interface args {
     Type: "server" | "user"
@@ -33,8 +35,9 @@ class PrefixAliasData extends CommandData implements CommandDataAbstract {
 }
 
 class PrefixAlias extends CommandBase implements CommandAbstract {
-    public static readonly name: string = "prefixalias"
-    public static readonly names: string[] = [this.name]
+    public static readonly name: string = "prefix-alias"
+    public static readonly names: string[] = [this.name, "prefixalias"]
+    public static readonly helpData = new CommandHelp()
     private data: PrefixAliasData
 
 
@@ -119,5 +122,35 @@ class PrefixAlias extends CommandBase implements CommandAbstract {
     }
 
 }
+
+PrefixAlias.helpData
+    .setCommand(PrefixAlias.name)
+    .setDescription("Manage custom command prefix aliases for yourself or the server.")
+    .setUsage("prefixalias [options] [prefix]")
+    .setGroup(CommandGroup.Misc)
+    .addArg(new CommandHelpArg()
+        .setName("type")
+        .setAliases(["-type", "t", "-t"])
+        .setDescription("Scope: user (default) or server")
+        .setUsage("type server"))
+    .addArg(new CommandHelpArg()
+        .setName("list")
+        .setAliases(["-list"])
+        .setDescription("List current prefix aliases")
+        .setUsage("-list"))
+    .addArg(new CommandHelpArg()
+        .setName("clear")
+        .setAliases(["-clear"])
+        .setDescription("Clear all prefix aliases")
+        .setUsage("-clear"))
+    .addArg(new CommandHelpArg()
+        .setName("remove")
+        .setAliases(["-remove"])
+        .setDescription("Remove a specific prefix alias")
+        .setUsage("-remove !"))
+    .addArg(new CommandHelpArg()
+        .setName("prefix")
+        .setDescription("Prefix alias to add (or remove with -remove)")
+        .setUsage("!"))
 
 CommandEmitterInstance.AddCommand(PrefixAlias, PrefixAlias.names)

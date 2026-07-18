@@ -17,7 +17,7 @@ import { Beatmap } from "@src/class/api/osu/class/Beatmap"
 import { BeatmapSet } from "@src/class/api/osu/class/BeatmapSet"
 import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator/PerformanceCalculator"
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, PageArg, UsernameArg } from "@src/utils/discord/help";
 import { BeatmapStringOption, CONTEXT_FULL, GamemodeStringOption, IndexStringOption, ListBooleanOption, PageNumberOption, UsernameStringOption } from "@src/utils/discord/interaction"
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer"
@@ -410,6 +410,7 @@ InteractionRegistrerInstance.AddInteraction(Recent.interactionData)
 
 Recent.helpData
     .setCommand(Recent.name)
+    .setGroup(CommandGroup.Scores)
     .setDescription("Display recent scores for a user.")
     .setUsage("recent [username] [gamemode] [page] [best] [exclude-fails] [list] [count] [map] [od]")
     .setAliases(Recent.names)

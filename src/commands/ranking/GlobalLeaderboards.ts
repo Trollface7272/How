@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, FriendsArg } from "@src/utils/discord/help";
 import { SlashCommandBuilder } from "discord.js";
 import { Gamemode, RankingType } from "@src/class/api/osu/types/MiscTypes";
@@ -145,6 +145,7 @@ CommandEmitterInstance.AddCommand(GlobalLeaderboards, GlobalLeaderboards.names)
 
 GlobalLeaderboards.helpData
     .setCommand(GlobalLeaderboards.name)
+    .setGroup(CommandGroup.Ranking)
     .setDescription("Display global leaderboards.")
     .setUsage("glb [country] [me] [gamemode] [friends]")
     .setAliases(GlobalLeaderboards.names)

@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 
 import { Client } from "@src/class/Client";
 import { OAuth2Scopes, SlashCommandBuilder } from "discord.js";
@@ -61,6 +61,7 @@ InteractionRegistrerInstance.AddInteraction(Invite.interactionData)
 
 Invite.helpData
     .setCommand(Invite.name)
+    .setGroup(CommandGroup.Misc)
     .setDescription("Get invite link for the bot")
     .setUsage("invite")
     .setAliases(Invite.names);

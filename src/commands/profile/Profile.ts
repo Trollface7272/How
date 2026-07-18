@@ -5,7 +5,7 @@ import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { Profile as OsuProfile } from "@src/class/api/osu/class/Profile";
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, InteractionReplyOptions, MessageReplyOptions, SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } from "discord.js";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, UsernameArg } from "@src/utils/discord/help";
 import { EmojiFactory } from "@src/class/Emojis";
 import { GamemodeNames, GamemodeNumToStr } from "@src/class/api/osu/Consts";
@@ -422,6 +422,7 @@ Profile.interactionData
 
 Profile.helpData
   .setCommand(Profile.name)
+    .setGroup(CommandGroup.Profile)
   .setDescription("Display user osu profile")
   .setUsage("profile [username] [mode]")
   .setAliases(Profile.names)

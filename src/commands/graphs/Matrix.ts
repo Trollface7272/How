@@ -3,7 +3,7 @@ import { MessageEventData } from "@src/class/partials/MessageEvent";
 import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
-import { CommandHelp } from "@src/class/help/CommandHelp";
+import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 
 import { MatrixChart } from "@src/class/graphs/Matrix";
 
@@ -24,7 +24,9 @@ class MatrixData extends CommandData implements CommandDataAbstract {
 }
 
 class Matrix extends CommandBase implements CommandAbstract {
-    public static readonly names: string[] = ["matrix"]
+    public static readonly name: string = "matrix"
+    public static readonly names: string[] = [this.name]
+    public static readonly helpData = new CommandHelp()
     private data: MatrixData
 
 
@@ -41,5 +43,12 @@ class Matrix extends CommandBase implements CommandAbstract {
     }
 
 }
+
+Matrix.helpData
+    .setCommand(Matrix.name)
+    .setDescription("Render a sample matrix chart.")
+    .setUsage("matrix")
+    .setGroup(CommandGroup.Graphs)
+    .setEnabled(false)
 
 CommandEmitterInstance.AddCommand(Matrix, Matrix.names)
