@@ -293,7 +293,7 @@ class Recent extends CommandBase implements CommandAbstract {
         })
 
         embed.setAuthor({
-            name: `${score.Beatmapset.title} [${score.Beatmap.version}] +${score.Mods.Formatted} [${score.Beatmap.difficulty_rating.roundFixed(2)}★]`,
+            name: `${score.Beatmapset.title} [${score.Beatmap.version}] +${score.Mods.Formatted} [${score.performance.normal.difficulty.star_rating.roundFixed(2)}★]`,
             url: score.Beatmap.url,
             iconURL: score.User.avatar_url
         })
@@ -333,7 +333,7 @@ class Recent extends CommandBase implements CommandAbstract {
                 }
             }
             return TextRenderer.render(`recent/score`, {
-                index: score.index + 1, title: escapeMarkdown(score.Beatmapset.title), difficulty: escapeMarkdown(score.Beatmap.version), beatmapUrl: score.Beatmap.url, mods: score.Mods.Formatted, starRating: score.Beatmap.difficulty_rating.roundFixed(2),
+                index: score.index + 1, title: escapeMarkdown(score.Beatmapset.title), difficulty: escapeMarkdown(score.Beatmap.version), beatmapUrl: score.Beatmap.url, mods: score.Mods.Formatted, starRating: score.performance.normal.difficulty.star_rating.roundFixed(2),
                 grade: score.Grade, pp: score.performance.normal.performance.pp.roundFixed(3), fcpp: score.performance.improved?.performance?.pp ? `/${score.performance.improved.performance.pp.roundFixed(3)}pp` : "", accuracy: (score.Accuracy * 100).roundFixed(2), rank: rank,
                 score: score.ScoreFormatted, combo: FormatCombo(score.MaxCombo, score.performance.normal.difficulty.max_combo, score.RulesetId), hits: FormatHits(score.Statistics, score.RulesetId),
                 timestamp: score.EndedAt.toDiscordToolTip()
