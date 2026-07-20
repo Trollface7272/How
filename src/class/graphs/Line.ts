@@ -92,12 +92,12 @@ export class LineChart {
                     }
                 },
                 scales: {
-                    "y2": {
+                    y: {
                         title: this.yTitle,
                         reverse: this.reverse,
                         grid: { display: this.yLines ?? false }
                     },
-                    "x2": {
+                    x: {
                         title: this.xTitle,
                         grid: { display: this.xLines ?? false }
                     }
