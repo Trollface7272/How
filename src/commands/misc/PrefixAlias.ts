@@ -50,75 +50,93 @@ class PrefixAlias extends CommandBase implements CommandAbstract {
 
         const { Type } = this.data.args
 
-        let ret: string = null
+        try {
+            let ret: string = null
 
-        switch (Type) {
-            case "user": {
-                ret = await this.HandleEntity(user)
-                break
-            }
+            switch (Type) {
+                case "user": {
+                    ret = await this.HandleEntity(user)
+                    break
+                }
 
-            case "server": {
-                if (!this.data.IsInGuild()) {
-                    this.data.Reply({ content: "Server prefix is only modifiable in server" })
+                case "server": {
+                    if (!this.data.IsInGuild()) {
+                        await this.data.Reply({ content: "Server prefix is only modifiable in server", ephemeral: true })
+                        return CommandResponseCodes.USER_ERROR
+                    }
+
+                    const member = this.data.GetMember()
+                    if (!member.permissions.any("ManageMessages", true)) {
+                        await this.data.Reply({ content: "Server prefix is only modifiable by admin", ephemeral: true })
+                        return CommandResponseCodes.USER_ERROR
+                    }
+
+                    const guild = await GuildFactory.GetGuild(member.guild.id)
+
+                    if (!guild) {
+                        await this.data.Reply({ content: "Failed to load server configuration.", ephemeral: true })
+                        return CommandResponseCodes.ERROR
+                    }
+
+                    ret = await this.HandleEntity(guild)
+                    break;
+                }
+
+                default: {
+                    await this.data.Reply({ content: `Unknown type "${Type}", valid types: server, user`, ephemeral: true })
                     return CommandResponseCodes.USER_ERROR
                 }
-
-                const member = this.data.GetMember()
-                if (!member.permissions.any("ManageMessages", true)) {
-                    this.data.Reply({ content: "Server prefix is only modifiable by admin" })
-                    return CommandResponseCodes.USER_ERROR
-                }
-
-                const guild = await GuildFactory.GetGuild(member.guild.id)
-
-                if (!guild) {
-                    this.data.Reply({ content: "Unknown error occured" })
-                    return CommandResponseCodes.ERROR
-                }
-
-                ret = await this.HandleEntity(guild)
-                break;
             }
 
-            default: {
-                this.data.Reply({ content: `Unknown type "${Type}", valid types: server, user` })
-                return CommandResponseCodes.USER_ERROR
-            }
+            const embed = this.GetBaseEmbed()
+                .setDescription(ret ?? `Successfully modified prefixes`)
+
+            await this.data.Reply({
+                embeds: [embed]
+            })
+
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("PrefixAlias error:", error)
+            await this.data.Reply({
+                content: "Failed to modify prefixes. Please try again later.",
+                ephemeral: true
+            })
+            throw error
         }
-
-        const embed = this.GetBaseEmbed()
-            .setDescription(ret ?? `Successfully modified prefixes`)
-
-        await this.data.Reply({
-            embeds: [embed]
-        })
-
-
-
-        return CommandResponseCodes.OK
     }
 
     private async HandleEntity(entity: User | Guild) {
         const { Prefix, Clear, Remove, List } = this.data.args
 
-        if (List) {
-            if (entity.prefixes.length === 0) return "No prefix aliases found"
-            return entity.prefixes.join(", ")
-        }
+        try {
+            if (List) {
+                if (entity.prefixes.length === 0) return "No prefix aliases found"
+                return entity.prefixes.join(", ")
+            }
 
-        if (Clear) {
-            entity.prefixes = []
-            await entity.Save()
-        }
+            if (Clear) {
+                entity.prefixes = []
+                await entity.Save()
+            }
 
-        if (Remove) {
-            entity.prefixes = entity.prefixes.filter(el => el !== Prefix)
-            await entity.Save()
+            if (Remove) {
+                if (!Prefix) {
+                    throw new Error("Prefix required for remove operation")
+                }
+                entity.prefixes = entity.prefixes.filter(el => el !== Prefix)
+                await entity.Save()
+            } else if (Prefix) {
+                if (entity.prefixes.includes(Prefix)) {
+                    return `Prefix "${Prefix}" already exists`
+                }
+                entity.prefixes.push(Prefix)
+                await entity.Save()
+            }
+        } catch (error) {
+            Logger.Error("PrefixAlias HandleEntity error:", error)
+            throw error
         }
-        
-        entity.prefixes.push(Prefix)
-        await entity.Save()
     }
 
 }

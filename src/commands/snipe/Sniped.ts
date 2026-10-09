@@ -19,6 +19,7 @@ import { Canvas } from "canvas";
 import sharp from "sharp";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 import { CONTEXT_FULL } from "@src/utils/discord/interaction";
+import { Logger } from "@src/class/Logger";
 
 type Color = string
 
@@ -97,33 +98,37 @@ class Sniped extends CommandBase implements CommandAbstract {
         const user = this.data.GetUser()
         const { Username } = this.data.args
 
-        const fetcher = await Fetcher.Create(user.id)
+        try {
+            const fetcher = await Fetcher.Create(user.id)
 
-        const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
-        if (profileError) {
-            this.data.Reply(this.HandleProfileError(profileError, Username))
-            return CommandResponseCodes.USER_ERROR
-        }
+            const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
+            if (profileError) {
+                Logger.Error("Sniped profile error:", profileError)
+                await this.data.Reply(this.HandleProfileError(profileError, Username))
+                return CommandResponseCodes.ERROR
+            }
 
-        const from = moment()
-        from.startOf("day").subtract(2, "months")
-        const to = moment()
-        to.startOf("day").add(1, "day")
+            const from = moment()
+            from.startOf("day").subtract(2, "months")
+            const to = moment()
+            to.startOf("day").add(1, "day")
 
-        const gainPromise = HandleAsync(fetcher.SnipeGetScores({ name: profile.id, gains: true, country: profile.country_code, from: from.toDate(), to: to.toDate() }))
-        const lossesPromise = HandleAsync(fetcher.SnipeGetScores({ name: profile.id, gains: false, country: profile.country_code, from: from.toDate(), to: to.toDate() }))
+            const gainPromise = HandleAsync(fetcher.SnipeGetScores({ name: profile.id, gains: true, country: profile.country_code, from: from.toDate(), to: to.toDate() }))
+            const lossesPromise = HandleAsync(fetcher.SnipeGetScores({ name: profile.id, gains: false, country: profile.country_code, from: from.toDate(), to: to.toDate() }))
 
-        const [gainsScores, gainsError] = await gainPromise
-        if (gainsError) {
-            this.data.Reply(this.HandleProfileError(gainsError, Username))
-            return CommandResponseCodes.USER_ERROR
-        }
+            const [gainsScores, gainsError] = await gainPromise
+            if (gainsError) {
+                Logger.Error("Sniped gains error:", gainsError)
+                await this.data.Reply(this.RenderApiError())
+                return CommandResponseCodes.ERROR
+            }
 
-        const [lossesScores, lossesError] = await lossesPromise
-        if (lossesError) {
-            this.data.Reply(this.HandleProfileError(lossesError, Username))
-            return CommandResponseCodes.USER_ERROR
-        }
+            const [lossesScores, lossesError] = await lossesPromise
+            if (lossesError) {
+                Logger.Error("Sniped losses error:", lossesError)
+                await this.data.Reply(this.RenderApiError())
+                return CommandResponseCodes.ERROR
+            }
 
         const gains: SnipeData = {
             total: gainsScores.length,
@@ -220,10 +225,15 @@ class Sniped extends CommandBase implements CommandAbstract {
             .setImage("attachment://chart.png")
 
 
-        await this.data.Reply({ embeds: [embed], files: [{ attachment: chart, name: "chart.png" }], components: [] })
+            await this.data.Reply({ embeds: [embed], files: [{ attachment: chart, name: "chart.png" }], components: [] })
 
 
-        return CommandResponseCodes.OK
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("Sniped error:", error)
+            await this.data.Reply(this.RenderApiError())
+            throw error
+        }
     }
 
     private createWeeklyChart(data: SnipeData, type: "gains" | "losses", username: string) {
