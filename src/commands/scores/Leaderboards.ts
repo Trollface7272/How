@@ -104,109 +104,133 @@ class Leaderboards extends CommandBase implements CommandAbstract {
     }
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
-        let isButton = false
-        if (this.data.IsInteraction()) {
-            const interaction = this.data.GetInteraction()
-            if (interaction.isButton()) {
-                isButton = true
-                const [cmd, id, page] = interaction.customId.split(";")
-                this.args.Page = parseInt(page)
+        
+        try {
+            let isButton = false
+            if (this.data.IsInteraction()) {
+                const interaction = this.data.GetInteraction()
+                if (interaction.isButton()) {
+                    isButton = true
+                    const [cmd, id, page] = interaction.customId.split(";")
+                    this.args.Page = parseInt(page)
+                }
             }
-        }
 
-        const fetcher = await Fetcher.Create(user.id)
+            const fetcher = await Fetcher.Create(user.id)
 
-        if (this.data.GetCommand().startsWith("r")) {
-            const [recent, recentErr] = await HandleAsync(fetcher.GetUserScores({ Id: user.osu.userId, Limit: 1, Type: "recent", Gamemode: this.args.Gamemode }))
-            if (recentErr) {
-                Logger.Error(recentErr)
+            if (this.data.GetCommand().startsWith("r")) {
+                if (!user.osu?.userId) {
+                    await this.data.Reply(this.RenderNoUserError())
+                    return CommandResponseCodes.USER_ERROR
+                }
+                
+                const [recent, recentErr] = await HandleAsync(fetcher.GetUserScores({ Id: user.osu.userId, Limit: 1, Type: "recent", Gamemode: this.args.Gamemode }))
+                if (recentErr) {
+                    Logger.Error("Leaderboards recent fetch error:", recentErr)
+                    await this.data.Reply(this.RenderApiError())
+                    return CommandResponseCodes.ERROR
+                }
+                if (recent.length === 0) {
+                    await this.data.Reply(this.RenderNoScores())
+                    return CommandResponseCodes.USER_ERROR
+                }
+                this.args.Map = recent[0].BeatmapId
+            }
+
+            const { Type, Gamemode, Page, Mods } = this.args
+            const cached = isButton ? cache.get<cache>(this.oldComponentId) : null
+
+
+            const Map = this.data.args.Map || await this.data.GetBeatmapFromConversation()
+            if (!Map) {
+                await this.data.Reply(this.RenderNoBeatmapError())
+                return CommandResponseCodes.USER_ERROR
+            }
+
+
+            const [map, mapErr] = isButton && cached?.map ? [cached.map, null] : await HandleAsync(fetcher.GetBeatmap({ id: Map, Gamemode }))
+            if (mapErr) {
+                Logger.Error("Leaderboards beatmap fetch error:", mapErr)
+                await this.data.Reply(this.RenderApiError())
                 return CommandResponseCodes.ERROR
             }
-            if (recent.length === 0) {
+            if (!map.is_scoreable) {
+                await this.data.Reply(this.RenderBeatmapUnscoreable())
+                return CommandResponseCodes.USER_ERROR
+            }
+
+            const [lb, scoresErr] = isButton && cached?.lb ? [cached.lb, null] : await HandleAsync(fetcher.GetLeaderboards({ id: Map, mods: Mods, gamemode: Gamemode, type: Type }))
+            if (scoresErr) {
+                Logger.Error("Leaderboards scores fetch error:", scoresErr)
+                const errorReply = this.HandleLeaderboardsError(scoresErr)
+                await this.data.Reply(errorReply)
+                return CommandResponseCodes.ERROR
+            }
+            const { user_score } = lb
+            const scores = lb.scores.slice(Page * 10, (Page + 1) * 10)
+            if (scores.length === 0) {
                 await this.data.Reply(this.RenderNoScores())
                 return CommandResponseCodes.USER_ERROR
             }
-            this.args.Map = recent[0].BeatmapId
-        }
 
-        const { Type, Gamemode, Page, Mods } = this.args
-        const cached = isButton ? cache.get<cache>(this.oldComponentId) : null
-
-
-        const Map = this.data.args.Map || await this.data.GetBeatmapFromConversation()
-        if (!Map) {
-            await this.data.Reply(this.RenderNoBeatmapError())
-            return CommandResponseCodes.USER_ERROR
-        }
-
-
-        const [map, mapErr] = isButton ? [cached.map] : await HandleAsync(fetcher.GetBeatmap({ id: Map, Gamemode }))
-        if (mapErr) {
-            await this.data.Reply(this.RenderApiError())
-            Logger.Error(mapErr)
-            return CommandResponseCodes.OK
-        }
-        if (!map.is_scoreable) {
-            await this.data.Reply(this.RenderBeatmapUnscoreable())
-            return CommandResponseCodes.USER_ERROR
-        }
-
-        const [lb, scoresErr] = isButton ? [cached.lb] : await HandleAsync(fetcher.GetLeaderboards({ id: Map, mods: Mods, gamemode: Gamemode, type: Type }))
-        if (scoresErr) {
-            const errorReply = this.HandleLeaderboardsError(scoresErr)
-            if (errorReply) {
-                this.data.Reply(errorReply)
-                return CommandResponseCodes.USER_ERROR
+            const userids = lb.scores.map(score => score.UserId)
+            const [users, usersErr] = isButton && cached?.users ? [cached.users, null] : await HandleAsync(fetcher.GetByUserIds({ ids: userids }))
+            if (usersErr) {
+                Logger.Error("Leaderboards user fetch error:", usersErr)
+                // Continue without user ranks if this fails
             }
-            return CommandResponseCodes.ERROR
-        }
-        const { user_score } = lb
-        const scores = lb.scores.slice(Page * 10, (Page + 1) * 10)
-        if (scores.length === 0) {
-            await this.data.Reply(this.RenderNoScores())
-            return CommandResponseCodes.USER_ERROR
-        }
-
-        const userids = lb.scores.map(score => score.UserId)
-        const users = isButton ? cached.users : await fetcher.GetByUserIds({ ids: userids })
-        const userRanks: { [key: number]: Profile.FromIds } = {}
-        users.forEach(user => userRanks[user.id] = user)
-        scores.forEach(score => score.User.global_rank = userRanks[score.UserId].statistics_rulesets[Gamemode].global_rank)
-
-        const ejsScoresData = scores.map(score => {
-            return {
-                index: score.index, userId: score.UserId, username: score.User.username, userUrl: score.User.url,
-                userRank: score.User.global_rank, pp: score.PP, accuracy: score.Accuracy, mods: score.Mods.Formatted,
-                grade: score.Grade, score: score.ScoreFormatted, combo: score.MaxCombo, max_combo: map.max_combo, misses: score.Statistics.miss, created_at: score.EndedAt
+            
+            const userRanks: { [key: number]: Profile.FromIds } = {}
+            if (users) {
+                users.forEach(user => userRanks[user.id] = user)
+                scores.forEach(score => {
+                    if (userRanks[score.UserId]) {
+                        score.User.global_rank = userRanks[score.UserId].statistics_rulesets[Gamemode]?.global_rank
+                    }
+                })
             }
-        })
 
-        const embed = this.GetBaseEmbed()
-        const text = TextRenderer.render("leaderboards", {
-            scores: ejsScoresData, user_score: user_score, author: user.osu?.userId
-        })
-
-        embed.setDescription(text)
-            .setAuthor({
-                name: `Top ${Page * 10 + 1}-${Math.min((Page + 1) * 10, lb.scores.length)} ${Type == LeaderboardsType.friend ? "Friend" : Type == LeaderboardsType.country ? "Country" : "Global"} Scores On ${map.beatmapset.title} [${map.version}]`, iconURL: GetFlag(scores[0].User.country_code), url: map.url
+            const ejsScoresData = scores.map(score => {
+                return {
+                    index: score.index, userId: score.UserId, username: score.User.username, userUrl: score.User.url,
+                    userRank: score.User.global_rank, pp: score.PP, accuracy: score.Accuracy, mods: score.Mods.Formatted,
+                    grade: score.Grade, score: score.ScoreFormatted, combo: score.MaxCombo, max_combo: map.max_combo, misses: score.Statistics.miss, created_at: score.EndedAt
+                }
             })
-            .setThumbnail(map.beatmapset.covers["list@2x"])
+
+            const embed = this.GetBaseEmbed()
+            const text = TextRenderer.render("leaderboards", {
+                scores: ejsScoresData, user_score: user_score, author: user.osu?.userId
+            })
+
+            embed.setDescription(text)
+                .setAuthor({
+                    name: `Top ${Page * 10 + 1}-${Math.min((Page + 1) * 10, lb.scores.length)} ${Type == LeaderboardsType.friend ? "Friend" : Type == LeaderboardsType.country ? "Country" : "Global"} Scores On ${map.beatmapset.title} [${map.version}]`, iconURL: GetFlag(scores[0].User.country_code), url: map.url
+                })
+                .setThumbnail(map.beatmapset.covers["list@2x"])
 
 
 
-        const [_, err] = await HandleAsync(this.data.Reply({ embeds: [embed], components: this.RenderComponents(Page, Math.ceil(lb.scores.length / 10)) }))
+            const [_, err] = await HandleAsync(this.data.Reply({ embeds: [embed], components: this.RenderComponents(Page, Math.ceil(lb.scores.length / 10)) }))
 
-        if (!err) {
-            componentCache.set(this.componentId, this.args)
-            cache.set(this.componentId, { lb, map, users })
+            if (!err) {
+                componentCache.set(this.componentId, this.args)
+                cache.set(this.componentId, { lb, map, users })
 
-            if (this.oldComponentId) {
-                cache.del(this.oldComponentId)
-                componentCache.del(this.oldComponentId)
+                if (this.oldComponentId) {
+                    cache.del(this.oldComponentId)
+                    componentCache.del(this.oldComponentId)
+                }
+            } else {
+                Logger.Error("Leaderboards reply error:", err)
             }
-        }
 
-        return CommandResponseCodes.OK
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("Leaderboards error:", error)
+            await this.data.Reply(this.RenderApiError())
+            throw error
+        }
     }
 
     private RenderComponents(curentPage: number, maxPage: number) {

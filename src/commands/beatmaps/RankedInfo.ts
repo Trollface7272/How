@@ -48,48 +48,29 @@ class RankedInfo extends CommandBase implements CommandAbstract {
         this.data = new RankedInfoData(data)
     }
     public async Handle(): Promise<CommandResponseCodes> {
-        const user = this.data.GetUser()
-
-        const { Day, Month, Year, Gamemode } = this.data.args
-
-        const fetcher = await Fetcher.Create(user.id)
-
-        const start = new Date(Year, Month, 1)
-        const end = new Date(Year, Month + 1, 0)
-
-        if (Day) {
-            start.setDate(Day)
-            end.setDate(Day)
-        }
-
-        const [sets, sets_err] = await HandleAsync(BeatmapSetFactory.GetByRange(start, end))
-
-        const info = {
-            drain: [],
-            length: [],
-        }
-
-        for (const set of sets) {
-            for (const map of set.beatmaps) {
-                info.drain.push(map.hit_length)
-                info.length.push(map.total_length)
-            }
-        }
-
-
-
-
-
-
-        
-
-        console.log(info, {
-            a: convertSeconds(info.drain.sum()),
-            b: convertSeconds(info.length.sum())
+        await this.data.Reply({
+            content: "This command is not yet implemented.",
+            ephemeral: true
         })
+        return CommandResponseCodes.USER_ERROR
         
-
-        return CommandResponseCodes.OK
+        // TODO: Complete implementation
+        // const user = this.data.GetUser()
+        // const { Day, Month, Year, Gamemode } = this.data.args
+        // const fetcher = await Fetcher.Create(user.id)
+        // const start = new Date(Year, Month, 1)
+        // const end = new Date(Year, Month + 1, 0)
+        // if (Day) {
+        //     start.setDate(Day)
+        //     end.setDate(Day)
+        // }
+        // const [sets, sets_err] = await HandleAsync(BeatmapSetFactory.GetByRange(start, end))
+        // if (sets_err) {
+        //     Logger.Error("RankedInfo error:", sets_err)
+        //     await this.data.Reply(this.RenderApiError())
+        //     return CommandResponseCodes.ERROR
+        // }
+        // ... process and render results
     }
 
 }

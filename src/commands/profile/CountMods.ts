@@ -53,55 +53,68 @@ class CountMods extends CommandBase implements CommandAbstract {
         const Id = !Username && !_id ? user?.osu?.userId : _id
 
         if (!Id && !Username) {
-            this.data.Reply(this.RenderNoUserError())
+            await this.data.Reply(this.RenderNoUserError())
             return CommandResponseCodes.USER_ERROR
         }
 
-        const fetcher = await Fetcher.Create(user.id)
-        const [_scores, err] = await HandleAsync(
-            Promise.all([
-                fetcher.GetUserScores({ Id: Id, Username: Username, Gamemode: Gamemode, Limit: 100, Type: "best" }),
-                fetcher.GetUserScores({ Id: Id, Username: Username, Gamemode: Gamemode, Limit: 100, Type: "best", Offset: 100 })
-            ])
-        )
-        if (err) {
-            Logger.Error(err)
-            return CommandResponseCodes.USER_ERROR
-        }
-
-        const scores = [..._scores[0], ..._scores[1]]
-
-        const mods = new Map<string, { count: number, mods: string, pp: number }>()
-        for (const score of scores) {
-            let mod = score.Mods.Formatted
-            if (mods.has(mod)) {
-                const val = mods.get(mod)
-                val.count++
-                val.pp += score.weight.pp
-            } else {
-                mods.set(mod, {
-                    count: 1,
-                    mods: mod,
-                    pp: score.weight.pp
-                })
+        try {
+            const fetcher = await Fetcher.Create(user.id)
+            const [_scores, err] = await HandleAsync(
+                Promise.all([
+                    fetcher.GetUserScores({ Id: Id, Username: Username, Gamemode: Gamemode, Limit: 100, Type: "best" }),
+                    fetcher.GetUserScores({ Id: Id, Username: Username, Gamemode: Gamemode, Limit: 100, Type: "best", Offset: 100 })
+                ])
+            )
+            if (err) {
+                Logger.Error("CountMods score fetch error:", err)
+                const errorReply = this.HandleScoreError(err)
+                await this.data.Reply(errorReply)
+                return CommandResponseCodes.ERROR
             }
+
+            const scores = [..._scores[0], ..._scores[1]]
+
+            if (scores.length === 0) {
+                await this.data.Reply(this.RenderNoScores())
+                return CommandResponseCodes.USER_ERROR
+            }
+
+            const mods = new Map<string, { count: number, mods: string, pp: number }>()
+            for (const score of scores) {
+                let mod = score.Mods.Formatted
+                if (mods.has(mod)) {
+                    const val = mods.get(mod)
+                    val.count++
+                    val.pp += score.weight.pp
+                } else {
+                    mods.set(mod, {
+                        count: 1,
+                        mods: mod,
+                        pp: score.weight.pp
+                    })
+                }
+            }
+
+            const data: { count: number, mods: string, pp: number }[] = []
+            for (const [mod, vals] of mods) {
+                data.push({ mods: mod, count: vals.count, pp: vals.pp })
+            }
+            data.sort((a, b) => b.count - a.count)
+
+            const description = data.map(el => `**${el.mods}**: ${el.count} (${Math.round(el.pp * 100) / 100}pp)`).join("\n")
+
+            const embed = this.GetBaseEmbed()
+                .setAuthor({ name: `Mods in ${GamemodeNames[Gamemode]} Top Plays for ${scores[0].User.username}`, iconURL: GetFlag(scores[0].User.country_code), url: `https://osu.ppy.sh/users/${scores[0].User.id}` })
+                .setDescription(description)
+                .setThumbnail(scores[0].User.avatar_url)
+
+            await this.data.Reply({ embeds: [embed] })
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("CountMods error:", error)
+            await this.data.Reply(this.RenderApiError())
+            throw error
         }
-
-        const data: { count: number, mods: string, pp: number }[] = []
-        for (const [mod, vals] of mods) {
-            data.push({ mods: mod, count: vals.count, pp: vals.pp })
-        }
-        data.sort((a, b) => b.count - a.count)
-
-        const description = data.map(el => `**${el.mods}**: ${el.count} (${Math.round(el.pp * 100) / 100}pp)`).join("\n")
-
-        const embed = this.GetBaseEmbed()
-            .setAuthor({ name: `Mods in ${GamemodeNames[Gamemode]} Top Plays for ${scores[0].User.username}`, iconURL: GetFlag(scores[0].User.country_code), url: `https://osu.ppy.sh/users/${scores[0].User.id}` })
-            .setDescription(description)
-            .setThumbnail(scores[0].User.avatar_url)
-
-        await this.data.Reply({ embeds: [embed] })
-        return CommandResponseCodes.OK
     }
 
 }

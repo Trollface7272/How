@@ -16,6 +16,8 @@ import { assert } from "console";
 import context from "node-execution-context";
 import { Context } from "@src/types/Context";
 import { channelBeatmapCache } from "@src/utils/osu/cache";
+import { UserFacingError } from "@src/class/errors/UserFacingError";
+import { ErrorMapper } from "@src/class/errors/ErrorMapper";
 
 export class InteractionCreateData implements EventData, MessageEventData {
     private _user: User
@@ -252,8 +254,8 @@ export class InteractionCreate implements Event {
                     }
                     resolve(0)
                 } catch (err) {
-                    Logger.Error(err)
-                    Logger.Trace()
+                    await this.handleError(err, data, commandData.name)
+                    resolve(0)
                 }
             }, {
                 command: commandData.name,
@@ -263,6 +265,28 @@ export class InteractionCreate implements Event {
             })
 
         })
+    }
+
+    private async handleError(err: unknown, data: InteractionCreateData, commandName: string): Promise<void> {
+        Logger.Error(`Error in command "${commandName}":`, err)
+        Logger.Trace()
+
+        const userError = ErrorMapper.toUserFacingError(err, `executing command ${commandName}`)
+        const reply = userError.toReply()
+
+        try {
+            await data.Reply(reply)
+        } catch (replyError) {
+            Logger.Error("Failed to send error reply:", replyError)
+            try {
+                await data.Reply({
+                    content: "An error occurred and the bot was unable to respond properly.",
+                    ephemeral: true
+                })
+            } catch (finalError) {
+                Logger.Error("Critical: Failed to send fallback error reply:", finalError)
+            }
+        }
     }
 
 }

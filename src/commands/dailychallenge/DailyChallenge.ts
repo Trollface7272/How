@@ -57,28 +57,36 @@ class DailyChallenge extends CommandBase implements CommandAbstract {
         const { List, Page, Search } = this.data.args
         const PER_PAGE = List ? 10 : 1
 
-        const challenges = await DailyChallengeFactory.GetDailyChallenges({
-            fetchedScores: true
-        }, PER_PAGE, Page * PER_PAGE, { ends_at: 1 })
+        try {
+            const challenges = await DailyChallengeFactory.GetDailyChallenges({
+                fetchedScores: true
+            }, PER_PAGE, Page * PER_PAGE, { ends_at: 1 })
 
-        if (!challenges) {
-            this.data.Reply(this.RenderApiError())
-            Logger.Error(challenges)
+            if (!challenges || challenges.length === 0) {
+                await this.data.Reply({
+                    content: "No daily challenges found.",
+                    ephemeral: true
+                })
+                return CommandResponseCodes.USER_ERROR
+            }
+
+            const embed = this.GetBaseEmbed()
+
+            if (List) {
+                embed.setDescription("Daily challenges list (feature incomplete)")
+            } else {
+                const challenge = challenges[0]
+                embed.setDescription(`Daily challenge info (feature incomplete)`)
+            }
+
+            await this.data.Reply({ embeds: [embed] })
+
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("DailyChallenge error:", error)
+            await this.data.Reply(this.RenderApiError())
             return CommandResponseCodes.ERROR
         }
-
-        const embed = this.GetBaseEmbed()
-
-        if (List) {
-
-        } else {
-            const challenge = challenges[0]
-        }
-
-
-        console.log(challenges)
-
-        return CommandResponseCodes.OK
     }
 
 }

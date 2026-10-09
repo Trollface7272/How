@@ -17,6 +17,8 @@ import { Mods } from "@src/class/api/osu/class/Mods";
 import context from "node-execution-context";
 import { Context } from "@src/types/Context";
 import { channelBeatmapCache } from "@src/utils/osu/cache";
+import { UserFacingError } from "@src/class/errors/UserFacingError";
+import { ErrorMapper } from "@src/class/errors/ErrorMapper";
 
 const regexes = {
     normal: /^\+?(NF|EZ|TD|HD|HR|SD|DT|RX|HT|NC|FL|AU|SO|AP|PF|4K|5K|6K|7K|8K|FI|RD|CN|TP|9K|KC|1K|3K|2K|V2|MR)+$/gi,
@@ -342,8 +344,7 @@ export class MessageCreate implements Event {
                             break;
                     }
                 } catch (err) {
-                    Logger.Error(err)
-                    Logger.Trace()
+                    await this.handleError(err, data, command)
                 }
                 resolve(0)
             }, {
@@ -372,5 +373,26 @@ export class MessageCreate implements Event {
             }
         }
 
+    }
+
+    private async handleError(err: unknown, data: MessageCreateData, commandName: string): Promise<void> {
+        Logger.Error(`Error in command "${commandName}":`, err)
+        Logger.Trace()
+
+        const userError = ErrorMapper.toUserFacingError(err, `executing command ${commandName}`)
+        const reply = userError.toReply()
+
+        try {
+            await data.Reply(reply)
+        } catch (replyError) {
+            Logger.Error("Failed to send error reply:", replyError)
+            try {
+                await data.Reply({
+                    content: "An error occurred and the bot was unable to respond properly."
+                })
+            } catch (finalError) {
+                Logger.Error("Critical: Failed to send fallback error reply:", finalError)
+            }
+        }
     }
 }

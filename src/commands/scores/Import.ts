@@ -43,15 +43,36 @@ class Import extends CommandBase implements CommandAbstract {
 
         const Username = username || user?.osu?.username
 
+        if (!Username) {
+            await this.data.Reply(this.RenderNoUserError())
+            return CommandResponseCodes.USER_ERROR
+        }
+
         const msg = await this.data.Reply({content: `Importing Scores...`})
 
-        const resp = await importScores(Username, user.admin)
+        try {
+            const resp = await importScores(Username, user.admin)
 
-        const embed = this.GetBaseEmbed()
-            .setDescription(resp as string)
-        
-        if (msg) msg.edit({embeds: [embed], content: ""})
-
+            const embed = this.GetBaseEmbed()
+                .setDescription(resp as string)
+            
+            if (msg) {
+                await msg.edit({embeds: [embed], content: ""})
+            } else {
+                await this.data.Reply({embeds: [embed]})
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : "Failed to import scores. Please try again later."
+            const embed = this.GetBaseEmbed()
+                .setDescription(`Error: ${errorMessage}`)
+            
+            if (msg) {
+                await msg.edit({embeds: [embed], content: ""})
+            } else {
+                await this.data.Reply({embeds: [embed]})
+            }
+            return CommandResponseCodes.ERROR
+        }
 
         return CommandResponseCodes.OK
     }

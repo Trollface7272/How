@@ -100,123 +100,155 @@ class Playcount extends CommandBase implements CommandAbstract {
         const Username = _username || user?.osu?.username
 
         if (!Username) {
-            this.data.Reply(this.RenderNoUserError())
+            await this.data.Reply(this.RenderNoUserError())
             return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
         const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: Gamemode }))
         if (profileError) {
-            Logger.Error(profileError)
+            Logger.Error("LineGraph profile error:", profileError)
+            const errorReply = this.HandleProfileError(profileError, Username)
+            await this.data.Reply(errorReply)
             return CommandResponseCodes.ERROR
         }
 
-        let data: [number[], string[]]
-        let datasets: ChartDataset<"line">[]
-        switch (Type) {
-            case Types.Playcount:
-                data = this.GetPlaycountData(profile)
-                break
-            case Types.Rank:
-                data = this.GetRankData(profile)
-                break
-            case Types.WatchedReplays:
-                data = this.GetWatchedReplaysData(profile)
-                break
-            case Types.DailyChallengeThresholds:
-                const vals = await this.GetDailyChallengeThresholdsData(profile)
-                datasets = vals[0]
-                data = [null, vals[1]]
-                break
-        }
-        const [playcountNums, labels] = data
+        try {
+            let data: [number[], string[]]
+            let datasets: ChartDataset<"line">[]
+            switch (Type) {
+                case Types.Playcount:
+                    data = this.GetPlaycountData(profile)
+                    break
+                case Types.Rank:
+                    data = this.GetRankData(profile)
+                    break
+                case Types.WatchedReplays:
+                    data = this.GetWatchedReplaysData(profile)
+                    break
+                case Types.DailyChallengeThresholds:
+                    const vals = await this.GetDailyChallengeThresholdsData(profile)
+                    datasets = vals[0]
+                    data = [null, vals[1]]
+                    break
+                default:
+                    await this.data.Reply({
+                        content: "Invalid graph type specified.",
+                        ephemeral: true
+                    })
+                    return CommandResponseCodes.USER_ERROR
+            }
+            const [playcountNums, labels] = data
 
-        const options: ChartOptions = {
-            reverse: false, yLines: true, fill: "start", labels, data: playcountNums, datasets: datasets,
-            yTitle: {
-                display: true,
-                text: "Playcount",
-                color: "rgb(200, 200, 200)",
-                font: {
-                    size: 20
-                }
-            },
-            plugins: [ChartPlugins.osuGraphBgColorPlugin]
-        }
+            if (!playcountNums && !datasets) {
+                await this.data.Reply({
+                    content: "No data available to generate graph.",
+                    ephemeral: true
+                })
+                return CommandResponseCodes.USER_ERROR
+            }
 
-        if (Type === Types.Rank) {
-            options.reverse = true
-            options.fill = null
-            options.yTitle.text = "Rank"
-        } else if (Type === Types.WatchedReplays) {
-            options.yTitle.text = "Replays watched"
-        } else if (Type === Types.DailyChallengeThresholds) {
-            options.yTitle.text = "Top X% score"
-            options.fill = null
-            options.legend = true
-            if (Ranks) {
+            const options: ChartOptions = {
+                reverse: false, yLines: true, fill: "start", labels, data: playcountNums, datasets: datasets,
+                yTitle: {
+                    display: true,
+                    text: "Playcount",
+                    color: "rgb(200, 200, 200)",
+                    font: {
+                        size: 20
+                    }
+                },
+                plugins: [ChartPlugins.osuGraphBgColorPlugin]
+            }
+
+            if (Type === Types.Rank) {
                 options.reverse = true
-            options.yTitle.text = "Top X% rank"
+                options.fill = null
+                options.yTitle.text = "Rank"
+            } else if (Type === Types.WatchedReplays) {
+                options.yTitle.text = "Replays watched"
+            } else if (Type === Types.DailyChallengeThresholds) {
+                options.yTitle.text = "Top X% score"
+                options.fill = null
+                options.legend = true
+                if (Ranks) {
+                    options.reverse = true
+                    options.yTitle.text = "Top X% rank"
+                }
+            }
+
+            const chart = new LineChart(options)
+
+            const chartBuffer = await chart.Render()
+            await this.data.Reply({ files: [{ attachment: chartBuffer, name: "chart.png" }] })
+
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("LineGraph rendering error:", error)
+            await this.data.Reply({
+                content: "Failed to generate graph. Please try again later.",
+                ephemeral: true
+            })
+            throw error
         }
-        }
-
-        const chart = new LineChart(options)
-
-        const chartBuffer = await chart.Render()
-        await this.data.Reply({ files: [{ attachment: chartBuffer, name: "chart.png" }] })
-
-        return CommandResponseCodes.OK
     }
     public async GetDailyChallengeThresholdsData(profile: Profile.FromId): Promise<[ChartDataset<"line">[], string[]]> {
-        const challenge = await DailyChallengeFactory.GetCurrentChallenge()
-        if (!challenge) return [[], []]
-        const datasets: ChartDataset<"line">[] = []
-        const labels: string[] = []
-        const data = {
-            top10: [],
-            top50: [],
-            first: []
-        }
-        const thresholds = challenge.thresholds.slice(1)
-        for (const threshold of thresholds) {
-            if (threshold.date.getMinutes() < 10) labels.push(`${threshold.date.getHours()}:00`)
-            else labels.push("")
-            if (this.data.args.Ranks) {
-                data.top10.push(threshold.top10.position)
-                data.top50.push(threshold.top50.position)
-                data.first.push(threshold.rank1.position)
-            } else {
-                data.top10.push(threshold.top10.score)
-                data.top50.push(threshold.top50.score)
-                data.first.push(threshold.rank1.score)
+        try {
+            const challenge = await DailyChallengeFactory.GetCurrentChallenge()
+            if (!challenge || !challenge.thresholds || challenge.thresholds.length === 0) {
+                return [[], []]
             }
+            const datasets: ChartDataset<"line">[] = []
+            const labels: string[] = []
+            const data = {
+                top10: [],
+                top50: [],
+                first: []
+            }
+            const thresholds = challenge.thresholds.slice(1)
+            for (const threshold of thresholds) {
+                if (threshold.date.getMinutes() < 10) labels.push(`${threshold.date.getHours()}:00`)
+                else labels.push("")
+                if (this.data.args.Ranks) {
+                    data.top10.push(threshold.top10.position)
+                    data.top50.push(threshold.top50.position)
+                    data.first.push(threshold.rank1.position)
+                } else {
+                    data.top10.push(threshold.top10.score)
+                    data.top50.push(threshold.top50.score)
+                    data.first.push(threshold.rank1.score)
+                }
+            }
+            const Top = this.data.args.Top
+            if (Top === TopTypes.All || Top === TopTypes.Top10) 
+                datasets.push({
+                    data: data.top10,
+                    borderColor: "rgb(0, 255, 0)",
+                    showLine: true,
+                    tension: 0,
+                    label: "Top 10%"
+                })
+            if (Top === TopTypes.All || Top === TopTypes.Top50) 
+                datasets.push({
+                    data: data.top50,
+                    borderColor: "rgb(255, 0, 0)",
+                    showLine: true,
+                    tension: 0,
+                    label: "Top 50%"
+                })
+            if (!this.data.args.Ranks && (Top === TopTypes.All || Top === TopTypes.First)) 
+                datasets.push({
+                    data: data.first,
+                    borderColor: "rgb(0, 0, 255)",
+                    showLine: true,
+                    tension: 0,
+                    label: "1st"
+                })
+            return [datasets, labels]
+        } catch (error) {
+            Logger.Error("Error fetching daily challenge thresholds:", error)
+            return [[], []]
         }
-        const Top = this.data.args.Top
-        if (Top === TopTypes.All || Top === TopTypes.Top10) 
-            datasets.push({
-                data: data.top10,
-                borderColor: "rgb(0, 255, 0)",
-                showLine: true,
-                tension: 0,
-                label: "Top 10%"
-            })
-        if (Top === TopTypes.All || Top === TopTypes.Top50) 
-            datasets.push({
-                data: data.top50,
-                borderColor: "rgb(255, 0, 0)",
-                showLine: true,
-                tension: 0,
-                label: "Top 50%"
-            })
-        if (!this.data.args.Ranks && (Top === TopTypes.All || Top === TopTypes.First)) 
-            datasets.push({
-                data: data.first,
-                borderColor: "rgb(0, 0, 255)",
-                showLine: true,
-                tension: 0,
-                label: "1st"
-            })
-        return [datasets, labels]
     }
 
     private GetPlaycountData(profile: Profile.FromId): [number[], string[]] {

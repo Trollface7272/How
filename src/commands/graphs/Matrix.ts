@@ -4,6 +4,7 @@ import { CommandData } from "@src/class/base/CommandData";
 import { CommandEmitterInstance } from "@src/class/CommandEmitter";
 import { CommandBase } from "@src/class/base/Command";
 import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
+import { Logger } from "@src/class/Logger";
 
 import { MatrixChart } from "@src/class/graphs/Matrix";
 
@@ -35,11 +36,19 @@ class Matrix extends CommandBase implements CommandAbstract {
         this.data = new MatrixData(data)
     }
     public async Handle(): Promise<CommandResponseCodes> {
-
-        const chart = new MatrixChart()
-        const buffer = await chart.Render()
-        this.data.Reply({ files: [{ attachment: buffer, name: "chart.png" }] })
-        return CommandResponseCodes.OK
+        try {
+            const chart = new MatrixChart()
+            const buffer = await chart.Render()
+            await this.data.Reply({ files: [{ attachment: buffer, name: "chart.png" }] })
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("Matrix chart error:", error)
+            await this.data.Reply({
+                content: "Failed to generate matrix chart.",
+                ephemeral: true
+            })
+            throw error
+        }
     }
 
 }
