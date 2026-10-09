@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { afterAll, beforeAll, test } from "@jest/globals"
+import { afterAll, beforeAll, test } from "vitest"
 import { Connect, Disconnect } from "../class/database/Main"
 import { Fetcher } from "../class/api/osu/Fetcher"
 import { Profile } from "../class/api/osu/class/Profile"

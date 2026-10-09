@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { User, UserFactory } from "../class/database/User";
 import { Connect, Disconnect } from "../class/database/Main";
 import { GuildFactory } from "../class/database/Guild";

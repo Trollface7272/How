@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { expect, test } from "@jest/globals";
+import { expect, test } from "vitest";
 import { Connect, Disconnect } from "../class/database/Main";
 import { DBReminder } from "../class/database/Reminder";
 import { ObjectId } from "mongodb";

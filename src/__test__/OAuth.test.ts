@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { expect, test } from "@jest/globals"
+import { expect, test } from "vitest"
 import { OAuthGenerator } from "../class/api/osu/OAuth"
 import { Connect, Disconnect } from "../class/database/Main"
 

@@ -27,13 +27,13 @@ export class ErrorMapper {
         }
 
         // FetcherError (custom osu! API errors)
-        if (err instanceof FetcherError) {
-            return this.mapFetcherError(err)
+        if (this.isFetcherError(err)) {
+            return this.mapFetcherError(err as FetcherError)
         }
 
         // AxiosError (HTTP errors)
-        if (err instanceof AxiosError) {
-            return this.mapAxiosError(err)
+        if (this.isAxiosError(err)) {
+            return this.mapAxiosError(err as AxiosError)
         }
 
         // MongoDB/Database errors
@@ -70,9 +70,17 @@ export class ErrorMapper {
     private static mapAxiosError(err: AxiosError): UserFacingError {
         const status = err.response?.status
 
+        // Check for network errors first (connection issues)
+        if (err.code) {
+            const networkErrorCodes = ['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'ERR_NETWORK'];
+            if (networkErrorCodes.includes(err.code)) {
+                return new NetworkError("osu! API");
+            }
+        }
+
         if (!status) {
             // Network error (no response)
-            return new NetworkError("external API")
+            return new NetworkError("osu! API")
         }
 
         switch (status) {
@@ -93,6 +101,29 @@ export class ErrorMapper {
                 Logger.Error(`Unhandled HTTP status ${status}:`, err)
                 return new UnexpectedError("API request")
         }
+    }
+
+    /**
+     * Check if error is AxiosError
+     */
+    private static isAxiosError(err: unknown): boolean {
+        if (!err || typeof err !== "object") return false
+        return (err as any).isAxiosError === true
+    }
+
+    /**
+     * Check if error is FetcherError
+     */
+    private static isFetcherError(err: unknown): boolean {
+        if (!err || typeof err !== "object") return false
+        const hasCode = typeof (err as any).code === "number"
+        const hasMessage = typeof (err as any).message === "string"
+        // Check if it has the FetcherError shape
+        return hasCode && hasMessage && (
+            (err as any).code === FetcherErrors.UserNotLinked ||
+            (err as any).code === FetcherErrors.RequiresSupporter ||
+            (err as any).code === FetcherErrors.MissingIdentifyScope
+        )
     }
 
     /**
