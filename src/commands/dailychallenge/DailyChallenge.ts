@@ -171,3 +171,5 @@ DailyChallenge.interactionData
 
 CommandEmitterInstance.AddCommand(DailyChallenge, DailyChallenge.names)
 InteractionRegistrerInstance.AddInteraction(DailyChallenge.interactionData)
+
+export default DailyChallenge;

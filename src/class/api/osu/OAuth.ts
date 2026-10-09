@@ -92,7 +92,7 @@ class cOAuthGenerator {
 
         this.clientCredentials = {
             access_token: data.access_token,
-            expires_in: new Date(Date.now() + data.expires_in),
+            expires_in: new Date(Date.now() + data.expires_in * 1000),
             token_type: data.token_type,
             scope: ["public"]
         }

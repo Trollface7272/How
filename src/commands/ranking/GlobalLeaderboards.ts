@@ -35,7 +35,7 @@ class GlobalLeaderboardsData extends CommandData implements CommandDataAbstract 
 
         return {
             Country: country,
-            Me: this.data.GetBoolean("me", []),
+            Me: this.data.GetBoolean("me", ["-me"]),
             Type: type,
             Gamemode: this.data.GetGamemode(),
             Friends: this.data.GetBoolean("friends", ["f"])
@@ -159,3 +159,5 @@ GlobalLeaderboards.helpData
         .setUsage("-me"))
     .addArg(GamemodeArg)
     .addArg(FriendsArg);
+
+export default GlobalLeaderboards;

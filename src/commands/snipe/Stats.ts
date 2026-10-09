@@ -69,7 +69,7 @@ class SnipeStats extends CommandBase implements CommandAbstract {
             return CommandResponseCodes.USER_ERROR
         }
         if (lossesError) {
-            console.log(gainsError)
+            console.log(lossesError)
             this.data.Reply(this.RenderApiError())
             return CommandResponseCodes.USER_ERROR
         }
@@ -104,3 +104,5 @@ SnipeStats.helpData
     .setUsage("dss [username]")
     .setAliases(SnipeStats.names)
     .addArg(UsernameArg);
+
+export default SnipeStats;

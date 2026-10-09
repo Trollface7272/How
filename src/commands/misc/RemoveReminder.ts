@@ -84,3 +84,5 @@ class RemoveReminder extends CommandBase implements CommandAbstract {
 
 CommandEmitterInstance.AddCommand(RemoveReminder, RemoveReminder.names)
 InteractionRegistrerInstance.AddInteraction(RemoveReminder.interactionData)
+
+export default RemoveReminder;

@@ -97,3 +97,5 @@ RankedInfo.helpData
         .setUsage("15"))
     .addArg(GamemodeArg)
     .setEnabled(false)
+
+export default RankedInfo;

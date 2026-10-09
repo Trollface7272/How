@@ -163,3 +163,5 @@ RemindMe.interactionData
             .setRequired(false));
 
 CommandEmitterInstance.AddCommand(RemindMe, RemindMe.names)
+
+export default RemindMe;

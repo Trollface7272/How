@@ -338,3 +338,5 @@ Sniped.helpData
     .setUsage("sniped [username]")
     .setAliases(Sniped.names)
     .addArg(UsernameArg);
+
+export default Sniped;

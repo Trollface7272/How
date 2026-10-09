@@ -25,9 +25,12 @@ class SettingsData extends CommandData implements CommandDataAbstract {
     }
 
     public GetComandArgs(): args {
+        const enable = this.data.GetBoolean("enable", ["-enable", "e"])
+        const disable = this.data.GetBoolean("disable", ["-disable", "d"])
         return {
-            Type: this.data.GetString("type", ["-type"]) as "user" | "server" ?? "user",
-            Value: this.data.GetBoolean("enable", ["-enable", "e"]) ?? !this.data.GetBoolean("disable", ["-disable", "d"]),
+            Type: (this.data.GetString("type", ["-type"]) as "user" | "server") ?? "user",
+            // GetBoolean returns false when the flag is absent, so ?? never saw a missing flag.
+            Value: enable ? true : disable ? false : true,
             Key: this.data.GetRemaining("setting"),
         }
     }
@@ -64,7 +67,7 @@ class Settings extends CommandBase implements CommandAbstract {
                 this.data.Reply({ content: "User settings" })
                 break
             case "server":
-                this.SetServerSettings()
+                await this.SetServerSettings()
                 break
             default:
                 this.data.Reply({ content: "Invalid type" })
@@ -168,3 +171,5 @@ Settings.helpData
         .setName("disable")
         .setDescription("Disable setting")
         .setUsage("-disable"));
+
+export default Settings;

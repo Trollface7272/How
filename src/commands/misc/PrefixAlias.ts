@@ -7,6 +7,7 @@ import { Guild, GuildFactory } from "@src/class/database/Guild";
 import { User } from "@src/class/database/User";
 import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { CommandHelpArg } from "@src/class/help/CommandHelpArg";
+import { Logger } from "@src/class/Logger";
 
 interface args {
     Type: "server" | "user"
@@ -172,3 +173,5 @@ PrefixAlias.helpData
         .setUsage("!"))
 
 CommandEmitterInstance.AddCommand(PrefixAlias, PrefixAlias.names)
+
+export default PrefixAlias;

@@ -291,3 +291,5 @@ Playcount.helpData
         .setUsage("-top10"))
 
 CommandEmitterInstance.AddCommand(Playcount, Playcount.names)
+
+export default Playcount;

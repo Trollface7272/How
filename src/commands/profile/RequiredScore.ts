@@ -143,3 +143,5 @@ RequiredScore.helpData
         .setDescription("Rank to get requirements for")
         .setUsage("1"))
     .addArg(UsernameArg);
+
+export default RequiredScore;

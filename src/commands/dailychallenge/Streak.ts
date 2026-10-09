@@ -228,3 +228,5 @@ StreakLeaderboards.helpData
         .setUsage("-current"))
 
 CommandEmitterInstance.AddCommand(StreakLeaderboards, StreakLeaderboards.names)
+
+export default StreakLeaderboards;

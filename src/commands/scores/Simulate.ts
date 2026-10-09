@@ -49,3 +49,5 @@ Simulate.helpData
     .setUsage("simulate")
     .setAliases(Simulate.names)
     .setEnabled(false);
+
+export default Simulate;

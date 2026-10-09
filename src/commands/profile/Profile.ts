@@ -190,7 +190,7 @@ class Profile extends CommandBase implements CommandAbstract {
           switch (err.code) {
             case FetcherErrors.UserNotLinked: {
               await this.data.Reply(this.RenderUserNotFound({ username }))
-              return CommandResponseCodes.OK
+              return CommandResponseCodes.USER_ERROR
             }
             case FetcherErrors.MissingIdentifyScope: {
               await this.data.Reply(this.RenderApiError())

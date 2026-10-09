@@ -185,7 +185,7 @@ class Top extends CommandBase implements CommandAbstract {
             if (!Recent && !Random && !Reversed) {
                 const embed = this.RenderGreaterThan({ user: username, total: scores.length, pp: GreaterThan })
                 this.data.Reply({ embeds: [embed] })
-                return CommandResponseCodes.USER_ERROR
+                return CommandResponseCodes.OK
             }
         }
 

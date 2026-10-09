@@ -307,3 +307,5 @@ Leaderboards.helpData
         .setUsage("global"))
     .addArg(GamemodeArg)
     .addArg(ModsArg);
+
+export default Leaderboards;

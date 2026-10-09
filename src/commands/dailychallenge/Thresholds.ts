@@ -118,3 +118,5 @@ DailyChallengeThreshold.helpData
     .setDescription("Display daily challenge thresholds.")
     .setUsage("dcth")
     .setAliases(DailyChallengeThreshold.names);
+
+export default DailyChallengeThreshold;
