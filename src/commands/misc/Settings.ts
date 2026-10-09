@@ -80,25 +80,38 @@ class Settings extends CommandBase implements CommandAbstract {
         const { guild } = context.get<Context>()
         const { Key, Value } = this.data.args
 
-        const keys = Key.split(".")
-        const settings = guild.settings
-        let current = settings
-
-        while (keys.length > 1) {
-            const key = keys.shift()
-            if (!key) break
-            if (!current[key]) {
-                current[key] = {}
-            }
-            current = current[key]
+        if (!Key) {
+            this.data.Reply({ content: "No setting key provided." })
+            return
         }
-        const key = keys.shift()
-        if (!key) return
-        current[key] = Value
 
-        guild.settings = settings
-        await guild.Save()
-        this.data.Reply({ content: `Set setting \`${Key}\` to \`${Value}\`` })
+        try {
+            const keys = Key.split(".")
+            const settings = guild.settings
+            let current = settings
+
+            while (keys.length > 1) {
+                const key = keys.shift()
+                if (!key) break
+                if (!current[key]) {
+                    current[key] = {}
+                }
+                current = current[key]
+            }
+            const key = keys.shift()
+            if (!key) {
+                this.data.Reply({ content: "Invalid setting key." })
+                return
+            }
+            current[key] = Value
+
+            guild.settings = settings
+            await guild.Save()
+            this.data.Reply({ content: `Set setting \`${Key}\` to \`${Value}\`` })
+        } catch (error) {
+            this.data.Reply({ content: "Failed to update server settings. Please try again later." })
+            throw error
+        }
     }
 
 }

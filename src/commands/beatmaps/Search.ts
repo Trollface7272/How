@@ -64,20 +64,33 @@ class Search extends CommandBase implements CommandAbstract {
         const { Gamemode, Text, Type } = this.data.args
         const user = this.data.GetUser()
 
+        if (!Text || Text.trim() === "") {
+            await this.data.Reply({
+                content: "Please provide a search query.",
+                ephemeral: true
+            })
+            return CommandResponseCodes.USER_ERROR
+        }
+
         const fetcher = await Fetcher.Create(user.id)
         const [beatmaps, beatmapsErr] = await HandleAsync(fetcher.SearchBeatmaps({ query: Text, gamemode: Gamemode, type: Type }))
         if (beatmapsErr) {
-            Logger.Error(beatmapsErr)
-            this.data.Reply(this.RenderApiError())
+            Logger.Error("Search error:", beatmapsErr)
+            await this.data.Reply(this.RenderApiError())
             return CommandResponseCodes.ERROR
         }
 
-        if (!beatmaps.total) {
-            this.data.Reply(this.RenderNoBeatmapsFound())
+        if (!beatmaps || !beatmaps.total) {
+            await this.data.Reply(this.RenderNoBeatmapsFound())
             return CommandResponseCodes.USER_ERROR
         }
 
         const sets = beatmaps.beatmapsets.slice(0, 10).filter(set => set)
+
+        if (sets.length === 0) {
+            await this.data.Reply(this.RenderNoBeatmapsFound())
+            return CommandResponseCodes.USER_ERROR
+        }
 
         const data = sets.map((set, i) => ({
             title: set.title, index: i + 1, id: set.id, creator: set.creator, status: set.status, difficultyEmojis: set.DifficultyEmojis,

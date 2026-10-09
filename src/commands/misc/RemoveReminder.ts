@@ -49,30 +49,35 @@ class RemoveReminder extends CommandBase implements CommandAbstract {
         const user = this.data.GetUser();
 
         if (!reminderId) {
-            this.data.Reply({ content: "Invalid reminder ID." });
+            await this.data.Reply({ content: "Invalid reminder ID.", ephemeral: true });
             return CommandResponseCodes.USER_ERROR;
         }
 
-        const foundReminder = await DBReminder.GetReminderById(new ObjectId(reminderId));
+        try {
+            const foundReminder = await DBReminder.GetReminderById(new ObjectId(reminderId));
 
-        if (!foundReminder) {
-            this.data.Reply({ content: "Reminder not found." });
-            return CommandResponseCodes.USER_ERROR;
-        }
-
-        if (foundReminder.userId !== user.id) {
-            const member = this.data.GetMember();
-            if (!member || !member.permissions.has("ManageMessages")) {
-                this.data.Reply({ content: "You can only remove your own reminders or you need Manage Messages permissions.", ephemeral: true });
+            if (!foundReminder) {
+                await this.data.Reply({ content: "Reminder not found.", ephemeral: true });
                 return CommandResponseCodes.USER_ERROR;
             }
+
+            if (foundReminder.userId !== user.id) {
+                const member = this.data.GetMember();
+                if (!member || !member.permissions.has("ManageMessages")) {
+                    await this.data.Reply({ content: "You can only remove your own reminders or you need Manage Messages permissions.", ephemeral: true });
+                    return CommandResponseCodes.USER_ERROR;
+                }
+            }
+
+            await DBReminder.DeleteReminder(new ObjectId(reminderId));
+
+            await this.data.Reply({ content: "Reminder removed", ephemeral: true });
+
+            return CommandResponseCodes.OK
+        } catch (error) {
+            await this.data.Reply({ content: "Failed to remove reminder. Please try again later.", ephemeral: true });
+            throw error
         }
-
-        await DBReminder.DeleteReminder(new ObjectId(reminderId));
-
-        this.data.Reply({ content: "Remidner removed", ephemeral: true });
-
-        return CommandResponseCodes.OK
     }
 
 }
