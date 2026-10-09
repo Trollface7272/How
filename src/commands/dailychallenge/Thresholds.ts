@@ -42,59 +42,70 @@ class DailyChallengeThreshold extends CommandBase implements CommandAbstract {
     public async Handle(): Promise<CommandResponseCodes> {
         const user = this.data.GetUser()
 
-        const challenge = await DailyChallengeFactory.GetCurrentChallenge()
+        try {
+            const challenge = await DailyChallengeFactory.GetCurrentChallenge()
 
-        if (!challenge) {
-            this.data.Reply({ content: "No active challenge" })
-            return CommandResponseCodes.ERROR
-        }
+            if (!challenge) {
+                await this.data.Reply({ content: "No active challenge found.", ephemeral: true })
+                return CommandResponseCodes.USER_ERROR
+            }
 
-        const [userScore, userScoreError] = user.osu ? await HandleAsync(DailyChallengeScoreFactory.GetDailyChallengeScoreByUser(user?.osu?.userId, challenge.id)) : [null, null]
-        if (userScoreError) {
-            this.data.Reply(this.RenderApiError())
-            Logger.Error(userScoreError)
-            return CommandResponseCodes.ERROR
-        }
-        const fetcher = await Fetcher.Create(user.id)
-        const [beatmap, beatmapErr] = await HandleAsync(fetcher.GetBeatmap({ id: challenge.current_playlist_item.beatmap_id, Gamemode: GamemodeNumToStr[challenge.current_playlist_item.ruleset_id] }))
-        if (beatmapErr) {
-            this.data.Reply(this.RenderApiError())
-            Logger.Error(beatmapErr)
-            return CommandResponseCodes.ERROR
-        }
+            const [userScore, userScoreError] = user.osu ? await HandleAsync(DailyChallengeScoreFactory.GetDailyChallengeScoreByUser(user?.osu?.userId, challenge.id)) : [null, null]
+            if (userScoreError) {
+                Logger.Error("DailyChallengeThresholds user score error:", userScoreError)
+                // Continue without user score if it fails
+            }
+            
+            const fetcher = await Fetcher.Create(user.id)
+            const [beatmap, beatmapErr] = await HandleAsync(fetcher.GetBeatmap({ id: challenge.current_playlist_item.beatmap_id, Gamemode: GamemodeNumToStr[challenge.current_playlist_item.ruleset_id] }))
+            if (beatmapErr) {
+                Logger.Error("DailyChallengeThresholds beatmap error:", beatmapErr)
+                await this.data.Reply(this.RenderApiError())
+                return CommandResponseCodes.ERROR
+            }
 
-        const user_score = userScore ? { score: userScore.TotalScore.toLocaleString(), rank: userScore.position.toLocaleString() } : null
+            const user_score = userScore ? { score: userScore.TotalScore.toLocaleString(), rank: userScore.position.toLocaleString() } : null
 
-        const threshold = challenge.thresholds.at(-1)
+            const threshold = challenge.thresholds.at(-1)
+            
+            if (!threshold) {
+                await this.data.Reply({ content: "No threshold data available yet.", ephemeral: true })
+                return CommandResponseCodes.USER_ERROR
+            }
 
-        const text = TextRenderer.render("dailychallenge/threshold", {
-            total: threshold.total, score1Threshold: threshold.rank1.score.toLocaleString(),
-            score10Threshold: threshold.top10.score.toLocaleString(), rank10Threshold: threshold.top10.position.toLocaleString(),
-            score50Threshold: threshold.top50.score.toLocaleString(), rank50Threshold: threshold.top50.position.toLocaleString(),
-            updated: threshold.date.toDiscordToolTip(),
-            user_score, user_percent: userScore ? (userScore.position / threshold.total * 100).roundFixed(2) : null
-        })
-
-        const embed = this.GetBaseEmbed()
-            .setDescription(text)
-            .setAuthor(userScore ? {
-                name: "Daily Challenge Thresholds",
-                iconURL: GetFlag(user.osu.country),
-                url: challenge.URL,
-            } : {
-                name: "Daily Challenge Thresholds",
-                url: challenge.URL,
-            })
-            .setThumbnail(beatmap.FullBackground)
-            .setFooter({
-                text: `${beatmap.beatmapset.artist} - ${beatmap.beatmapset.title} [${beatmap.version}] by ${beatmap.beatmapset.creator}`
+            const text = TextRenderer.render("dailychallenge/threshold", {
+                total: threshold.total, score1Threshold: threshold.rank1.score.toLocaleString(),
+                score10Threshold: threshold.top10.score.toLocaleString(), rank10Threshold: threshold.top10.position.toLocaleString(),
+                score50Threshold: threshold.top50.score.toLocaleString(), rank50Threshold: threshold.top50.position.toLocaleString(),
+                updated: threshold.date.toDiscordToolTip(),
+                user_score, user_percent: userScore ? (userScore.position / threshold.total * 100).roundFixed(2) : null
             })
 
+            const embed = this.GetBaseEmbed()
+                .setDescription(text)
+                .setAuthor(userScore ? {
+                    name: "Daily Challenge Thresholds",
+                    iconURL: GetFlag(user.osu.country),
+                    url: challenge.URL,
+                } : {
+                    name: "Daily Challenge Thresholds",
+                    url: challenge.URL,
+                })
+                .setThumbnail(beatmap.FullBackground)
+                .setFooter({
+                    text: `${beatmap.beatmapset.artist} - ${beatmap.beatmapset.title} [${beatmap.version}] by ${beatmap.beatmapset.creator}`
+                })
 
-        this.data.Reply({ embeds: [embed] })
+
+            await this.data.Reply({ embeds: [embed] })
 
 
-        return CommandResponseCodes.OK
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("DailyChallengeThresholds error:", error)
+            await this.data.Reply(this.RenderApiError())
+            throw error
+        }
     }
 
 }
