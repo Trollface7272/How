@@ -117,7 +117,6 @@ class Top extends CommandBase implements CommandAbstract {
     private oldComponentId: string
     private args: args
 
-
     constructor(data: MessageEventData) {
         super()
         this.componentId = randomBytes(16).toString("hex")
@@ -179,7 +178,6 @@ class Top extends CommandBase implements CommandAbstract {
                 el.performance.normal = el.performance.fc
             })
         }
-
 
         if (GreaterThan) {
             let username = scores[0].User.username
@@ -429,3 +427,5 @@ Top.helpData
         .setDescription("Show random scores")
         .setUsage("random")
     )
+
+export default Top;

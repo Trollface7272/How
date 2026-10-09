@@ -255,3 +255,6 @@ Beatmap.interactionData
   )
 CommandEmitterInstance.AddCommand(Beatmap, Beatmap.names)
 InteractionRegistrerInstance.AddInteraction(Beatmap.interactionData)
+
+
+export default Beatmap;

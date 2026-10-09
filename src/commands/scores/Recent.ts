@@ -54,7 +54,6 @@ class RecentData extends CommandData implements CommandDataAbstract {
     public GetComandArgs(): args {
         const command = this.data.GetCommand()
 
-
         
         const Gamemode = this.data.GetGamemode()
         const Specific = this.data.GetSpecific()
@@ -269,7 +268,6 @@ class Recent extends CommandBase implements CommandAbstract {
 
         let mapEmbed: Promise<EmbedBuilder>
 
-
         if (this.data.args.Map) mapEmbed = this.renderMap({ beatmap: score.Beatmap, beatmapset: score.Beatmapset })
 
         let rank: string = ""
@@ -437,3 +435,5 @@ Recent.helpData
         .setName("map")
         .setDescription("Display beatmap info")
         .setUsage("-map"))
+
+export default Recent;

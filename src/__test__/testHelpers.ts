@@ -70,6 +70,11 @@ export function createMockMessageEvent(options: MockMessageEventOptions = {}): M
         GetGamemode: vi.fn().mockReturnValue(null),
         GetBoolean: vi.fn().mockReturnValue(false),
         GetNumber: vi.fn().mockReturnValue(null),
+        GetString: vi.fn().mockReturnValue(null),
+        GetBeatmap: vi.fn().mockReturnValue(null),
+        GetBeatmapFromConversation: vi.fn().mockResolvedValue(123456),
+        GetSpecific: vi.fn().mockReturnValue([]),
+        GetPage: vi.fn().mockReturnValue(1),
         GetMods: vi.fn().mockReturnValue([]),
         IsInteraction: vi.fn().mockReturnValue(options.isInteraction || false),
         GetInteraction: vi.fn().mockReturnValue(options.interaction),
@@ -279,5 +284,161 @@ export function mockFetcherUserNotLinked() {
     return {
         GetProfile: vi.fn().mockRejectedValue(error),
         Create: vi.fn().mockRejectedValue(error)
+    };
+}
+
+// Create array of mock scores for Recent/Top commands
+export function createMockScores(count: number = 5, overrides: Partial<any> = {}): any[] {
+    return Array.from({ length: count }, (_, i) => ({
+        id: 999999 + i,
+        user_id: 1000000,
+        beatmap_id: 123456 + i,
+        score: 5000000 - (i * 100000),
+        max_combo: 1000 - (i * 50),
+        rank: ['SS', 'S', 'A', 'B', 'C'][Math.min(i, 4)],
+        count_300: 500 - (i * 20),
+        count_100: 50 + (i * 5),
+        count_50: 5 + i,
+        count_miss: i,
+        count_geki: 100 - (i * 10),
+        count_katu: 10 + i,
+        pp: 250 - (i * 20),
+        accuracy: 0.99 - (i * 0.01),
+        mods: i === 0 ? ['HD', 'HR'] : [],
+        perfect: i === 0,
+        passed: true,
+        replay: false,
+        created_at: new Date(Date.now() - i * 3600000).toISOString(),
+        beatmap: createMockBeatmap({ id: 123456 + i }),
+        beatmapset: {
+            id: 12345 + i,
+            title: `Test Song ${i + 1}`,
+            artist: `Test Artist ${i + 1}`,
+            creator: 'Test Mapper'
+        },
+        user: {
+            id: 1000000,
+            username: 'TestPlayer',
+            avatar_url: 'https://a.ppy.sh/1000000',
+            country_code: 'US'
+        },
+        ...overrides
+    }));
+}
+
+// Create full beatmapset with multiple difficulties
+export function createMockBeatmapset(overrides: Partial<any> = {}): any {
+    return {
+        id: 12345,
+        title: 'Test Song',
+        artist: 'Test Artist',
+        creator: 'Test Mapper',
+        status: 'ranked',
+        ranked_date: '2020-01-01',
+        last_updated: new Date().toISOString(),
+        beatmaps: [
+            createMockBeatmap({ id: 123456, version: 'Easy', difficulty_rating: 2.5 }),
+            createMockBeatmap({ id: 123457, version: 'Normal', difficulty_rating: 3.5 }),
+            createMockBeatmap({ id: 123458, version: 'Hard', difficulty_rating: 5.5 }),
+            createMockBeatmap({ id: 123459, version: 'Insane', difficulty_rating: 7.5 })
+        ],
+        covers: {
+            cover: 'https://example.com/cover.jpg',
+            'cover@2x': 'https://example.com/cover@2x.jpg',
+            card: 'https://example.com/card.jpg',
+            'card@2x': 'https://example.com/card@2x.jpg',
+            list: 'https://example.com/list.jpg',
+            'list@2x': 'https://example.com/list@2x.jpg',
+            slimcover: 'https://example.com/slimcover.jpg',
+            'slimcover@2x': 'https://example.com/slimcover@2x.jpg'
+        },
+        ...overrides
+    };
+}
+
+// Create DailyChallenge DB document
+export function createMockDailyChallenge(overrides: Partial<any> = {}): any {
+    return {
+        _id: 'dc_20240101',
+        date: '2024-01-01',
+        beatmap_id: 123456,
+        beatmap: createMockBeatmap(),
+        thresholds: {
+            bronze: 1000000,
+            silver: 2000000,
+            gold: 3000000,
+            platinum: 4000000
+        },
+        participantCount: 100,
+        scores: [],
+        ...overrides
+    };
+}
+
+// Create DailyChallenge score
+export function createMockDailyChallengeScore(overrides: Partial<any> = {}): any {
+    return {
+        user_id: 1000000,
+        username: 'TestPlayer',
+        score: 5000000,
+        rank: 1,
+        tier: 'platinum',
+        mods: ['HD', 'HR'],
+        accuracy: 0.985,
+        max_combo: 1000,
+        created_at: new Date().toISOString(),
+        ...overrides
+    };
+}
+
+// Create minimal Discord Client stub
+export function createMockDiscordClient(): any {
+    return {
+        user: { 
+            id: 'bot123', 
+            username: 'TestBot',
+            tag: 'TestBot#0000'
+        },
+        application: { 
+            id: 'app123' 
+        },
+        guilds: {
+            cache: {
+                size: 10,
+                map: vi.fn()
+            }
+        },
+        uptime: 1000000,
+        ws: {
+            ping: 50
+        },
+        generateInvite: vi.fn().mockReturnValue('https://discord.com/oauth2/authorize?client_id=app123'),
+        ...overrides
+    };
+}
+
+// Extended Fetcher mock with all methods
+export function createMockFetcher(options: {
+    profile?: any;
+    scores?: any[];
+    beatmap?: any;
+    searchResults?: any;
+    events?: any[];
+} = {}): any {
+    return {
+        GetProfile: vi.fn().mockResolvedValue(options.profile || createMockProfile()),
+        GetOwnProfile: vi.fn().mockResolvedValue(options.profile || createMockProfile()),
+        GetUser: vi.fn().mockResolvedValue(options.profile || createMockProfile()),
+        GetUserScores: vi.fn().mockResolvedValue(options.scores || createMockScores()),
+        GetBeatmap: vi.fn().mockResolvedValue(options.beatmap || createMockBeatmap()),
+        GetBeatmapScores: vi.fn().mockResolvedValue(options.scores || createMockScores()),
+        SearchBeatmaps: vi.fn().mockResolvedValue(options.searchResults || {
+            beatmapsets: [createMockBeatmapset()]
+        }),
+        GetRecentEvents: vi.fn().mockResolvedValue(options.events || []),
+        ScoreProfile: vi.fn().mockResolvedValue({
+            rank: 1000,
+            scores: options.scores || createMockScores()
+        })
     };
 }

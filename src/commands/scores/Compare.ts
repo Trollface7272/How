@@ -229,7 +229,6 @@ Compare.interactionData
     .addStringOption(GamemodeStringOption)
     .addNumberOption(PageNumberOption)
 
-
 CommandEmitterInstance.AddCommand(Compare, Compare.names)
 InteractionRegistrerInstance.AddInteraction(Compare.interactionData)
 
@@ -246,3 +245,5 @@ Compare.helpData
     .addArg(UsernameArg)
     .addArg(GamemodeArg)
     .addArg(PageArg);
+
+export default Compare;

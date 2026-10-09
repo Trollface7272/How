@@ -435,3 +435,5 @@ Profile.helpData
 
 CommandEmitterInstance.AddCommand(Profile, Profile.names)
 InteractionRegistrerInstance.AddInteraction(Profile.interactionData)
+
+export default Profile;
