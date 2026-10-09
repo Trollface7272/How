@@ -120,3 +120,4 @@ Update.helpData
     .setUsage("update [username]")
     .setAliases(Update.names)
     .addArg(UsernameArg);
+export default Update;

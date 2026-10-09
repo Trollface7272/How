@@ -88,3 +88,4 @@ Link.helpData
     .setUsage("link [friends]")
     .setAliases(Link.names)
     .addArg(FriendsArg);
+export default Link;

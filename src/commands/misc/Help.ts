@@ -96,3 +96,5 @@ Help.interactionData
 
 CommandEmitterInstance.AddCommand(Help, Help.names)
 InteractionRegistrerInstance.AddInteraction(Help.interactionData)
+
+export default Help;

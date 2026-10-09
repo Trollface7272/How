@@ -60,3 +60,4 @@ Info.helpData
     .setDescription("Display bot information.")
     .setUsage("info")
     .setAliases(Info.names);
+export default Info;

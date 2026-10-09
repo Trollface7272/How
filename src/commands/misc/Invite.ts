@@ -59,6 +59,8 @@ Invite.interactionData
 CommandEmitterInstance.AddCommand(Invite, Invite.names)
 InteractionRegistrerInstance.AddInteraction(Invite.interactionData)
 
+export default Invite;
+
 Invite.helpData
     .setCommand(Invite.name)
     .setGroup(CommandGroup.Misc)
