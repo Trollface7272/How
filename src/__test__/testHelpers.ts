@@ -432,6 +432,7 @@ export function createMockFetcher(options: {
         GetUserScores: vi.fn().mockResolvedValue(options.scores || createMockScores()),
         GetBeatmap: vi.fn().mockResolvedValue(options.beatmap || createMockBeatmap()),
         GetBeatmapScores: vi.fn().mockResolvedValue(options.scores || createMockScores()),
+        GetBeatmapUserScores: vi.fn().mockResolvedValue(options.scores || createMockScores()),
         SearchBeatmaps: vi.fn().mockResolvedValue(options.searchResults || {
             beatmapsets: [createMockBeatmapset()]
         }),

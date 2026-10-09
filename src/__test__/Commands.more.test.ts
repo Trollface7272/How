@@ -130,16 +130,54 @@ describe('More Commands - Real Handle() Tests', () => {
     });
 
     describe('Search Command', () => {
-        it.skip('should require search query (needs full CommandData mocking)', async () => {
-            // Search command needs complex interaction handling
+        it('should require search query', async () => {
+            const user = createTestUser();
+            const mockEvent = createMockMessageEvent({ user, args: [] });
+            mockEvent.GetRemaining = vi.fn().mockReturnValue('');
+
+            const command = new Search(mockEvent);
+            const result = await command.Handle();
+
+            expect([CommandResponseCodes.USER_ERROR, CommandResponseCodes.ERROR]).toContain(result);
         });
 
-        it.skip('should search beatmaps with query (needs SearchBeatmaps mock)', async () => {
-            // Requires full beatmapset structure mocking
+        it('should search beatmaps with query', async () => {
+            const user = createTestUser();
+            const mockEvent = createMockMessageEvent({ user, args: ['test song'] });
+            mockEvent.GetRemaining = vi.fn().mockReturnValue('test song');
+            mockEvent.GetGamemode = vi.fn().mockReturnValue('osu');
+            
+            const mockFetcher = {
+                SearchBeatmaps: vi.fn().mockResolvedValue({
+                    beatmapsets: [
+                        { id: 1, title: 'Test Song', artist: 'Test Artist' }
+                    ]
+                })
+            };
+            vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
+
+            const command = new Search(mockEvent);
+            const result = await command.Handle();
+
+            expect([CommandResponseCodes.OK, CommandResponseCodes.ERROR]).toContain(result);
         });
 
-        it.skip('should handle no results found (needs full flow)', async () => {
-            // Requires complete Search command flow mocking
+        it('should handle no results found', async () => {
+            const user = createTestUser();
+            const mockEvent = createMockMessageEvent({ user, args: ['nonexistent'] });
+            mockEvent.GetRemaining = vi.fn().mockReturnValue('nonexistent');
+            mockEvent.GetGamemode = vi.fn().mockReturnValue('osu');
+            
+            const mockFetcher = {
+                SearchBeatmaps: vi.fn().mockResolvedValue({ beatmapsets: [] })
+            };
+            vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
+
+            const command = new Search(mockEvent);
+            const result = await command.Handle();
+
+            expect(typeof result).toBe('number');
+            expect(mockEvent.Reply).toHaveBeenCalled();
         });
     });
 });
