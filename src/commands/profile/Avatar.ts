@@ -48,18 +48,28 @@ class Avatar extends CommandBase implements CommandAbstract {
         const Username = _name ?? user?.osu?.username
 
         if (!Username) {
-            this.data.Reply(this.RenderNoUserError())
+            await this.data.Reply(this.RenderNoUserError())
             return CommandResponseCodes.USER_ERROR
         }
 
         const fetcher = await Fetcher.Create(user.id)
         const [profile, profileErr] = await HandleAsync(fetcher.GetProfile({ Username: Username, Gamemode: "osu" }))
         if (profileErr) {
-            Logger.Error(profileErr)
+            Logger.Error("Avatar profile error:", profileErr)
+            const errorReply = this.HandleProfileError(profileErr, Username)
+            await this.data.Reply(errorReply)
             return CommandResponseCodes.ERROR
         }
 
         const avatar = profile.avatar_url
+        if (!avatar) {
+            await this.data.Reply({
+                content: `No avatar found for ${profile.username}.`,
+                ephemeral: true
+            })
+            return CommandResponseCodes.USER_ERROR
+        }
+
         const embed = this.GetBaseEmbed()
             .setAuthor({ name: `${profile.username}`, iconURL: GetFlag(profile.country_code), url: profile.url })
             .setImage(avatar)

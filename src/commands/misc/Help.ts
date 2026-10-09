@@ -43,26 +43,34 @@ class Help extends CommandBase implements CommandAbstract {
         const { Command } = this.data.args
         const embed = this.GetBaseEmbed()
 
-        if (!Command) {
-            embed
-                .setAuthor({ name: "Commands" })
-                .setDescription(
-                    `${CommandHelpDataInstance.renderGroupIndex()}\n\n` +
-                    `Use \`help <command>\` for details.`
-                )
-            this.data.Reply({ embeds: [embed] })
+        try {
+            if (!Command) {
+                embed
+                    .setAuthor({ name: "Commands" })
+                    .setDescription(
+                        `${CommandHelpDataInstance.renderGroupIndex()}\n\n` +
+                        `Use \`help <command>\` for details.`
+                    )
+                await this.data.Reply({ embeds: [embed] })
+                return CommandResponseCodes.OK
+            }
+
+            const help = CommandHelpDataInstance.getHelp(Command)
+            if (!help) {
+                embed.setDescription(`Unknown command \`${Command}\`.\nUse \`help\` to list commands.`)
+                await this.data.Reply({ embeds: [embed] })
+                return CommandResponseCodes.USER_ERROR
+            }
+
+            await this.data.Reply({ embeds: [help.renderEmbed(embed)] })
             return CommandResponseCodes.OK
+        } catch (error) {
+            await this.data.Reply({
+                content: "Failed to display help information.",
+                ephemeral: true
+            })
+            throw error
         }
-
-        const help = CommandHelpDataInstance.getHelp(Command)
-        if (!help) {
-            embed.setDescription(`Unknown command \`${Command}\`.\nUse \`help\` to list commands.`)
-            this.data.Reply({ embeds: [embed] })
-            return CommandResponseCodes.USER_ERROR
-        }
-
-        this.data.Reply({ embeds: [help.renderEmbed(embed)] })
-        return CommandResponseCodes.OK
     }
 
 }
