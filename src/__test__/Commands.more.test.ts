@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CommandResponseCodes } from '../class/partials/Command';
 import { Fetcher } from '../class/api/osu/Fetcher';
-import { createMockMessageEvent, createTestUser, mockFetcherSuccess, createMockProfile } from './testHelpers';
+import { createMockMessageEvent, createTestUser, mockFetcherSuccess, createMockProfile, createMockFetcher, createMockSearchResult } from './testHelpers';
 import { FetcherError, FetcherErrors } from '../class/api/osu/class/FetcherError';
 
 // Import more real commands
@@ -81,19 +81,13 @@ describe('More Commands - Real Handle() Tests', () => {
         it('should update user profile when linked', async () => {
             const user = createTestUser();
             const mockEvent = createMockMessageEvent({ user, args: [] });
-            const mockProfile = createMockProfile();
-            const mockFetcher = {
-                GetOwnProfile: vi.fn().mockResolvedValue(mockProfile)
-            };
-            
-            vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
+            vi.spyOn(Fetcher, 'Create').mockResolvedValue(createMockFetcher({ profile: createMockProfile() }) as any);
 
             const command = new Update(mockEvent);
             const result = await command.Handle();
 
-            // Should execute without throwing
-            expect(typeof result).toBe('number');
-            expect(mockEvent.Reply).toHaveBeenCalled();
+            expect(result).toBe(CommandResponseCodes.OK);
+            expect((mockEvent as any)._getLastReply().embeds[0].data.description).toContain('Rank');
         });
     });
 
@@ -147,19 +141,14 @@ describe('More Commands - Real Handle() Tests', () => {
             mockEvent.GetRemaining = vi.fn().mockReturnValue('test song');
             mockEvent.GetGamemode = vi.fn().mockReturnValue('osu');
             
-            const mockFetcher = {
-                SearchBeatmaps: vi.fn().mockResolvedValue({
-                    beatmapsets: [
-                        { id: 1, title: 'Test Song', artist: 'Test Artist' }
-                    ]
-                })
-            };
+            const mockFetcher = createMockFetcher({ searchResults: createMockSearchResult() });
             vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
 
             const command = new Search(mockEvent);
             const result = await command.Handle();
 
-            expect([CommandResponseCodes.OK, CommandResponseCodes.ERROR]).toContain(result);
+            expect(result).toBe(CommandResponseCodes.OK);
+            expect((mockEvent as any)._getLastReply().embeds[0].data.description).toContain('Test Song');
         });
 
         it('should handle no results found', async () => {

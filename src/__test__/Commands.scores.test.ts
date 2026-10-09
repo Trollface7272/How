@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CommandResponseCodes } from '../class/partials/Command';
 import { Fetcher } from '../class/api/osu/Fetcher';
-import { createMockMessageEvent, createTestUser, createMockFetcher, createMockScores, createMockProfile, createMockBeatmap } from './testHelpers';
+import { createMockMessageEvent, createTestUser, createMockFetcher, createMockScores, createMockProfile, axiosError } from './testHelpers';
+import { db } from '../class/database/Main';
+import { createStoredScore } from './testHelpers';
 
 // Import score commands
 import Recent from '../commands/scores/Recent';
@@ -34,21 +36,15 @@ describe('Scores Commands - Recent', () => {
     it('should handle user not found', async () => {
         const user = createTestUser();
         const mockEvent = createMockMessageEvent({ user, args: ['NonexistentUser'] });
-        mockEvent.GetRemaining = vi.fn().mockReturnValue('NonexistentUser');
-        
-        const notFoundError: any = new Error('Not found');
-        notFoundError.response = { status: 404 };
-        notFoundError.isAxiosError = true;
-        
-        const mockFetcher = createMockFetcher({});
-        mockFetcher.GetProfile = vi.fn().mockRejectedValue(notFoundError);
-        
+        const mockFetcher = createMockFetcher();
+        mockFetcher.GetUserScores = vi.fn().mockRejectedValue(axiosError(404, 'Not found'));
         vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
 
         const command = new Recent(mockEvent);
         const result = await command.Handle();
 
-        expect([CommandResponseCodes.ERROR, CommandResponseCodes.USER_ERROR]).toContain(result);
+        expect(result).toBe(CommandResponseCodes.ERROR);
+        expect(mockEvent.Reply).toHaveBeenCalled();
     });
 
     it('should handle no recent plays found', async () => {
@@ -69,12 +65,8 @@ describe('Scores Commands - Recent', () => {
         const user = createTestUser();
         const mockEvent = createMockMessageEvent({ user, args: [] });
         
-        const rateLimitError: any = new Error('Rate limit');
-        rateLimitError.response = { status: 429 };
-        rateLimitError.isAxiosError = true;
-        
-        const mockFetcher = createMockFetcher({});
-        mockFetcher.GetUserScores = vi.fn().mockRejectedValue(rateLimitError);
+        const mockFetcher = createMockFetcher();
+        mockFetcher.GetUserScores = vi.fn().mockRejectedValue(axiosError(429, 'Rate limit'));
         
         vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
 
@@ -127,19 +119,16 @@ describe('Scores Commands - Top', () => {
         const user = createTestUser();
         const mockEvent = createMockMessageEvent({ user, args: [] });
         
-        const timeoutError: any = new Error('Timeout');
-        timeoutError.code = 'ETIMEDOUT';
-        timeoutError.isAxiosError = true;
-        
-        const mockFetcher = createMockFetcher({});
-        mockFetcher.GetUserScores = vi.fn().mockRejectedValue(timeoutError);
-        
+        const mockFetcher = createMockFetcher();
+        mockFetcher.GetUserScores = vi.fn().mockRejectedValue(axiosError(504, 'Timeout'));
         vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
 
         const command = new Top(mockEvent);
         const result = await command.Handle();
 
-        expect([CommandResponseCodes.ERROR]).toContain(result);
+        expect(result).toBe(CommandResponseCodes.USER_ERROR);
+        const reply = (mockEvent as any)._getLastReply();
+        expect(reply.embeds[0].data.title).toMatch(/osu!api/i);
     });
 });
 
@@ -148,56 +137,42 @@ describe('Scores Commands - Score', () => {
         vi.clearAllMocks();
     });
 
-    it('should display score on beatmap', async () => {
+    it('should display an imported score', async () => {
         const user = createTestUser();
-        const mockEvent = createMockMessageEvent({ user, args: ['123456'] });
-        mockEvent.GetRemaining = vi.fn().mockReturnValue('123456');
-        mockEvent.GetNumber = vi.fn().mockReturnValue(123456);
-        const mockFetcher = createMockFetcher({
-            beatmap: createMockBeatmap(),
-            scores: createMockScores(1)
-        });
-        
-        vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
+        const mockEvent = createMockMessageEvent({ user, args: [] });
+        await db.collection('scores').insertOne(createStoredScore({ userId: user.osu.userId }));
+        vi.spyOn(Fetcher, 'Create').mockResolvedValue(createMockFetcher() as any);
 
         const command = new Score(mockEvent);
         const result = await command.Handle();
 
-        expect(typeof result).toBe('number');
-        expect(mockEvent.Reply).toHaveBeenCalled();
+        expect(result).toBe(CommandResponseCodes.OK);
+        expect((mockEvent as any)._getLastReply().embeds[0].data.description).toContain('Test Song');
     });
 
-    it('should handle invalid beatmap ID', async () => {
+    it('should handle no imported scores', async () => {
         const user = createTestUser();
-        const mockEvent = createMockMessageEvent({ user, args: ['invalid'] });
-        mockEvent.GetRemaining = vi.fn().mockReturnValue('invalid');
-        mockEvent.GetNumber = vi.fn().mockReturnValue(null);
+        const mockEvent = createMockMessageEvent({ user, args: [] });
+        vi.spyOn(Fetcher, 'Create').mockResolvedValue(createMockFetcher() as any);
 
         const command = new Score(mockEvent);
         const result = await command.Handle();
 
-        expect([CommandResponseCodes.USER_ERROR, CommandResponseCodes.ERROR]).toContain(result);
+        expect(result).toBe(CommandResponseCodes.USER_ERROR);
+        expect((mockEvent as any)._getLastReply().embeds[0].data.description).toMatch(/no scores/i);
     });
 
-    it('should handle beatmap not found', async () => {
+    it('should handle a score query failure', async () => {
         const user = createTestUser();
-        const mockEvent = createMockMessageEvent({ user, args: ['999999'] });
-        mockEvent.GetRemaining = vi.fn().mockReturnValue('999999');
-        mockEvent.GetNumber = vi.fn().mockReturnValue(999999);
-        
-        const notFoundError: any = new Error('Not found');
-        notFoundError.response = { status: 404 };
-        notFoundError.isAxiosError = true;
-        
-        const mockFetcher = createMockFetcher({});
-        mockFetcher.GetBeatmap = vi.fn().mockRejectedValue(notFoundError);
-        
-        vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
+        const mockEvent = createMockMessageEvent({ user, args: [] });
+        vi.spyOn(Fetcher, 'Create').mockResolvedValue(createMockFetcher() as any);
+        const { ScoreFactory } = await import('../class/database/Score');
+        vi.spyOn(ScoreFactory, 'GetScoresByUser').mockRejectedValue(new Error('db down'));
 
         const command = new Score(mockEvent);
         const result = await command.Handle();
 
-        expect([CommandResponseCodes.ERROR, CommandResponseCodes.USER_ERROR]).toContain(result);
+        expect(result).toBe(CommandResponseCodes.ERROR);
     });
 });
 
@@ -208,24 +183,20 @@ describe('Scores Commands - Compare', () => {
 
     it('should compare scores on beatmap', async () => {
         const user = createTestUser();
-        const mockEvent = createMockMessageEvent({ user, args: [] });
-        const mockFetcher = createMockFetcher({
-            beatmap: createMockBeatmap(),
-            scores: createMockScores(2)
-        });
-        
+        const mockEvent = createMockMessageEvent({ user, args: [], conversationBeatmap: 123456 });
+        const mockFetcher = createMockFetcher({ scores: createMockScores(2, {}, 'fromId') });
         vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
 
         const command = new Compare(mockEvent);
         const result = await command.Handle();
 
-        expect(typeof result).toBe('number');
-        expect(mockEvent.Reply).toHaveBeenCalled();
+        expect(result).toBe(CommandResponseCodes.OK);
+        expect((mockEvent as any)._getLastReply().embeds[0].data.description).toContain('pp');
     });
 
     it('should handle no scores to compare', async () => {
         const user = createTestUser();
-        const mockEvent = createMockMessageEvent({ user, args: [] });
+        const mockEvent = createMockMessageEvent({ user, args: [], conversationBeatmap: 123456 });
         const mockFetcher = createMockFetcher({ scores: [] });
         
         vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
@@ -239,20 +210,14 @@ describe('Scores Commands - Compare', () => {
 
     it('should handle server error', async () => {
         const user = createTestUser();
-        const mockEvent = createMockMessageEvent({ user, args: [] });
-        
-        const serverError: any = new Error('Server error');
-        serverError.response = { status: 503 };
-        serverError.isAxiosError = true;
-        
-        const mockFetcher = createMockFetcher({});
-        mockFetcher.GetBeatmap = vi.fn().mockRejectedValue(serverError);
-        
+        const mockEvent = createMockMessageEvent({ user, args: [], conversationBeatmap: 123456 });
+        const mockFetcher = createMockFetcher();
+        mockFetcher.GetBeatmapUserScores = vi.fn().mockRejectedValue(axiosError(503, 'Server error'));
         vi.spyOn(Fetcher, 'Create').mockResolvedValue(mockFetcher as any);
 
         const command = new Compare(mockEvent);
         const result = await command.Handle();
 
-        expect([CommandResponseCodes.ERROR]).toContain(result);
+        expect(result).toBe(CommandResponseCodes.USER_ERROR);
     });
 });

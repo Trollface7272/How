@@ -118,7 +118,8 @@ describe('Profile Command Tests', () => {
         const command = new Profile(mockEvent);
         const result = await command.Handle();
 
-        expect([CommandResponseCodes.ERROR]).toContain(result);
+        expect(result).toBe(CommandResponseCodes.USER_ERROR);
+        expect((mockEvent as any)._getLastReply().embeds[0].data.title).toMatch(/osu!api/i);
     });
 });
 

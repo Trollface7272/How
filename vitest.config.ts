@@ -10,7 +10,8 @@ export default defineConfig({
     exclude: ['node_modules/'],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reportOnFailure: true,
+      reporter: ['text', 'json-summary', 'text-summary'],
       include: ['src/**/*.ts'],
       exclude: [
         'node_modules/',

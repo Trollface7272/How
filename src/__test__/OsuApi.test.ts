@@ -1,120 +1,102 @@
-import "dotenv/config"
-import { describe, expect, test, vi, beforeEach } from "vitest"
-import { Fetcher } from "../class/api/osu/Fetcher"
-import { Profile } from "../class/api/osu/class/Profile"
-import { FetcherError, FetcherErrors } from "../class/api/osu/class/FetcherError"
+import { describe, expect, test, vi, beforeEach } from "vitest";
+import axios from "axios";
+import { Fetcher } from "../class/api/osu/Fetcher";
+import { Profile } from "../class/api/osu/class/Profile";
+import { Score } from "../class/api/osu/class/Score";
+import { FetcherMissingIdentifyScopeError, FetcherUserNotLinkedError } from "../class/api/osu/class/FetcherError";
+import { axiosError, createProfileRaw, createScoreRaw } from "./testHelpers";
+
+const http = {
+    get: vi.fn(),
+    post: vi.fn(),
+};
+
+vi.mock("axios", async () => {
+    const actual = await vi.importActual<typeof import("axios")>("axios");
+    return {
+        ...actual,
+        default: {
+            ...actual.default,
+            create: () => http,
+            get: (...args: unknown[]) => http.get(...args),
+            post: (...args: unknown[]) => http.post(...args),
+        },
+        isAxiosError: (error: any) => Boolean(error?.isAxiosError) || actual.isAxiosError(error),
+    };
+});
+
+function linkedFetcher(scope = ["public", "identify"]) {
+    return new Fetcher({
+        token_type: "Bearer",
+        access_token: "token",
+        scope,
+        IsValid: () => true,
+    } as any, true);
+}
 
 describe("Osu API - Fetcher", () => {
-    const testUserId = "552546198918004757";
-
     beforeEach(() => {
-        vi.clearAllMocks();
+        http.get.mockReset();
+        http.post.mockReset();
     });
 
-    test("Get own profile", async () => {
-        const mockProfile = Object.assign(new Profile.Self(), {
-            username: "Trollface",
-            id: 8398988,
-            country_code: "US",
-            statistics: {
-                global_rank: 10000,
-                pp: 5000,
-                accuracy: 98.5
-            }
-        });
+    test("loads the authorized user's profile", async () => {
+        http.get.mockResolvedValue({ data: createProfileRaw({ username: "Trollface", id: 8398988 }) });
 
-        vi.spyOn(Fetcher, "Create").mockResolvedValue({
-            GetOwnProfile: vi.fn().mockResolvedValue(mockProfile)
-        } as any);
-
-        const fetcher = await Fetcher.Create(testUserId);
-        const profile = await fetcher.GetOwnProfile({ Gamemode: "osu" });
+        const profile = await linkedFetcher().GetOwnProfile({ Gamemode: "osu" });
 
         expect(profile).toBeInstanceOf(Profile.Self);
-        expect(profile).toHaveProperty("username", "Trollface");
-        expect(profile).toHaveProperty("id", 8398988);
+        expect(profile.username).toBe("Trollface");
+        expect(profile.id).toBe(8398988);
+        expect(http.get).toHaveBeenCalled();
     });
 
-    test("Get user profile by username", async () => {
-        const mockProfileData = {
-            username: "peppy",
-            id: 2,
-            country_code: "AU",
-            avatar_url: "https://example.com/avatar.jpg",
-            default_group: "default",
-            is_bot: false,
-            is_active: true,
-            is_deleted: false,
-            is_online: true,
-            is_supporter: true,
-            last_visit: new Date().toISOString(),
-            pm_friends_only: false,
-            profile_colour: "#FF0000",
-            cover_url: "https://example.com/cover.jpg",
-            discord: null,
-            has_supported: true,
-            interests: null,
-            join_date: "2007-09-16",
-            kudosu: { availible: 0, total: 0 },
-            location: "Australia",
-            max_blocks: 50,
-            max_friends: 250,
-            occupation: null,
-            playmode: "osu" as const,
-            playstyle: [],
-            post_count: 0,
-            profile_order: ["me" as const],
-            title: null,
-            title_url: null,
-            twitter: null,
-            website: null,
-            country: { code: "AU", name: "Australia" },
-            cover: { custom_url: "", url: "" }
-        };
-        const mockProfile = new Profile.Base(mockProfileData);
+    test("loads a profile by username", async () => {
+        http.get.mockResolvedValue({ data: createProfileRaw({ username: "peppy", id: 2, country_code: "AU" }) });
 
-        vi.spyOn(Fetcher, "Create").mockResolvedValue({
-            GetUser: vi.fn().mockResolvedValue(mockProfile)
+        const profile = await linkedFetcher().GetProfile({ Username: "peppy", Gamemode: "osu" });
+
+        expect(profile).toBeInstanceOf(Profile.FromId);
+        expect(profile.username).toBe("peppy");
+        expect(profile.country_code).toBe("AU");
+    });
+
+    test("maps recent scores into Score.Recent", async () => {
+        http.get.mockResolvedValue({ data: [createScoreRaw({ id: 55 })] });
+
+        const scores = await linkedFetcher().GetUserScores({
+            Gamemode: "osu",
+            Type: "recent",
+            Id: 1_000_000,
+            Limit: 1,
+        });
+
+        expect(scores[0]).toBeInstanceOf(Score.Recent);
+        expect(scores[0].Id).toBe(55);
+    });
+
+    test("refuses the self endpoint when the token is not a user token", async () => {
+        const fetcher = new Fetcher({ token_type: "Bearer", access_token: "app", scope: ["public"], IsValid: () => true } as any, false);
+        await expect(fetcher.GetOwnProfile({ Gamemode: "osu" })).rejects.toBeInstanceOf(FetcherUserNotLinkedError);
+    });
+
+    test("refuses the self endpoint without the identify scope", async () => {
+        await expect(linkedFetcher(["public"]).GetOwnProfile({ Gamemode: "osu" })).rejects.toBeInstanceOf(FetcherMissingIdentifyScopeError);
+    });
+
+    test("propagates an API rate limit", async () => {
+        http.get.mockRejectedValue(axiosError(429, "Rate limit"));
+        await expect(linkedFetcher().GetProfile({ Username: "peppy", Gamemode: "osu" })).rejects.toMatchObject({
+            response: { status: 429 },
+        });
+    });
+
+    test("uses client credentials when Create has no linked user", async () => {
+        vi.spyOn(axios, "post").mockResolvedValue({
+            data: { access_token: "app-token", expires_in: 3600, token_type: "Bearer" },
         } as any);
 
-        const fetcher = await Fetcher.Create(testUserId);
-        const profile = await fetcher.GetUser("peppy", { Gamemode: "osu" });
-
-        expect(profile).toBeInstanceOf(Profile.Base);
-        expect(profile.username).toBe("peppy");
-    });
-
-    test("Fetcher handles user not linked error", async () => {
-        vi.spyOn(Fetcher, "Create").mockRejectedValue(
-            new FetcherError(FetcherErrors.UserNotLinked, "User not linked to osu! account")
-        );
-
-        await expect(Fetcher.Create("invalid_user")).rejects.toThrow();
-    });
-
-    test("Fetcher handles missing identify scope error", async () => {
-        const mockFetcher = {
-            GetOwnProfile: vi.fn().mockRejectedValue(
-                new FetcherError(FetcherErrors.MissingIdentifyScope, "Missing identify scope")
-            )
-        };
-
-        vi.spyOn(Fetcher, "Create").mockResolvedValue(mockFetcher as any);
-
-        const fetcher = await Fetcher.Create(testUserId);
-        await expect(fetcher.GetOwnProfile({ Gamemode: "osu" })).rejects.toThrow();
-    });
-
-    test("Fetcher handles API rate limit", async () => {
-        const mockFetcher = {
-            GetUser: vi.fn().mockRejectedValue(
-                new Error("Rate limit exceeded")
-            )
-        };
-
-        vi.spyOn(Fetcher, "Create").mockResolvedValue(mockFetcher as any);
-
-        const fetcher = await Fetcher.Create(testUserId);
-        await expect(fetcher.GetUser("test", { Gamemode: "osu" })).rejects.toThrow();
+        const fetcher = await Fetcher.Create("nobody-linked");
+        await expect(fetcher.GetOwnProfile({ Gamemode: "osu" })).rejects.toBeInstanceOf(FetcherUserNotLinkedError);
     });
 });

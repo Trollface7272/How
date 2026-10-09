@@ -1,87 +1,61 @@
-import "dotenv/config"
-import { describe, expect, test, vi, beforeEach } from "vitest";
+import { describe, expect, test } from "vitest";
+import { ObjectId } from "mongodb";
 import { User, UserFactory } from "../class/database/User";
-import { GuildFactory, Guild } from "../class/database/Guild";
+import { Guild, GuildFactory } from "../class/database/Guild";
+import { db } from "../class/database/Main";
 
 describe("Database - User Factory", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    test("User by userid", async () => {
-        const mockUser = {
-            userId: "552546198918004757",
+    test("loads a stored user by discord id", async () => {
+        await db.collection("users").insertOne({
+            _id: new ObjectId(),
+            id: "552546198918004757",
             username: "_trollface",
-            osuId: 8398988,
-            accessToken: "mock_token",
-            refreshToken: "mock_refresh",
-            expiresAt: new Date()
-        };
-
-        vi.spyOn(UserFactory, "GetUser").mockResolvedValue(
-            Object.assign(new User(), mockUser)
-        );
+            osu: { userId: 8398988, username: "Trollface" },
+        });
 
         const user = await UserFactory.GetUser("552546198918004757");
 
-        expect(user).toBeTruthy();
-        expect(user).toHaveProperty("username", "_trollface");
         expect(user).toBeInstanceOf(User);
+        expect(user && user.username).toBe("_trollface");
+        expect(user && user.osu.userId).toBe(8398988);
     });
 
-    test("User with invalid id", async () => {
-        vi.spyOn(UserFactory, "GetUser").mockResolvedValue(null);
-
-        const user = await UserFactory.GetUser("");
-
-        expect(user).toBeFalsy();
+    test("returns false when the user does not exist", async () => {
+        expect(await UserFactory.GetUser("missing")).toBe(false);
+        expect(await UserFactory.GetUser("")).toBe(false);
     });
 
-    test("User not found returns null", async () => {
-        vi.spyOn(UserFactory, "GetUser").mockResolvedValue(null);
+    test("saves and reloads osu link data", async () => {
+        const user = new User();
+        user._id = new ObjectId();
+        user.id = "user-save";
+        user.username = "Saver";
+        user.osu = { username: "osuSaver", userId: 42 } as any;
+        await user.Save();
 
-        const user = await UserFactory.GetUser("nonexistent");
-
-        expect(user).toBeNull();
+        const loaded = await UserFactory.GetUser("user-save");
+        expect(loaded && loaded.osu.username).toBe("osuSaver");
     });
 });
 
 describe("Database - Guild Factory", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    test("Guild with guildid", async () => {
-        const mockGuild = {
-            guildId: "1039071920433414194",
+    test("loads a stored guild", async () => {
+        await db.collection("guilds").insertOne({
+            _id: new ObjectId(),
+            id: "1039071920433414194",
             name: "hh",
             prefix: "!",
-            settings: {}
-        };
-
-        vi.spyOn(GuildFactory, "GetGuild").mockResolvedValue(
-            Object.assign(new Guild(), mockGuild)
-        );
+            prefixes: ["!!"],
+        });
 
         const guild = await GuildFactory.GetGuild("1039071920433414194");
 
-        expect(guild).toBeTruthy();
-        expect(guild).toHaveProperty("name", "hh");
+        expect(guild).toBeInstanceOf(Guild);
+        expect(guild && guild.name).toBe("hh");
+        expect(guild && guild.prefixes).toContain("!!");
     });
 
-    test("Guild with invalid id", async () => {
-        vi.spyOn(GuildFactory, "GetGuild").mockResolvedValue(null);
-
-        const guild = await GuildFactory.GetGuild("");
-
-        expect(guild).toBeFalsy();
-    });
-
-    test("Guild not found returns null", async () => {
-        vi.spyOn(GuildFactory, "GetGuild").mockResolvedValue(null);
-
-        const guild = await GuildFactory.GetGuild("nonexistent");
-
-        expect(guild).toBeNull();
+    test("returns false when the guild does not exist", async () => {
+        expect(await GuildFactory.GetGuild("missing")).toBe(false);
     });
 });

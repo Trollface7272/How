@@ -211,9 +211,8 @@ describe('Misc Commands - Real Handle() Tests', () => {
             expect(mockEvent.Reply).toHaveBeenCalled();
             
             const reply = (mockEvent as any)._getLastReply();
-            if (reply.embeds && reply.embeds[0]) {
-                expect(reply.embeds[0].data.title).toBeDefined();
-            }
+            const fields = reply.embeds[0].data.fields.map((field: { name: string }) => field.name);
+            expect(fields).toEqual(expect.arrayContaining(['Guilds', 'Users', 'Commands']));
         });
     });
 

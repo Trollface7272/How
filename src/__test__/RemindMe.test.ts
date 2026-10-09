@@ -1,166 +1,91 @@
-import "dotenv/config"
-import { describe, expect, test, vi, beforeEach } from "vitest";
-import { DBReminder } from "../class/database/Reminder";
+import { describe, expect, test, vi } from "vitest";
 import { ObjectId } from "mongodb";
+import { DBReminder } from "../class/database/Reminder";
+import { ReminderTrackingLoop } from "../tracking/Reminders";
+
+function reminder(overrides: Partial<DBReminder> = {}) {
+    return new DBReminder({
+        _id: new ObjectId(),
+        userId: "12345",
+        channelId: "67890",
+        messageId: "11223",
+        message: "Test reminder",
+        remindAt: new Date(Date.now() - 1000),
+        ...overrides,
+    });
+}
+
+function clientFor(channel: any) {
+    return {
+        user: { id: "bot" },
+        channels: { fetch: vi.fn().mockResolvedValue(channel) },
+    } as any;
+}
 
 describe("Reminder System", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+    test("saves, finds, and deletes a reminder", async () => {
+        const stored = reminder();
+        await stored.save();
+
+        const found = await DBReminder.GetReminderById(stored._id);
+        expect(found?.message).toBe("Test reminder");
+
+        await DBReminder.DeleteReminder(stored._id);
+        expect(await DBReminder.GetReminderById(stored._id)).toBeNull();
     });
 
-    test("Create and delete reminder", async () => {
-        const reminderId = new ObjectId();
-        const mockReminder = {
-            _id: reminderId,
-            userId: "12345",
-            channelId: "67890",
-            messageId: "11223",
-            message: "Test reminder",
-            remindAt: new Date()
+    test("returns only due reminders", async () => {
+        await reminder({ message: "due" }).save();
+        await reminder({ message: "later", remindAt: new Date(Date.now() + 60_000) }).save();
+
+        const due = await DBReminder.GetDueReminders();
+        expect(due.map((item) => item.message)).toEqual(["due"]);
+    });
+
+    test("deletes a one-shot reminder after sending it", async () => {
+        const stored = reminder();
+        await stored.save();
+        const channel = {
+            id: stored.channelId,
+            isTextBased: () => true,
+            isDMBased: () => false,
+            permissionsFor: () => ({ has: () => true }),
+            send: vi.fn().mockResolvedValue(undefined),
         };
+        await ReminderTrackingLoop(clientFor(channel));
 
-        vi.spyOn(DBReminder.prototype, "save").mockResolvedValue(undefined as any);
-        vi.spyOn(DBReminder, "GetReminderById")
-            .mockResolvedValueOnce(Object.assign(new DBReminder(mockReminder), mockReminder))
-            .mockResolvedValueOnce(null);
-        vi.spyOn(DBReminder, "DeleteReminder").mockResolvedValue(undefined as any);
-
-        const reminder = new DBReminder(mockReminder);
-        await reminder.save();
-
-        const foundReminder = await DBReminder.GetReminderById(reminderId);
-
-        expect(foundReminder).toBeTruthy();
-        expect(foundReminder?.message).toBe("Test reminder");
-
-        await DBReminder.DeleteReminder(reminderId);
-
-        const foundReminderAfterDelete = await DBReminder.GetReminderById(reminderId);
-
-        expect(foundReminderAfterDelete).toBeFalsy();
+        expect(channel.send).toHaveBeenCalledWith(expect.objectContaining({
+            content: expect.stringContaining("Test reminder"),
+        }));
+        expect(await DBReminder.GetReminderById(stored._id)).toBeNull();
     });
 
-    test("Create and store looping reminder", async () => {
-        const reminderId = new ObjectId();
-        const mockReminder = {
-            _id: reminderId,
-            userId: "user1",
-            channelId: "channel1",
-            messageId: "message1",
-            message: "Looping reminder test",
-            remindAt: new Date(),
+    test("pushes a looping reminder forward instead of deleting it", async () => {
+        const start = new Date(Date.now() - 1000);
+        const stored = reminder({
             isLooping: true,
-            loopInterval: 60000
-        };
-
-        vi.spyOn(DBReminder.prototype, "save").mockResolvedValue(undefined as any);
-        vi.spyOn(DBReminder, "GetReminderById")
-            .mockResolvedValueOnce(Object.assign(new DBReminder(mockReminder), mockReminder))
-            .mockResolvedValueOnce(null);
-        vi.spyOn(DBReminder, "DeleteReminder").mockResolvedValue(undefined as any);
-
-        const reminder = new DBReminder(mockReminder);
-        await reminder.save();
-
-        const foundReminder = await DBReminder.GetReminderById(reminderId);
-
-        expect(foundReminder).toBeTruthy();
-        expect(foundReminder?.isLooping).toBe(true);
-        expect(foundReminder?.loopInterval).toBe(60000);
-
-        await DBReminder.DeleteReminder(reminderId);
-
-        const foundReminderAfterDelete = await DBReminder.GetReminderById(reminderId);
-        expect(foundReminderAfterDelete).toBeFalsy();
-    });
-
-    test("Looping reminder updates remindAt", async () => {
-        const initialRemindAt = new Date(Date.now() - 10000);
-        const reminderId = new ObjectId();
-        
-        // Create the updated date first
-        const updatedRemindAt = new Date(initialRemindAt.getTime() + 60000);
-        
-        // Create mock reminder instances
-        const initialReminder = new DBReminder({
-            _id: reminderId,
-            userId: "user2",
-            channelId: "channel2",
-            messageId: "message2",
-            message: "Looping reminder update test",
-            remindAt: initialRemindAt,
-            isLooping: true,
-            loopInterval: 60000
+            loopInterval: 3_600_000,
+            remindAt: start,
         });
-        
-        const updatedReminder = new DBReminder({
-            _id: reminderId,
-            userId: "user2",
-            channelId: "channel2",
-            messageId: "message2",
-            message: "Looping reminder update test",
-            remindAt: updatedRemindAt,
-            isLooping: true,
-            loopInterval: 60000
-        });
+        await stored.save();
+        const channel = {
+            id: stored.channelId,
+            isTextBased: () => true,
+            isDMBased: () => false,
+            permissionsFor: () => ({ has: () => true }),
+            send: vi.fn().mockResolvedValue(undefined),
+        };
+        await ReminderTrackingLoop(clientFor(channel));
 
-        vi.spyOn(DBReminder.prototype, "save").mockResolvedValue(undefined as any);
-        vi.spyOn(DBReminder, "GetReminderById")
-            .mockResolvedValueOnce(updatedReminder)  // After save, simulate the tracking loop having updated it
-            .mockResolvedValueOnce(null);  // After delete
-        vi.spyOn(DBReminder, "DeleteReminder").mockResolvedValue(undefined as any);
-
-        await initialReminder.save();
-
-        // Simulate tracking loop having updated the reminder
-        const fetchedReminder = await DBReminder.GetReminderById(reminderId);
-
-        expect(fetchedReminder).toBeTruthy();
-        expect(fetchedReminder!.remindAt.getTime()).toBeGreaterThan(initialRemindAt.getTime());
-        expect(fetchedReminder!.remindAt.getTime()).toBe(updatedRemindAt.getTime());
-
-        await DBReminder.DeleteReminder(reminderId);
-
-        const foundReminderAfterDelete = await DBReminder.GetReminderById(reminderId);
-        expect(foundReminderAfterDelete).toBeFalsy();
+        const updated = await DBReminder.GetReminderById(stored._id);
+        expect(updated).toBeTruthy();
+        expect(updated!.remindAt.getTime()).toBeGreaterThan(start.getTime());
     });
 
-    test("DBReminder constructor initializes properly", () => {
-        const reminderData = {
-            _id: new ObjectId(),
-            userId: "123",
-            channelId: "456",
-            messageId: "789",
-            message: "Constructor test",
-            remindAt: new Date()
-        };
-
-        const reminder = new DBReminder(reminderData);
-
-        expect(reminder).toBeInstanceOf(DBReminder);
-        expect(reminder.message).toBe("Constructor test");
-        expect(reminder.userId).toBe("123");
-        expect(reminder.channelId).toBe("456");
-    });
-
-    test("GetDueReminders should return overdue reminders", async () => {
-        const dueReminder = {
-            _id: new ObjectId(),
-            userId: "user3",
-            channelId: "channel3",
-            messageId: "message3",
-            message: "Due reminder",
-            remindAt: new Date(Date.now() - 1000)
-        };
-
-        vi.spyOn(DBReminder, "GetDueReminders").mockResolvedValue([
-            Object.assign(new DBReminder(dueReminder), dueReminder)
-        ]);
-
-        const reminders = await DBReminder.GetDueReminders();
-
-        expect(reminders).toHaveLength(1);
-        expect(reminders[0].message).toBe("Due reminder");
-        expect(reminders[0].remindAt.getTime()).toBeLessThan(Date.now());
+    test("deletes a reminder whose channel cannot be found", async () => {
+        const stored = reminder();
+        await stored.save();
+        await ReminderTrackingLoop(clientFor(null));
+        expect(await DBReminder.GetReminderById(stored._id)).toBeNull();
     });
 });
