@@ -5,19 +5,21 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: ['dotenv/config'],
+    setupFiles: ['dotenv/config', 'src/__test__/setup.ts'],
     include: ['src/**/*.{test,spec}.ts'],
-    exclude: [
-      'node_modules/',
-      'src/__test__/Database.test.ts',  // Requires DB setup
-      'src/__test__/OAuth.test.ts',     // Requires OAuth setup  
-      'src/__test__/OsuApi.test.ts',    // Requires API setup
-      'src/__test__/RemindMe.test.ts'   // Requires DB setup
-    ],
+    exclude: ['node_modules/'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'dist/', '**/*.d.ts', '**/*.test.ts', '**/*.spec.ts']
+      include: ['src/**/*.ts'],
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'src/**/*.d.ts',
+        'src/**/*.test.ts',
+        'src/**/*.spec.ts',
+        'src/__test__/**'
+      ]
     }
   },
   resolve: {

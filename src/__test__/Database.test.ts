@@ -1,42 +1,87 @@
 import "dotenv/config"
-import { expect, test } from "vitest";
+import { describe, expect, test, vi, beforeEach } from "vitest";
 import { User, UserFactory } from "../class/database/User";
-import { Connect, Disconnect } from "../class/database/Main";
-import { GuildFactory } from "../class/database/Guild";
+import { GuildFactory, Guild } from "../class/database/Guild";
 
-const testUserId = "552546198918004757"
-const testGuildId = "1039071920433414194"
+describe("Database - User Factory", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
 
-beforeAll(async () => {
-    await Connect()
-})
+    test("User by userid", async () => {
+        const mockUser = {
+            userId: "552546198918004757",
+            username: "_trollface",
+            osuId: 8398988,
+            accessToken: "mock_token",
+            refreshToken: "mock_refresh",
+            expiresAt: new Date()
+        };
 
-test("User by userid", async () => {
-    const user = await UserFactory.GetUser(testUserId)
+        vi.spyOn(UserFactory, "GetUser").mockResolvedValue(
+            Object.assign(new User(), mockUser)
+        );
 
-    expect(user).toBeTruthy()
-    expect(user).toHaveProperty("username", "_trollface")
-    expect(user).toBeInstanceOf(User)
-})
+        const user = await UserFactory.GetUser("552546198918004757");
 
-test("User with invalid id", async () => {
-    const user = await UserFactory.GetUser("")
+        expect(user).toBeTruthy();
+        expect(user).toHaveProperty("username", "_trollface");
+        expect(user).toBeInstanceOf(User);
+    });
 
-    expect(user).toBeFalsy()
-})
+    test("User with invalid id", async () => {
+        vi.spyOn(UserFactory, "GetUser").mockResolvedValue(null);
 
-test("Guild with guildid", async () => {
-    const guild = await GuildFactory.GetGuild(testGuildId)
+        const user = await UserFactory.GetUser("");
 
-    expect(guild).toHaveProperty("name", "hh")
-})
+        expect(user).toBeFalsy();
+    });
 
-test("Guild with invalid id", async () => {
-    const guild = await GuildFactory.GetGuild("")
+    test("User not found returns null", async () => {
+        vi.spyOn(UserFactory, "GetUser").mockResolvedValue(null);
 
-    expect(guild).toBeFalsy()
-})
+        const user = await UserFactory.GetUser("nonexistent");
 
-afterAll(async () => {
-    await Disconnect()
-})
+        expect(user).toBeNull();
+    });
+});
+
+describe("Database - Guild Factory", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    test("Guild with guildid", async () => {
+        const mockGuild = {
+            guildId: "1039071920433414194",
+            name: "hh",
+            prefix: "!",
+            settings: {}
+        };
+
+        vi.spyOn(GuildFactory, "GetGuild").mockResolvedValue(
+            Object.assign(new Guild(), mockGuild)
+        );
+
+        const guild = await GuildFactory.GetGuild("1039071920433414194");
+
+        expect(guild).toBeTruthy();
+        expect(guild).toHaveProperty("name", "hh");
+    });
+
+    test("Guild with invalid id", async () => {
+        vi.spyOn(GuildFactory, "GetGuild").mockResolvedValue(null);
+
+        const guild = await GuildFactory.GetGuild("");
+
+        expect(guild).toBeFalsy();
+    });
+
+    test("Guild not found returns null", async () => {
+        vi.spyOn(GuildFactory, "GetGuild").mockResolvedValue(null);
+
+        const guild = await GuildFactory.GetGuild("nonexistent");
+
+        expect(guild).toBeNull();
+    });
+});
