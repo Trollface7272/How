@@ -10,6 +10,7 @@ import { GetFlag, HandleAsync } from "@src/Utils";
 import { DailyChallengeProfileFactory } from "@src/class/database/DailyChallengeProfile";
 import { TextRenderer } from "@src/class/renderer/Text";
 import { EmojiFactory } from "@src/class/Emojis";
+import { Logger } from "@src/class/Logger";
 import { SlashCommandBuilder } from "discord.js";
 
 interface args {
@@ -127,3 +128,5 @@ DailyChallengeProfile.helpData
     .setUsage("dcp [username]")
     .setAliases(DailyChallengeProfile.names)
     .addArg(UsernameArg);
+
+export default DailyChallengeProfile;

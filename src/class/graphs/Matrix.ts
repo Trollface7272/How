@@ -139,8 +139,14 @@ export class MatrixChart {
             plugins: [ChartPlugins.osuGraphBgColorPlugin]
         } as ChartConfiguration;
         return new ChartJSNodeCanvas({
-            width: 2710, height: 416, chartCallback: (ChartJS) => {
-                ChartJS.register(MatrixController, MatrixElement)
+            width: 2710, height: 416,             chartCallback: (ChartJS) => {
+                // chartjs-node-canvas loads a fresh chart.js. Register controllers
+                // and the date adapter against that copy, not the one this file imported.
+                const matrix = require('chartjs-chart-matrix')
+                ChartJS.register(matrix.MatrixController, matrix.MatrixElement)
+                const adapterPath = require.resolve('chartjs-adapter-moment')
+                delete require.cache[adapterPath]
+                require('chartjs-adapter-moment')
             }
         }).renderToBuffer(config)
     }

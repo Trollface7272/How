@@ -209,3 +209,5 @@ DailyChallengeLeaderboards.helpData
 
 
 CommandEmitterInstance.AddCommand(DailyChallengeLeaderboards, DailyChallengeLeaderboards.names)
+
+export default DailyChallengeLeaderboards;

@@ -16,6 +16,7 @@ import { CalculateProgress } from "@src/class/api/osu/Utils"
 import { Beatmap } from "@src/class/api/osu/class/Beatmap"
 import { BeatmapSet } from "@src/class/api/osu/class/BeatmapSet"
 import { PerformanceCalculator } from "@src/class/api/osu/PerformanceCalculator/PerformanceCalculator"
+import { Logger } from "@src/class/Logger"
 import { CommandBase } from "@src/class/base/Command";
 import { CommandGroup, CommandHelp } from "@src/class/help/CommandHelp";
 import { GamemodeArg, PageArg, UsernameArg } from "@src/utils/discord/help";
@@ -53,7 +54,6 @@ class RecentData extends CommandData implements CommandDataAbstract {
 
     public GetComandArgs(): args {
         const command = this.data.GetCommand()
-
 
         
         const Gamemode = this.data.GetGamemode()
@@ -158,7 +158,7 @@ class Recent extends CommandBase implements CommandAbstract {
                 await Promise.all(performanceLoading)
 
                 this.data.Reply(this.renderMultipleBestScores({ scores, page: Page, maxPages: Math.ceil(allScores.length / listPageSize) }))
-                return CommandResponseCodes.USER_ERROR
+                return CommandResponseCodes.OK
             }
 
             const score = allScores[Page]
@@ -166,9 +166,14 @@ class Recent extends CommandBase implements CommandAbstract {
             const loading = Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)])
             await loading
             this.data.Reply(await this.renderSingleBestScore({ score, page: Page, maxPages: allScores.length }))
-            return CommandResponseCodes.USER_ERROR
+            return CommandResponseCodes.OK
         }
-        const allScores = await fetcher.GetUserScores({ Username: Username ?? Id.toString(), Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails, Id: Id })
+        const [allScores, scoresErr] = await HandleAsync(fetcher.GetUserScores({ Username: Username ?? Id.toString(), Gamemode: Gamemode, Type: "recent", Limit: 100, Fails: Fails, Id: Id }))
+        if (scoresErr) {
+            Logger.Error("Recent scores error:", scoresErr)
+            await this.data.Reply(this.RenderApiError())
+            return CommandResponseCodes.ERROR
+        }
         this.args.Scores = allScores
 
         if (allScores.length == 0) return this.noScoresFound(Username ?? Id.toString(), response)
@@ -182,7 +187,7 @@ class Recent extends CommandBase implements CommandAbstract {
             const performanceLoading = scores.map(score => Promise.all([score.fetchPerformance(), score.fetchPosition(user.id)]))
             await Promise.all(performanceLoading)
             this.data.Reply(this.renderMultipleScores({ scores, page: Page, maxPages: Math.ceil(allScores.length / listPageSize) }))
-            return CommandResponseCodes.USER_ERROR
+            return CommandResponseCodes.OK
         }
 
         const score = allScores[Page]
@@ -199,7 +204,7 @@ class Recent extends CommandBase implements CommandAbstract {
         await loading
 
         this.data.Reply(await this.renderSingleScore({ score, page: Page, maxPages: allScores.length, tries }))
-        return CommandResponseCodes.USER_ERROR
+        return CommandResponseCodes.OK
     }
 
     private renderCount({ fails, passes, total }: { passes: number, fails: number, total: number }) {
@@ -268,7 +273,6 @@ class Recent extends CommandBase implements CommandAbstract {
         const buttons = this.renderNavigationButtons({ curentPage: page, maxPage: maxPages })
 
         let mapEmbed: Promise<EmbedBuilder>
-
 
         if (this.data.args.Map) mapEmbed = this.renderMap({ beatmap: score.Beatmap, beatmapset: score.Beatmapset })
 
@@ -437,3 +441,5 @@ Recent.helpData
         .setName("map")
         .setDescription("Display beatmap info")
         .setUsage("-map"))
+
+export default Recent;

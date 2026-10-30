@@ -19,7 +19,6 @@ import NodeCache from "node-cache";
 import { CONTEXT_FULL, GamemodeStringOption, ModsStringOption, PageNumberOption, RandomBooleanOption, ReversedBooleanOption, UsernameStringOption } from "@src/utils/discord/interaction";
 import { InteractionRegistrerInstance } from "@src/class/InteractionRegisterer";
 
-
 type SortType = "ar" | "od" | "cs" | "hp" | "pp" | "bpm" | "score" | "difference" | "diff"
     | "rar" | "rod" | "rcs" | "rhp" | "rpp" | "rbpm" | "rscore" | "rdifference" | "rdiff"
 
@@ -51,7 +50,6 @@ const componentCache = new NodeCache({
     checkperiod: 60 * 60 * 24,
     maxKeys: 10000, useClones: false
 })
-
 
 class ScoreData extends CommandData implements CommandDataAbstract {
     public args: args
@@ -188,7 +186,6 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
                 merge(filterQuery, { mods: { $all: Mods.include.mods } })
             }
 
-
             const [score, err] = await HandleAsync(ScoreFactory.GetScoresByUser(Anyone ? -1 : Id, filterQuery, sortQuery, Limit, (Page - 1) * Limit, Random))
             if (err) {
                 Logger.Error("Score query error:", err)
@@ -300,7 +297,6 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
             .setDisabled(disabled)
     }
 
-
     private parseFilter(filter: string): Filter<Score> {
         const regex = /([A-z]*)(<=|>=|==|<|>|=)([A-z0-9]*)/gm
         const [, collumn, sign, value] = regex.exec(filter)
@@ -377,3 +373,5 @@ Score.helpData
     .addArg(GamemodeArg)
     .addArg(PageArg)
     .addArg(ModsArg)
+
+export default Score;

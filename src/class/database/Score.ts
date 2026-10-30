@@ -108,7 +108,11 @@ export class ScoreBeatmap {
         return `https://osu.ppy.sh/b/${this.id}`
     }
     constructor(beatmap?: Document) {
-        Object.assign(this, beatmap)
+        if (!beatmap) return
+        // `url` is a getter. Documents saved from a class instance can still
+        // carry it as data, and Object.assign would throw.
+        const { url: _url, ...rest } = beatmap as Document & { url?: string }
+        Object.assign(this, rest)
     }
 }
 

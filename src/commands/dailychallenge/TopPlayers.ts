@@ -213,3 +213,5 @@ DailyChallengeTopPlayers.helpData
         .setName("today")
         .setDescription("Show today's scores")
         .setUsage("-today"));
+
+export default DailyChallengeTopPlayers;

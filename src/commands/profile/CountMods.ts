@@ -137,3 +137,4 @@ CountMods.helpData
     .setAliases(CountMods.names)
     .addArg(UsernameArg)
     .addArg(GamemodeArg);
+export default CountMods;

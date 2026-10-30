@@ -61,3 +61,5 @@ Matrix.helpData
     .setEnabled(false)
 
 CommandEmitterInstance.AddCommand(Matrix, Matrix.names)
+
+export default Matrix;

@@ -1,10 +1,15 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import { ErrorMapper } from '@src/class/errors/ErrorMapper';
 import {
     UserFacingError,
     UserNotFoundError,
+    UserNotLinkedError,
     BeatmapNotFoundError,
+    NoScoresFoundError,
     OsuApiError,
+    RequiresSupporterError,
+    InvalidArgumentError,
+    BeatmapUnscoreableError,
     DatabaseError,
     NetworkError,
     UnexpectedError
@@ -19,7 +24,7 @@ describe('ErrorMapper', () => {
             expect(mapped).toBeInstanceOf(UserNotFoundError);
         });
 
-        it('should map AxiosError 404 to appropriate error', () => {
+        it('should map AxiosError 404 to UserNotFoundError', () => {
             const axiosError = {
                 isAxiosError: true,
                 response: { status: 404 },
@@ -27,11 +32,10 @@ describe('ErrorMapper', () => {
             } as any;
             
             const mapped = ErrorMapper.toUserFacingError(axiosError);
-            expect(mapped).toBeInstanceOf(OsuApiError);
-            expect(mapped.message).toContain('not found');
+            expect(mapped).toBeInstanceOf(UserNotFoundError);
         });
 
-        it('should map AxiosError 401 to OsuApiError', () => {
+        it('should map AxiosError 401 to UserNotLinkedError', () => {
             const axiosError = {
                 isAxiosError: true,
                 response: { status: 401 },
@@ -39,11 +43,10 @@ describe('ErrorMapper', () => {
             } as any;
             
             const mapped = ErrorMapper.toUserFacingError(axiosError);
-            expect(mapped).toBeInstanceOf(OsuApiError);
-            expect(mapped.message).toContain('authentication');
+            expect(mapped).toBeInstanceOf(UserNotLinkedError);
         });
 
-        it('should map AxiosError 429 to rate limit error', () => {
+        it('should map AxiosError 429 to OsuApiError', () => {
             const axiosError = {
                 isAxiosError: true,
                 response: { status: 429 },
@@ -52,7 +55,7 @@ describe('ErrorMapper', () => {
             
             const mapped = ErrorMapper.toUserFacingError(axiosError);
             expect(mapped).toBeInstanceOf(OsuApiError);
-            expect(mapped.message).toContain('rate limit');
+            expect(mapped.userMessage).toContain('osu! API');
         });
 
         it('should map AxiosError network errors', () => {
@@ -64,7 +67,7 @@ describe('ErrorMapper', () => {
             
             const mapped = ErrorMapper.toUserFacingError(axiosError);
             expect(mapped).toBeInstanceOf(NetworkError);
-            expect(mapped.message).toContain('network');
+            expect(mapped.userMessage).toContain('Failed to contact');
         });
 
         it('should map MongoDB errors to DatabaseError', () => {
@@ -106,7 +109,7 @@ describe('UserFacingError classes', () => {
         const error = new BeatmapNotFoundError('12345');
         const reply = error.toReply();
         expect(reply.content).toContain('12345');
-        expect(reply.content).toContain('beatmap');
+        expect(reply.content).toContain('Beatmap');
         expect(reply.ephemeral).toBe(true);
     });
 
@@ -118,9 +121,10 @@ describe('UserFacingError classes', () => {
     });
 
     it('should create NetworkError with proper reply', () => {
-        const error = new NetworkError();
+        const error = new NetworkError('test service');
         const reply = error.toReply();
-        expect(reply.content).toContain('network');
+        expect(reply.content).toContain('Failed to contact');
+        expect(reply.content).toContain('test service');
         expect(reply.ephemeral).toBe(true);
     });
 

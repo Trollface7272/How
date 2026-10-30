@@ -88,3 +88,5 @@ Import.helpData
     .setUsage("import [username]")
     .setAliases(Import.names)
     .addArg(UsernameArg);
+
+export default Import;

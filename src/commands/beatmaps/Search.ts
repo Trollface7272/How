@@ -194,3 +194,4 @@ Search.interactionData
     )
 CommandEmitterInstance.AddCommand(Search, Search.names)
 InteractionRegistrerInstance.AddInteraction(Search.interactionData)
+export default Search;

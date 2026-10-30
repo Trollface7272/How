@@ -259,3 +259,5 @@ SnipeProfile.helpData
     .setUsage("profilesnipestats [username]")
     .setAliases(SnipeProfile.names)
     .addArg(UsernameArg);
+
+export default SnipeProfile;

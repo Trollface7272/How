@@ -117,7 +117,6 @@ class Top extends CommandBase implements CommandAbstract {
     private oldComponentId: string
     private args: args
 
-
     constructor(data: MessageEventData) {
         super()
         this.componentId = randomBytes(16).toString("hex")
@@ -180,14 +179,13 @@ class Top extends CommandBase implements CommandAbstract {
             })
         }
 
-
         if (GreaterThan) {
             let username = scores[0].User.username
             scores = scores.filter(el => el.PP > GreaterThan)
             if (!Recent && !Random && !Reversed) {
                 const embed = this.RenderGreaterThan({ user: username, total: scores.length, pp: GreaterThan })
                 this.data.Reply({ embeds: [embed] })
-                return CommandResponseCodes.USER_ERROR
+                return CommandResponseCodes.OK
             }
         }
 
@@ -429,3 +427,5 @@ Top.helpData
         .setDescription("Show random scores")
         .setUsage("random")
     )
+
+export default Top;

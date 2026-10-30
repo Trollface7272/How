@@ -88,6 +88,11 @@ class Beatmap extends CommandBase implements CommandAbstract {
 
     let id = _id ?? await this.data.GetBeatmap()
 
+    if (id == null) {
+      await this.data.Reply(this.RenderNoBeatmapError())
+      return CommandResponseCodes.USER_ERROR
+    }
+
     const fetcher = await Fetcher.Create(user.id)
     const [beatmap, err] = await HandleAsync(fetcher.GetBeatmap({ Gamemode: Gamemode, id: id }))
     if (err) {
@@ -255,3 +260,6 @@ Beatmap.interactionData
   )
 CommandEmitterInstance.AddCommand(Beatmap, Beatmap.names)
 InteractionRegistrerInstance.AddInteraction(Beatmap.interactionData)
+
+
+export default Beatmap;

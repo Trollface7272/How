@@ -97,3 +97,5 @@ Avatar.helpData
     .setUsage("avatar [username]")
     .setAliases(Avatar.names)
     .addArg(UsernameArg);
+
+export default Avatar;

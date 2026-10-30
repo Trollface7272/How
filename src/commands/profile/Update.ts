@@ -59,14 +59,14 @@ class Update extends CommandBase implements CommandAbstract {
         const [profile, profileError] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
         if (profileError) {
             await this.data.Reply(this.HandleProfileError(profileError, Username))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.USER_ERROR
         }
 
         const [updated, updateError] = await HandleAsync(fetcher.AmeoTrackUpdate({ id: profile.id, mode: 0 }))
         if (updateError) {
             Logger.Error(updateError)
             await this.data.Reply(this.HandleProfileError(updateError, Username))
-            return CommandResponseCodes.OK
+            return CommandResponseCodes.ERROR
         }
 
         const text = TextRenderer.render("profile/update", {
@@ -120,3 +120,4 @@ Update.helpData
     .setUsage("update [username]")
     .setAliases(Update.names)
     .addArg(UsernameArg);
+export default Update;
