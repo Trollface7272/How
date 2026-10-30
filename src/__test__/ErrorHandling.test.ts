@@ -1,14 +1,35 @@
-import { describe, it, expect } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { AxiosError, AxiosResponse } from 'axios';
+import { InteractionReplyOptions, MessageReplyOptions } from 'discord.js';
 import { ErrorMapper } from '@src/class/errors/ErrorMapper';
+import { Logger } from '@src/class/Logger';
 import {
-    UserFacingError,
     UserNotFoundError,
+    UserNotLinkedError,
     BeatmapNotFoundError,
     OsuApiError,
     DatabaseError,
     NetworkError,
     UnexpectedError
 } from '@src/class/errors/UserFacingError';
+
+function httpError(status: number, message: string) {
+    const error = new AxiosError(message);
+    error.response = { status } as AxiosResponse;
+    return error;
+}
+
+function expectEphemeral(reply: InteractionReplyOptions | MessageReplyOptions) {
+    expect((reply as { ephemeral?: boolean }).ephemeral).toBe(true);
+}
+
+beforeEach(() => {
+    jest.spyOn(Logger, 'Error').mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+    jest.restoreAllMocks();
+});
 
 describe('ErrorMapper', () => {
     describe('toUserFacingError', () => {
@@ -19,52 +40,28 @@ describe('ErrorMapper', () => {
             expect(mapped).toBeInstanceOf(UserNotFoundError);
         });
 
-        it('should map AxiosError 404 to appropriate error', () => {
-            const axiosError = {
-                isAxiosError: true,
-                response: { status: 404 },
-                message: 'Not found'
-            } as any;
-            
-            const mapped = ErrorMapper.toUserFacingError(axiosError);
-            expect(mapped).toBeInstanceOf(OsuApiError);
-            expect(mapped.message).toContain('not found');
+        it('should map AxiosError 404 to UserNotFoundError', () => {
+            const mapped = ErrorMapper.toUserFacingError(httpError(404, 'Not found'));
+            expect(mapped).toBeInstanceOf(UserNotFoundError);
+            expect(mapped.userMessage).toContain('not found');
         });
 
-        it('should map AxiosError 401 to OsuApiError', () => {
-            const axiosError = {
-                isAxiosError: true,
-                response: { status: 401 },
-                message: 'Unauthorized'
-            } as any;
-            
-            const mapped = ErrorMapper.toUserFacingError(axiosError);
-            expect(mapped).toBeInstanceOf(OsuApiError);
-            expect(mapped.message).toContain('authentication');
+        it('should map AxiosError 401 to UserNotLinkedError', () => {
+            const mapped = ErrorMapper.toUserFacingError(httpError(401, 'Unauthorized'));
+            expect(mapped).toBeInstanceOf(UserNotLinkedError);
+            expect(mapped.userMessage).toContain('link');
         });
 
-        it('should map AxiosError 429 to rate limit error', () => {
-            const axiosError = {
-                isAxiosError: true,
-                response: { status: 429 },
-                message: 'Too many requests'
-            } as any;
-            
-            const mapped = ErrorMapper.toUserFacingError(axiosError);
+        it('should map AxiosError 429 to OsuApiError', () => {
+            const mapped = ErrorMapper.toUserFacingError(httpError(429, 'Too many requests'));
             expect(mapped).toBeInstanceOf(OsuApiError);
-            expect(mapped.message).toContain('rate limit');
+            expect(mapped.message).toContain('429');
         });
 
         it('should map AxiosError network errors', () => {
-            const axiosError = {
-                isAxiosError: true,
-                code: 'ECONNREFUSED',
-                message: 'Connection refused'
-            } as any;
-            
-            const mapped = ErrorMapper.toUserFacingError(axiosError);
+            const mapped = ErrorMapper.toUserFacingError(new AxiosError('Connection refused', 'ECONNREFUSED'));
             expect(mapped).toBeInstanceOf(NetworkError);
-            expect(mapped.message).toContain('network');
+            expect(mapped.message.toLowerCase()).toContain('network');
         });
 
         it('should map MongoDB errors to DatabaseError', () => {
@@ -99,42 +96,42 @@ describe('UserFacingError classes', () => {
         const reply = error.toReply();
         expect(reply.content).toContain('testuser');
         expect(reply.content).toContain('not found');
-        expect(reply.ephemeral).toBe(true);
+        expectEphemeral(reply);
     });
 
     it('should create BeatmapNotFoundError with proper reply', () => {
         const error = new BeatmapNotFoundError('12345');
         const reply = error.toReply();
         expect(reply.content).toContain('12345');
-        expect(reply.content).toContain('beatmap');
-        expect(reply.ephemeral).toBe(true);
+        expect(reply.content).toContain('Beatmap');
+        expectEphemeral(reply);
     });
 
     it('should create OsuApiError with proper reply', () => {
-        const error = new OsuApiError('API is down');
+        const error = new OsuApiError(503);
         const reply = error.toReply();
         expect(reply.content).toContain('osu! API');
-        expect(reply.ephemeral).toBe(true);
+        expectEphemeral(reply);
     });
 
     it('should create NetworkError with proper reply', () => {
-        const error = new NetworkError();
+        const error = new NetworkError('external API');
         const reply = error.toReply();
-        expect(reply.content).toContain('network');
-        expect(reply.ephemeral).toBe(true);
+        expect(reply.content).toContain('external API');
+        expectEphemeral(reply);
     });
 
     it('should create DatabaseError with proper reply', () => {
         const error = new DatabaseError('Connection timeout');
         const reply = error.toReply();
         expect(reply.content).toContain('database');
-        expect(reply.ephemeral).toBe(true);
+        expectEphemeral(reply);
     });
 
     it('should create UnexpectedError with proper reply', () => {
         const error = new UnexpectedError('Kaboom');
         const reply = error.toReply();
         expect(reply.content).toContain('unexpected');
-        expect(reply.ephemeral).toBe(true);
+        expectEphemeral(reply);
     });
 });

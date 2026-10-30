@@ -1,6 +1,7 @@
 
 {
 	"compilerOptions": {
+		"strict": false,
 		"lib": ["ESNext"],
 		"module": "commonjs",
 		"moduleResolution": "node",

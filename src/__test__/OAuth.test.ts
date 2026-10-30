@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { expect, test } from "@jest/globals"
+import { afterAll, beforeAll, expect, test } from "@jest/globals"
 import { OAuthGenerator } from "../class/api/osu/OAuth"
 import { Connect, Disconnect } from "../class/database/Main"
 
@@ -23,7 +23,8 @@ test("OAuth With UserId", async () => {
     expect(oauth).toHaveProperty("access_token")
     expect(oauth).toHaveProperty("expires_in")
     expect(oauth).toHaveProperty("token_type", "Bearer")
-    expect(oauth["expires_in"].getTime()).toBeGreaterThan(Date.now())
+    if (!oauth) throw new Error("Expected an OAuth token")
+    expect(oauth.expires_in.getTime()).toBeGreaterThan(Date.now())
 })
 
 afterAll(async () => {

@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { expect, test } from "@jest/globals";
+import { afterAll, beforeAll, expect, jest, test } from "@jest/globals";
 import { Connect, Disconnect } from "../class/database/Main";
 import { DBReminder } from "../class/database/Reminder";
 import { ObjectId } from "mongodb";
@@ -24,6 +24,7 @@ test("Create and delete reminder", async () => {
     const foundReminder = await DBReminder.GetReminderById(reminder._id);
 
     expect(foundReminder).toBeTruthy();
+    if (!foundReminder) throw new Error("Expected reminder to be saved");
     expect(foundReminder.message).toBe("Test reminder");
 
     await DBReminder.DeleteReminder(reminder._id);
@@ -50,6 +51,7 @@ test("Create and store looping reminder", async () => {
     const foundReminder = await DBReminder.GetReminderById(reminder._id);
 
     expect(foundReminder).toBeTruthy();
+    if (!foundReminder) throw new Error("Expected reminder to be saved");
     expect(foundReminder.isLooping).toBe(true);
     expect(foundReminder.loopInterval).toBe(60000);
 
@@ -75,14 +77,14 @@ test("Looping reminder updates remindAt", async () => {
     await reminder.save();
 
     const mockChannel = {
-        send: jest.fn().mockResolvedValue(true),
+        send: jest.fn(async (..._args: unknown[]) => true),
         isTextBased: () => true,
         isDMBased: () => false,
         permissionsFor: () => ({ has: () => true })
     };
     const mockClient = {
         channels: {
-            fetch: jest.fn().mockResolvedValue(mockChannel)
+            fetch: jest.fn(async () => mockChannel)
         },
         user: {},
     };
@@ -92,6 +94,7 @@ test("Looping reminder updates remindAt", async () => {
     const updatedReminder = await DBReminder.GetReminderById(reminder._id);
 
     expect(updatedReminder).toBeTruthy();
+    if (!updatedReminder) throw new Error("Expected reminder to be updated");
     expect(updatedReminder.remindAt.getTime()).toBeGreaterThan(initialRemindAt.getTime());
     expect(mockChannel.send).toHaveBeenCalledWith(expect.objectContaining({
         content: expect.stringContaining("Looping reminder update test")
