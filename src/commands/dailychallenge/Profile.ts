@@ -46,63 +46,74 @@ class DailyChallengeProfile extends CommandBase implements CommandAbstract {
 
         const Username = username || user?.osu?.username
         if (!Username) {
-            this.data.Reply(this.RenderNoUserError())
+            await this.data.Reply(this.RenderNoUserError())
             return CommandResponseCodes.USER_ERROR
         }
-        const fetcher = await Fetcher.Create(user.id)
-        const [profile, err] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
-        if (err) {
-            this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.ERROR
-        }
+        
+        try {
+            const fetcher = await Fetcher.Create(user.id)
+            const [profile, err] = await HandleAsync(fetcher.GetProfile({ Username, Gamemode: "osu" }))
+            if (err) {
+                Logger.Error("DailyChallengeProfile profile error:", err)
+                await this.data.Reply(this.RenderApiError())
+                return CommandResponseCodes.ERROR
+            }
 
-        const dcProfile = await DailyChallengeProfileFactory.GetDailyChallengeProfile(profile.id)
-        if (!dcProfile) {
-            this.data.Reply(this.RenderNoUserError())
-            return CommandResponseCodes.USER_ERROR
-        }
+            const dcProfile = await DailyChallengeProfileFactory.GetDailyChallengeProfile(profile.id)
+            if (!dcProfile) {
+                await this.data.Reply({
+                    content: `No daily challenge data found for ${profile.username}.`,
+                    ephemeral: true
+                })
+                return CommandResponseCodes.USER_ERROR
+            }
 
-        const grades = {
-            XH: 0,
-            X: 0,
-            SH: 0,
-            S: 0,
-            A: 0,
-            B: 0,
-            C: 0,
-            D: 0
-        }
+            const grades = {
+                XH: 0,
+                X: 0,
+                SH: 0,
+                S: 0,
+                A: 0,
+                B: 0,
+                C: 0,
+                D: 0
+            }
 
-        dcProfile.scoreData.forEach(score => {
-            grades[score.rank]++
-        })
-
-        const description = TextRenderer.render("dailychallenge/profile", {
-            avgRank: Math.round(dcProfile.scoreData.reduce((v, p) => v + p.position, 0) / dcProfile.scoreData.length),
-            avgRankPerc: (dcProfile.scoreData.reduce((v, p) => v + p.positionPercent, 0) / dcProfile.scoreData.length).toFixed(3),
-            perc10Placements: dcProfile.placements.top10.count,
-            perc50Placements: dcProfile.placements.top50.count,
-            played: dcProfile.placements.total,
-            avgScore: Math.round(dcProfile.scoreData.reduce((v, p) => v + p.score, 0) / dcProfile.scoreData.length),
-            grades: Object.entries(grades).filter(([k, v]) => v > 0).map(([key, value]) => EmojiFactory.GetEmoji(`Ranking${key}`) + `${value} `).join(""),
-            streak: dcProfile.streakData.currentStreak,
-            longestStreak: dcProfile.streakData.longestStreak,
-            detailedView: `https://howbot.net/daily-challenge/user/${profile.id}`
-        })
-
-        const embed = this.GetBaseEmbed()
-            .setAuthor({
-                name: `Daily Challenge Profile for ${profile.username}`,
-                iconURL: GetFlag(profile.country_code),
-                url: profile.url
+            dcProfile.scoreData.forEach(score => {
+                grades[score.rank]++
             })
-            .setDescription(description)
-            .setThumbnail(profile.avatar_url)
 
-        this.data.Reply({ embeds: [embed] })
-            
+            const description = TextRenderer.render("dailychallenge/profile", {
+                avgRank: Math.round(dcProfile.scoreData.reduce((v, p) => v + p.position, 0) / dcProfile.scoreData.length),
+                avgRankPerc: (dcProfile.scoreData.reduce((v, p) => v + p.positionPercent, 0) / dcProfile.scoreData.length).toFixed(3),
+                perc10Placements: dcProfile.placements.top10.count,
+                perc50Placements: dcProfile.placements.top50.count,
+                played: dcProfile.placements.total,
+                avgScore: Math.round(dcProfile.scoreData.reduce((v, p) => v + p.score, 0) / dcProfile.scoreData.length),
+                grades: Object.entries(grades).filter(([k, v]) => v > 0).map(([key, value]) => EmojiFactory.GetEmoji(`Ranking${key}`) + `${value} `).join(""),
+                streak: dcProfile.streakData.currentStreak,
+                longestStreak: dcProfile.streakData.longestStreak,
+                detailedView: `https://howbot.net/daily-challenge/user/${profile.id}`
+            })
 
-        return CommandResponseCodes.OK
+            const embed = this.GetBaseEmbed()
+                .setAuthor({
+                    name: `Daily Challenge Profile for ${profile.username}`,
+                    iconURL: GetFlag(profile.country_code),
+                    url: profile.url
+                })
+                .setDescription(description)
+                .setThumbnail(profile.avatar_url)
+
+            await this.data.Reply({ embeds: [embed] })
+                
+
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("DailyChallengeProfile error:", error)
+            await this.data.Reply(this.RenderApiError())
+            throw error
+        }
     }
 
 }

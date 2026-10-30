@@ -68,74 +68,80 @@ class DailyChallengeTopPlayers extends CommandBase implements CommandAbstract {
     }
 
     public async Handle(): Promise<CommandResponseCodes> {
-        if (this.args.Raw) {
-            return this.SendRawData()
-        }
-        if (this.data.IsInteraction()) {
-            const interaction = this.data.GetInteraction()
-            if (interaction.isButton()) {
-                const [command, componentId, page, id] = interaction.customId.split(";")
-                this.args.Page = parseInt(page)
+        try {
+            if (this.args.Raw) {
+                return this.SendRawData()
             }
-        }
-        const PER_PAGE = 20
-        const { Page, Today } = this.args
-        const user = this.data.GetUser()
-        //const s = [["top10Percent.count", - 1], ["averagePlacementPercent", 1]]
-        const filters: Filter<DailyChallengeProfile> = { }
-        if (this.args.Country) {
-            filters.country = this.args.Country.toUpperCase()
-        }
-
-        const _profiles =  await DailyChallengeProfileFactory.GetDailyChallengeProfiles(filters, { "top10Percent.count": -1, "averagePlacementPercent": 1 }, PER_PAGE, PER_PAGE * (Page - 1))
-        const _scores =  Today ? DailyChallengeScoreFactory.GetDailyChallengeScores({
-            "user.id": { $in: _profiles.map(el => el.id) }, temporary: true
-        }, true) : new Promise(resolve => resolve([]))
-        const _challenge = DailyChallengeFactory.GetCurrentChallenge()
-
-        const [scores, challenge] = await Promise.all([_scores, _challenge]) as [DailyChallengeScore[], DailyChallenge]
-
-        const fetcher = await Fetcher.Create(user.id)
-
-        const profiles = _profiles
-        const [fetchedProfiles, fetchedProfilesError] = await HandleAsync(fetcher.GetByUserIds({ ids: profiles.map(el => el.id) }))
-        if (fetchedProfilesError) {
-            Logger.Error(fetchedProfilesError)
-            this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.ERROR
-        }
-
-
-        const text = TextRenderer.render("dailychallenge/topplayers", {
-            profiles: profiles.map((profile, i) => {
-                const fetched = fetchedProfiles.find(el => el.id == profile.id)
-                const score = scores.find(el => el.user.id == profile.id)
-                const position = score ? score.position / challenge.thresholds.at(-1).total * 100 : null
-                return {
-                    index: (Page - 1) * PER_PAGE + i + 1,
-                    username: fetched.username,
-                    rank: fetched.statistics_rulesets.osu.global_rank,
-                    url: fetched.url, placementPercent: profile.averagePlacementPercent.roundFixed(2), placement: profile.averagePlacement.round(0),
-                    top10Percent: profile.placements.top10.count,
-                    currPerc: position?.roundFixed(2),
+            if (this.data.IsInteraction()) {
+                const interaction = this.data.GetInteraction()
+                if (interaction.isButton()) {
+                    const [command, componentId, page, id] = interaction.customId.split(";")
+                    this.args.Page = parseInt(page)
                 }
+            }
+            const PER_PAGE = 20
+            const { Page, Today } = this.args
+            const user = this.data.GetUser()
+            //const s = [["top10Percent.count", - 1], ["averagePlacementPercent", 1]]
+            const filters: Filter<DailyChallengeProfile> = { }
+            if (this.args.Country) {
+                filters.country = this.args.Country.toUpperCase()
+            }
+
+            const _profiles =  await DailyChallengeProfileFactory.GetDailyChallengeProfiles(filters, { "top10Percent.count": -1, "averagePlacementPercent": 1 }, PER_PAGE, PER_PAGE * (Page - 1))
+            const _scores =  Today ? DailyChallengeScoreFactory.GetDailyChallengeScores({
+                "user.id": { $in: _profiles.map(el => el.id) }, temporary: true
+            }, true) : new Promise(resolve => resolve([]))
+            const _challenge = DailyChallengeFactory.GetCurrentChallenge()
+
+            const [scores, challenge] = await Promise.all([_scores, _challenge]) as [DailyChallengeScore[], DailyChallenge]
+
+            const fetcher = await Fetcher.Create(user.id)
+
+            const profiles = _profiles
+            const [fetchedProfiles, fetchedProfilesError] = await HandleAsync(fetcher.GetByUserIds({ ids: profiles.map(el => el.id) }))
+            if (fetchedProfilesError) {
+                Logger.Error("DailyChallengeTopPlayers profile fetch error:", fetchedProfilesError)
+                await this.data.Reply(this.RenderApiError())
+                return CommandResponseCodes.ERROR
+            }
+
+
+            const text = TextRenderer.render("dailychallenge/topplayers", {
+                profiles: profiles.map((profile, i) => {
+                    const fetched = fetchedProfiles.find(el => el.id == profile.id)
+                    const score = scores.find(el => el.user.id == profile.id)
+                    const position = score ? score.position / challenge.thresholds.at(-1).total * 100 : null
+                    return {
+                        index: (Page - 1) * PER_PAGE + i + 1,
+                        username: fetched.username,
+                        rank: fetched.statistics_rulesets.osu.global_rank,
+                        url: fetched.url, placementPercent: profile.averagePlacementPercent.roundFixed(2), placement: profile.averagePlacement.round(0),
+                        top10Percent: profile.placements.top10.count,
+                        currPerc: position?.roundFixed(2),
+                    }
+                })
             })
-        })
 
-        const buttons = this.GetButtons()
+            const buttons = this.GetButtons()
 
-        const embed = this.GetBaseEmbed()
-            .setAuthor({
-                name: "Top Daily Challenge Players",
-                iconURL: GetFlag(fetchedProfiles.find(el => el.id == profiles[0].id)?.country?.code)
-            })
-            .setDescription(text)
-
-
-        await this.data.Reply({ embeds: [embed], components: [buttons] })
+            const embed = this.GetBaseEmbed()
+                .setAuthor({
+                    name: "Top Daily Challenge Players",
+                    iconURL: GetFlag(fetchedProfiles.find(el => el.id == profiles[0].id)?.country?.code)
+                })
+                .setDescription(text)
 
 
-        return CommandResponseCodes.OK
+            await this.data.Reply({ embeds: [embed], components: [buttons] })
+
+
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("DailyChallengeTopPlayers error:", error)
+            await this.data.Reply(this.RenderApiError())
+            throw error
+        }
     }
 
     private GetButtons() {

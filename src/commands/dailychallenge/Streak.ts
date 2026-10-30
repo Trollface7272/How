@@ -68,50 +68,56 @@ class StreakLeaderboards extends CommandBase implements CommandAbstract {
         componentCache.set(this.componentId, this.args)
     }
     public async Handle(): Promise<CommandResponseCodes> {
-        if (this.data.IsInteraction()) {
-            const interaction = this.data.GetInteraction()
-            if (interaction.isButton()) {
-                const [command, componentId, page, id] = interaction.customId.split(";")
-                this.args.Page = parseInt(page)
+        try {
+            if (this.data.IsInteraction()) {
+                const interaction = this.data.GetInteraction()
+                if (interaction.isButton()) {
+                    const [command, componentId, page, id] = interaction.customId.split(";")
+                    this.args.Page = parseInt(page)
+                }
             }
-        }
-        const user = this.data.GetUser()
-        const { Page, Current } = this.args
+            const user = this.data.GetUser()
+            const { Page, Current } = this.args
 
-        const [filter, err] = await HandleAsync(this.GetFilter())
-        if (err) {
-            if (err === CommandResponseCodes.USER_ERROR) return CommandResponseCodes.USER_ERROR
-            Logger.Error(err)
-            this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.ERROR
-        }
+            const [filter, err] = await HandleAsync(this.GetFilter())
+            if (err) {
+                if (err === CommandResponseCodes.USER_ERROR) return CommandResponseCodes.USER_ERROR
+                Logger.Error("DailyChallengeStreak filter error:", err)
+                await this.data.Reply(this.RenderApiError())
+                return CommandResponseCodes.ERROR
+            }
 
-        const sort = this.GetSort()
-        
-        const users = await DailyChallengeProfileFactory.GetDailyChallengeProfiles(filter, sort, this.PER_PAGE, (Page - 1) * this.PER_PAGE)
+            const sort = this.GetSort()
+            
+            const users = await DailyChallengeProfileFactory.GetDailyChallengeProfiles(filter, sort, this.PER_PAGE, (Page - 1) * this.PER_PAGE)
 
-        const [templateData, templateDataErr] = await HandleAsync(this.GetTemplateData(users))
-        if (templateDataErr) {
-            if (templateDataErr === CommandResponseCodes.USER_ERROR) return CommandResponseCodes.USER_ERROR
-            Logger.Error(templateDataErr)
-            this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.ERROR
-        }
+            const [templateData, templateDataErr] = await HandleAsync(this.GetTemplateData(users))
+            if (templateDataErr) {
+                if (templateDataErr === CommandResponseCodes.USER_ERROR) return CommandResponseCodes.USER_ERROR
+                Logger.Error("DailyChallengeStreak template data error:", templateDataErr)
+                await this.data.Reply(this.RenderApiError())
+                return CommandResponseCodes.ERROR
+            }
 
-        const text = TextRenderer.render("dailychallenge/streak", {
-            profiles: templateData
-        })
-        
-        const embed = this.GetBaseEmbed()
-            .setDescription(text)
-            .setAuthor({
-                name: `${Current ? "Current" : "Longest"} Streak Leaderboards`,
-                iconURL: GetFlag(templateData[0].country)
+            const text = TextRenderer.render("dailychallenge/streak", {
+                profiles: templateData
             })
+            
+            const embed = this.GetBaseEmbed()
+                .setDescription(text)
+                .setAuthor({
+                    name: `${Current ? "Current" : "Longest"} Streak Leaderboards`,
+                    iconURL: GetFlag(templateData[0].country)
+                })
 
-        await this.data.Reply({ embeds: [embed], components: [this.GetButtons()] })
+            await this.data.Reply({ embeds: [embed], components: [this.GetButtons()] })
 
-        return CommandResponseCodes.OK
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("DailyChallengeStreak error:", error)
+            await this.data.Reply(this.RenderApiError())
+            throw error
+        }
     }
 
     private GetButtons() {

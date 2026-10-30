@@ -10,6 +10,7 @@ import { UsernameArg } from "@src/utils/discord/help";
 import { Fetcher } from "@src/class/api/osu/Fetcher";
 import { HandleAsync } from "@src/Utils";
 import { TextRenderer } from "@src/class/renderer/Text";
+import { Logger } from "@src/class/Logger";
 
 interface args {
     Username: string

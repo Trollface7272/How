@@ -137,55 +137,72 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
         const fetcher = await Fetcher.Create(user.id)
 
         const { Id: _id, Username, Gamemode, Reversed, Random, Page, Sort, Filter, Mods, Anyone, PpVer } = this.args
-        const Id = _id ?? await fetcher.LookupId(Username)
+        
+        let Id = _id
+        if (!Anyone && !Id && Username) {
+            try {
+                Id = await fetcher.LookupId(Username)
+            } catch (error) {
+                Logger.Error("Failed to lookup user ID:", error)
+                await this.data.Reply(this.RenderNoUserError())
+                return CommandResponseCodes.USER_ERROR
+            }
+        }
+        
         const Limit = Random ? 1 : 5
 
-        const sortQuery: Sort = {}
-        for (const sort of Sort) {
-            const sign = sort.startsWith("r") ? 1 : -1
-            let column = lookupScoresColumn(sort.startsWith("r") ? sort.replace("r", "") : sort)
-            if (column.includes("{ppver}")) column = column.replace("{ppver}", PpVer)
-            if (!column) {
-                Logger.Info(`Unknown sort column: ${sort}`, Sort)
-                continue
+        try {
+            const sortQuery: Sort = {}
+            for (const sort of Sort) {
+                const sign = sort.startsWith("r") ? 1 : -1
+                let column = lookupScoresColumn(sort.startsWith("r") ? sort.replace("r", "") : sort)
+                if (column.includes("{ppver}")) column = column.replace("{ppver}", PpVer)
+                if (!column) {
+                    Logger.Info(`Unknown sort column: ${sort}`, Sort)
+                    continue
+                }
+                sortQuery[column] = (Reversed ? -sign : sign) as 1 | -1
             }
-            sortQuery[column] = (Reversed ? -sign : sign) as 1 | -1
-        }
 
-        if (Sort.length === 0) sortQuery.setAt = Reversed ? 1 : -1
+            if (Sort.length === 0) sortQuery.setAt = Reversed ? 1 : -1
 
-        const filterQuery: Filter<Document> = {}
-        for (const filter of Filter) {
-            merge(filterQuery, this.parseFilter(filter))
-        }
+            const filterQuery: Filter<Document> = {}
+            for (const filter of Filter) {
+                try {
+                    merge(filterQuery, this.parseFilter(filter))
+                } catch (error) {
+                    Logger.Error(`Invalid filter: ${filter}`, error)
+                }
+            }
 
-        if (Mods.exactExclude?.mods.length > 0) {
-            merge(filterQuery, { mods: { $not: { $all: Mods.exactExclude.mods } } })
-        }
-        if (Mods.exactInclude?.mods.length > 0) {
-            merge(filterQuery, { mods: { $all: Mods.exactInclude.mods, "$size": Mods.exactInclude.mods.length } })
-        }
-        if (Mods.exclude?.mods.length > 0) {
-            merge(filterQuery, { mods: { $nin: Mods.exclude.mods } })
-        }
-        if (Mods.include?.mods.length > 0) {
-            merge(filterQuery, { mods: { $all: Mods.include.mods } })
-        }
+            if (Mods.exactExclude?.mods.length > 0) {
+                merge(filterQuery, { mods: { $not: { $all: Mods.exactExclude.mods } } })
+            }
+            if (Mods.exactInclude?.mods.length > 0) {
+                merge(filterQuery, { mods: { $all: Mods.exactInclude.mods, "$size": Mods.exactInclude.mods.length } })
+            }
+            if (Mods.exclude?.mods.length > 0) {
+                merge(filterQuery, { mods: { $nin: Mods.exclude.mods } })
+            }
+            if (Mods.include?.mods.length > 0) {
+                merge(filterQuery, { mods: { $all: Mods.include.mods } })
+            }
 
 
-        const [score, err] = await HandleAsync(ScoreFactory.GetScoresByUser(Anyone ? -1 : Id, filterQuery, sortQuery, Limit, (Page - 1) * Limit, Random))
-        if (err) {
-            Logger.Error(err)
-            await this.data.Reply(this.RenderApiError())
-            return CommandResponseCodes.ERROR
-        }
-        const { scores, total, randomOffset } = score
-        const profileQuery = HandleAsync(fetcher.GetProfile({ Username: Anyone ? scores[0].userId : Username ?? Id, Gamemode: Gamemode }))
-
-        if (total == 0) {
-            await this.data.Reply(this.RenderNoImportedScoresError())
-            return CommandResponseCodes.USER_ERROR
-        }
+            const [score, err] = await HandleAsync(ScoreFactory.GetScoresByUser(Anyone ? -1 : Id, filterQuery, sortQuery, Limit, (Page - 1) * Limit, Random))
+            if (err) {
+                Logger.Error("Score query error:", err)
+                await this.data.Reply(this.RenderApiError())
+                return CommandResponseCodes.ERROR
+            }
+            const { scores, total, randomOffset } = score
+            
+            if (total == 0) {
+                await this.data.Reply(this.RenderNoImportedScoresError())
+                return CommandResponseCodes.USER_ERROR
+            }
+            
+            const profileQuery = HandleAsync(fetcher.GetProfile({ Username: Anyone ? scores[0].userId : Username ?? Id, Gamemode: Gamemode }))
 
         const description = scores.map((score, i) => {
             const index = Random ? randomOffset + 1 : (Page - 1) * 5 + i + 1
@@ -210,38 +227,43 @@ class Score extends CommandWithComponentsBase implements CommandAbstract {
             })
         }).join("\n")
 
-        const [profile, profileErr] = await profileQuery
-        
-        const profileData = profileErr ? {
-            country: { code: "XX", name: "Unknown" },
-            username: "unknown user " + scores[0].userId,
-            url: undefined,
-            flag: undefined,
-            avatar_url: "https://a.ppy.sh/-1",
-        } : {
-            ...profile,
-            avatar_url: profile.avatar_url ?? "https://a.ppy.sh/-1",
-            flag: GetFlag(profile.country.code),
-            url: profile.url ?? undefined
+            const [profile, profileErr] = await profileQuery
+            
+            const profileData = profileErr ? {
+                country: { code: "XX", name: "Unknown" },
+                username: "unknown user " + scores[0].userId,
+                url: undefined,
+                flag: undefined,
+                avatar_url: "https://a.ppy.sh/-1",
+            } : {
+                ...profile,
+                avatar_url: profile.avatar_url ?? "https://a.ppy.sh/-1",
+                flag: GetFlag(profile.country.code),
+                url: profile.url ?? undefined
+            }
+
+            const embed = this.GetBaseEmbed()
+                .setAuthor({
+                    name: `Matched scores${Anyone && scores.length > 1 ? "" : ` for ${profileData.username}`}`,
+                    iconURL: profileData.flag,
+                    url: profileData.url
+                })
+                .setFooter({
+                    text: `Page ${Page}/${Math.ceil(total / (Random ? 1 : 5))}`
+                })
+                .setThumbnail(profileData.avatar_url)
+                .setDescription(description)
+
+            const buttons = this.CreateButtons(Page, Math.ceil(total / (Random ? 1 : 5)))
+
+            await this.data.Reply({ embeds: [embed], components: [buttons] })
+
+            return CommandResponseCodes.OK
+        } catch (error) {
+            Logger.Error("Score command error:", error)
+            await this.data.Reply(this.RenderApiError())
+            throw error
         }
-
-        const embed = this.GetBaseEmbed()
-            .setAuthor({
-                name: `Matched scores${Anyone && scores.length > 1 ? "" : ` for ${profileData.username}`}`,
-                iconURL: profileData.flag,
-                url: profileData.url
-            })
-            .setFooter({
-                text: `Page ${Page}/${Math.ceil(total / (Random ? 1 : 5))}`
-            })
-            .setThumbnail(profileData.avatar_url)
-            .setDescription(description)
-
-        const buttons = this.CreateButtons(Page, Math.ceil(total / (Random ? 1 : 5)))
-
-        this.data.Reply({ embeds: [embed], components: [buttons] })
-
-        return CommandResponseCodes.OK
     }
 
     private RenderNoImportedScoresError() {
